@@ -49,7 +49,7 @@ function getToday() { return new Date().toISOString().slice(0,10); }
 async function translateWord(word) {
   if (!word) { translatedText.textContent = ""; return; }
   try {
-    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=auto|en`);
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=es|en`);
     const data = await res.json();
     translatedText.textContent = `Traducción: "${data.responseData.translatedText}"`;
   } catch {
