@@ -1,13 +1,18 @@
 // Firebase config placeholder - replace with your config
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_DOMINIO.firebaseapp.com",
-  projectId: "TU_PROYECTO_ID",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "XXXXX",
-  appId: "XXXXX"
+  apiKey: "AIzaSyBSxBLk7ugyWXhBhjCsMkEhzDgeotVmJoY",
+  authDomain: "onewordworld-1d967.firebaseapp.com",
+  projectId: "onewordworld-1d967",
+  storageBucket: "onewordworld-1d967.firebasestorage.app",
+  messagingSenderId: "382515045282",
+  appId: "1:382515045282:web:b3554f189ec575198888fb"
 };
+
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const wordsRef = db.collection("words");
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 const wordsRef = db.collection("words");
