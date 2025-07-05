@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌍 OneWordWorld</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+  <header>
+    <h1>🌍 OneWordWorld</h1>
+    <p>Escribe una palabra que represente tu día</p>
+  </header>
+
+  <main id="mainApp">
+    <input id="wordInput" type="text" placeholder="Tu palabra de hoy..." />
+    <button id="submitBtn">Enviar</button>
+    <button id="shareBtn">Compartir</button>
+
+    <ul id="highlights"></ul>
+    <canvas id="wordCloud" width="500" height="300"></canvas>
+
+    <h2>🗺️ Mapa mundial de palabras</h2>
+    <div id="map"></div><div id="stats"></div><div id="translation"><h3>🌐 Traducción</h3><p id="translatedText">Escribe una palabra para ver su traducción automática.</p></div>
+  </main>
+
+  <!-- Librerías externas -->
+  <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.1.2/src/wordcloud2.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
