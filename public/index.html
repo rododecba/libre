@@ -2,42 +2,35 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OneWordWorld 🌍</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <!-- WordCloud -->
-  <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.min.js"></script>
-  <!-- Leaflet for map -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Firebase SDK v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>🌍 OneWordWorld</h1>
-    <div id="authSection">
-      <button id="anonSignIn">Acceder Anónimo</button>
-      <input type="email" id="emailInput" placeholder="Email" />
-      <button id="emailSignIn">Acceder con Email</button>
-    </div>
-    <div id="app" style="display:none;">
-      <button id="signOut">Cerrar Sesión</button>
-      <input type="text" id="wordInput" placeholder="Tu palabra del día..." />
-      <button id="submitBtn">Enviar palabra</button>
-      <button id="toggleMode">🌗 Cambiar modo</button>
-      <ul id="highlights"></ul>
-      <canvas id="wordCloud"></canvas>
-      <div id="map" style="height: 300px; margin-top: 20px;"></div>
-      <div id="shareButtons">
-        <button id="shareTwitter">Twitter</button>
-        <button id="shareInstagram">Instagram</button>
-        <button id="shareWhatsApp">WhatsApp</button>
-      </div>
+  <h1>🌍 OneWordWorld</h1>
+
+  <div id="authSection">
+    <button id="anonLoginBtn">Entrar como Anónimo</button>
+    <div>
+      <input id="emailInput" type="email" placeholder="Correo electrónico" />
+      <input id="passwordInput" type="password" placeholder="Contraseña" />
+      <button id="emailLoginBtn">Entrar con Email</button>
     </div>
   </div>
+
+  <div id="mainApp" style="display:none;">
+    <input id="wordInput" type="text" placeholder="Tu palabra de hoy..." />
+    <button id="submitBtn">Enviar</button>
+
+    <ul id="highlights"></ul>
+    <canvas id="wordCloud" width="500" height="300"></canvas>
+  </div>
+
   <script src="../src/index.js"></script>
 </body>
 </html>
