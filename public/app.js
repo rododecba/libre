@@ -1,49 +1,55 @@
+// Inicializar filtro de malas palabras
+const filter = new Filter();
 
+// Referencias a los elementos
 const input = document.getElementById("phraseInput");
 const button = document.getElementById("submitBtn");
 const list = document.getElementById("phraseList");
-const filter = new Filter();
 
-function renderPhrase(text, id) {
-  const li = document.createElement("li");
-  li.textContent = text;
-  const flagBtn = document.createElement("button");
-  flagBtn.className = "flag";
-  flagBtn.textContent = "⚠️";
-  flagBtn.onclick = () => {
-    db.collection("phrases").doc(id).update({
-      flags: firebase.firestore.FieldValue.increment(1),
+// Función para cargar las frases
+function loadPhrases() {
+  db.collection("phrases")
+    .orderBy("timestamp", "desc")
+    .limit(50)
+    .get()
+    .then(snapshot => {
+      list.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.textContent = data.text;
+        list.appendChild(li);
+      });
+    })
+    .catch(error => {
+      console.error("❌ Error al cargar frases:", error);
     });
-    li.style.opacity = 0.3;
-  };
-  li.appendChild(flagBtn);
-  list.prepend(li);
 }
 
-db.collection("phrases")
-  .where("timestamp", ">", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
-  .orderBy("timestamp", "desc")
-  .onSnapshot((snapshot) => {
-    list.innerHTML = "";
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      if (!data.flags || data.flags < 3) {
-        renderPhrase(data.text, doc.id);
-      }
-    });
-  });
-
+// Evento al presionar el botón
 button.addEventListener("click", () => {
-  const text = input.value.trim();
-  if (!text) return;
-  if (filter.isProfane(text)) {
-    alert("Tu frase contiene lenguaje inapropiado.");
+  const rawText = input.value.trim();
+
+  if (rawText === "") {
+    alert("Escribe algo antes de soltarlo.");
     return;
   }
-  db.collection("phrases").add({
-    text,
-    timestamp: new Date(),
-    flags: 0,
-  });
-  input.value = "";
+
+  const cleanText = filter.clean(rawText);
+
+  db.collection("phrases")
+    .add({
+      text: cleanText,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+      input.value = "";
+      loadPhrases();
+    })
+    .catch(error => {
+      console.error("❌ Error al guardar la frase:", error);
+    });
 });
+
+// Cargar frases al inicio
+loadPhrases();
