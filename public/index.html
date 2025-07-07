@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HabitBox</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>HabitBox</h1>
+      <p class="subtitle">Elige un hábito y márcalo cada día</p>
+    </header>
+    <main>
+      <section id="setup" class="card">
+        <h2>Define tu hábito</h2>
+        <input id="habitInput" type="text" placeholder="Escribe tu hábito..." />
+        <button id="saveHabitBtn">Guardar hábito</button>
+      </section>
+      <section id="tracker" class="card hidden">
+        <h2 id="habitTitle"></h2>
+        <div class="toggle">
+          <button id="markDoneBtn">Hecho hoy ✅</button>
+        </div>
+        <div id="streak" class="streak"></div>
+      </section>
+    </main>
+  </div>
+  <script src="index.js"></script>
+</body>
+</html>
