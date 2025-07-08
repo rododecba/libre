@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LIBRE 🌬️</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <div class="header">
+      <div class="logo">LIBRE 🌬️</div>
+    </div>
+    <div class="phrase-list" id="phraseList"></div>
+    <button class="btn-primary" onclick="openCompose()">Escribir</button>
+  </div>
+
+  <div class="compose-screen" id="composeScreen">
+    <div class="compose-header">
+      <h2>Escribir</h2>
+      <button class="btn-close" onclick="closeCompose()">×</button>
+    </div>
+    <div class="text-area-wrapper">
+      <textarea id="phraseInput" maxlength="500" placeholder="Escribe lo que no dijiste..."></textarea>
+    </div>
+    <div class="options-row">
+      <input type="checkbox" id="anonymous" checked />
+      <label for="anonymous">Anónimo</label>
+      <div class="name-input-field">
+        <input type="text" id="nameInput" placeholder="Tu nombre (opcional)" />
+      </div>
+    </div>
+    <div class="char-count" id="charCount">0 / 500</div>
+    <button class="btn-publish" onclick="submitPhrase()">Soltar</button>
+  </div>
+
+  <div class="wind-animation-overlay" id="windAnimation">🌬️</div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
