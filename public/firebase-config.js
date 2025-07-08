@@ -1,10 +1,11 @@
-// Reemplaza con tu configuración de Firebase
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_AUTH_DOMAIN",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_STORAGE_BUCKET",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
+  authDomain: "libre-c5bf7.firebaseapp.com",
+  projectId: "libre-c5bf7",
+  storageBucket: "libre-c5bf7.firebasestorage.app",
+  messagingSenderId: "339942652190",
+  appId: "1:339942652190:web:595ce692456b9df806f10f"
 };
-firebase.initializeApp(firebaseConfig);
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
