@@ -1,1 +1,0 @@
-// Código JS funcional completo de LIBRE
