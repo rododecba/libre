@@ -8,33 +8,19 @@
 </head>
 <body>
   <div class="app-container">
-    <div class="header">
+    <header class="header">
       <div class="logo">LIBRE 🌬️</div>
-    </div>
-    <div class="phrase-list" id="phraseList"></div>
-    <button class="btn-primary" onclick="openCompose()">Escribir</button>
+      <button class="btn-primary" id="silentModeBtn">LECTURA SILENCIOSA</button>
+    </header>
+
+    <h2>Suelta tus pensamientos</h2>
+    <textarea id="phraseInput" maxlength="500" placeholder="Lo que no se dice, también necesita salir..."></textarea>
+    <button class="btn-publish" id="submitBtn">Soltar</button>
+
+    <ul class="phrase-list" id="phraseList"></ul>
   </div>
 
-  <div class="compose-screen" id="composeScreen">
-    <div class="compose-header">
-      <h2>Suelta tu pensamiento</h2>
-      <button class="btn-close" onclick="closeCompose()">×</button>
-    </div>
-    <div class="text-area-wrapper">
-      <textarea id="phraseInput" maxlength="500" placeholder="Lo que no se dice, también necesita salir..."></textarea>
-    </div>
-    <div class="options-row">
-      <input type="checkbox" id="anonymous" checked />
-      <label for="anonymous">Anónimo</label>
-      <div class="name-input-field">
-        <input type="text" id="nameInput" placeholder="Tu nombre (opcional)" />
-      </div>
-    </div>
-    <div class="char-count" id="charCount">0 / 500</div>
-    <button class="btn-publish" onclick="submitPhrase()">Soltar</button>
-  </div>
-
-  <div class="wind-animation-overlay" id="windAnimation">🌬️</div>
+  <div class="wind-animation-overlay" id="windOverlay">💨</div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
