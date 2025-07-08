@@ -1,42 +1,43 @@
-
-// Inicialización de Firestore
-const db = firebase.firestore();
 const phraseInput = document.getElementById("phraseInput");
 const submitBtn = document.getElementById("submitBtn");
 const phraseList = document.getElementById("phraseList");
 
-// Función para soltar frase
 submitBtn.addEventListener("click", async () => {
   const text = phraseInput.value.trim();
-  if (!text) return;
+  if (!text) {
+    alert("Escribe una frase antes de soltarla.");
+    return;
+  }
 
-  const now = new Date();
-  await db.collection("phrases").add({
-    text,
-    timestamp: firebase.firestore.Timestamp.fromDate(now),
-    responses: []
-  });
+  if (text.length > 500) {
+    alert("La frase no puede superar los 500 caracteres.");
+    return;
+  }
 
-  phraseInput.value = "";
-  loadPhrases(); // refrescar
+  try {
+    await db.collection("phrases").add({
+      text,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    phraseInput.value = "";
+    loadPhrases();
+  } catch (error) {
+    console.error("Error al guardar la frase:", error);
+  }
 });
 
-// Cargar frases activas (menos de 30 días)
 async function loadPhrases() {
   phraseList.innerHTML = "";
-  const snapshot = await db.collection("phrases").get();
-  const now = new Date();
+  const snapshot = await db.collection("phrases")
+    .orderBy("timestamp", "desc")
+    .limit(30)
+    .get();
 
   snapshot.forEach(doc => {
     const data = doc.data();
-    const created = data.timestamp.toDate();
-    const age = (now - created) / (1000 * 60 * 60 * 24);
-
-    if (age <= 30) {
-      const li = document.createElement("li");
-      li.textContent = data.text;
-      phraseList.appendChild(li);
-    }
+    const li = document.createElement("li");
+    li.textContent = data.text;
+    phraseList.appendChild(li);
   });
 }
 
