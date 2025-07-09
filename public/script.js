@@ -3,6 +3,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM completamente cargado. Iniciando script.js...");
+
     // Tu configuración de Firebase (proporcionada por el usuario)
     const firebaseConfig = {
         apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
@@ -14,8 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Inicializa Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app); // Obtiene la instancia de Firestore
+    try {
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app); // Obtiene la instancia de Firestore
+        console.log("Firebase inicializado y Firestore conectado.");
+    } catch (error) {
+        console.error("Error al inicializar Firebase:", error);
+        alert("Error al conectar con Firebase. Revisa la consola para más detalles."); // Usar modal
+        return; // Detener la ejecución si Firebase no se inicializa
+    }
+
 
     // Referencias a elementos del DOM
     const thoughtInput = document.getElementById('thoughtInput');
@@ -23,11 +33,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendThoughtBtn = document.getElementById('sendThoughtBtn');
     const featuredThoughtBox = document.querySelector('.featured-thought-box');
     const featuredThoughtPlaceholder = document.querySelector('.featured-thought-placeholder');
-    const totalThoughtsCountSpan = document.getElementById('totalThoughtsCount'); // Renombrado para claridad
+    const totalThoughtsCountSpan = document.getElementById('totalThoughtsCount');
 
     const myThoughtsCard = document.getElementById('myThoughtsCard');
     const viewByCountryCard = document.getElementById('viewByCountryCard');
     const featuredWordsCard = document.getElementById('featuredWordsCard');
+
+    // Verificar que los elementos DOM existen
+    if (!thoughtInput) console.error("Error: Elemento 'thoughtInput' no encontrado.");
+    if (!charCount) console.error("Error: Elemento 'charCount' no encontrado.");
+    if (!sendThoughtBtn) console.error("Error: Elemento 'sendThoughtBtn' no encontrado.");
+    if (!featuredThoughtBox) console.error("Error: Elemento 'featuredThoughtBox' no encontrado.");
+    if (!totalThoughtsCountSpan) console.error("Error: Elemento 'totalThoughtsCountSpan' no encontrado.");
+    if (!myThoughtsCard) console.error("Error: Elemento 'myThoughtsCard' no encontrado.");
+
 
     const MAX_CHARS = 500; // Límite de caracteres por pensamiento
     const THOUGHTS_PER_DAY_LIMIT = 3; // Límite de pensamientos por día
@@ -53,69 +72,97 @@ document.addEventListener('DOMContentLoaded', () => {
         const thoughts = getLocalThoughts();
         thoughts.push(thought);
         localStorage.setItem(`thoughts_${today}`, JSON.stringify(thoughts));
+        console.log("Pensamiento guardado localmente:", thought);
     };
 
     // --- Lógica de la Aplicación ---
 
     // 1. Contador de Caracteres y Botón de Enviar
-    charCount.textContent = MAX_CHARS; // Inicializar
+    if (charCount) {
+        charCount.textContent = MAX_CHARS; // Inicializar
+    }
 
-    thoughtInput.addEventListener('input', () => {
-        const remaining = MAX_CHARS - thoughtInput.value.length;
-        charCount.textContent = remaining;
-        charCount.style.color = remaining < 50 ? 'orange' : (remaining < 10 ? 'red' : 'var(--text-color-secondary)');
+    if (thoughtInput && charCount && sendThoughtBtn) {
+        thoughtInput.addEventListener('input', () => {
+            console.log("Evento 'input' detectado en thoughtInput. Valor actual:", thoughtInput.value);
+            const remaining = MAX_CHARS - thoughtInput.value.length;
+            charCount.textContent = remaining;
+            charCount.style.color = remaining < 50 ? 'orange' : (remaining < 10 ? 'red' : 'var(--text-color-secondary)');
 
-        // Mostrar/ocultar el botón de enviar
-        if (thoughtInput.value.trim().length > 0) {
-            sendThoughtBtn.style.display = 'block';
-        } else {
-            sendThoughtBtn.style.display = 'none';
-        }
-    });
+            // Mostrar/ocultar el botón de enviar
+            if (thoughtInput.value.trim().length > 0) {
+                sendThoughtBtn.style.display = 'block';
+                console.log("Botón de enviar visible.");
+            } else {
+                sendThoughtBtn.style.display = 'none';
+                console.log("Botón de enviar oculto.");
+            }
+        });
+    } else {
+        console.error("No se pudo adjuntar el listener 'input' porque faltan elementos DOM.");
+    }
+
 
     // 2. Enviar Pensamiento a Firestore
-    sendThoughtBtn.addEventListener('click', async () => {
-        const thoughtText = thoughtInput.value.trim();
-        if (!thoughtText) {
-            alert("Por favor, escribe un pensamiento antes de enviar."); // Usar un modal personalizado en un entorno real
-            return;
-        }
+    if (sendThoughtBtn) {
+        sendThoughtBtn.addEventListener('click', async () => {
+            console.log("Clic en el botón de enviar.");
+            const thoughtText = thoughtInput.value.trim();
+            if (!thoughtText) {
+                alert("Por favor, escribe un pensamiento antes de enviar."); // Usar un modal personalizado en un entorno real
+                return;
+            }
 
-        const localThoughts = getLocalThoughts();
-        if (localThoughts.length >= THOUGHTS_PER_DAY_LIMIT) {
-            alert(`Lo siento, solo puedes escribir ${THOUGHTS_PER_DAY_LIMIT} pensamientos por día.`); // Usar un modal personalizado
-            return;
-        }
+            const localThoughts = getLocalThoughts();
+            if (localThoughts.length >= THOUGHTS_PER_DAY_LIMIT) {
+                alert(`Lo siento, solo puedes escribir ${THOUGHTS_PER_DAY_LIMIT} pensamientos por día.`); // Usar un modal personalizado
+                return;
+            }
 
-        try {
-            // Añadir el pensamiento a la colección 'thoughts'
-            await addDoc(collection(db, "thoughts"), {
-                content: thoughtText,
-                createdAt: serverTimestamp(), // Marca de tiempo del servidor
-                // Podríamos añadir una ubicación aproximada aquí si la tuviéramos
-                // location: { lat: ..., lon: ... }
-            });
+            try {
+                // Asegúrate de que 'db' esté definido y sea una instancia válida de Firestore
+                if (typeof db === 'undefined') {
+                    console.error("Error: Firestore (db) no está inicializado.");
+                    alert("Error interno: La base de datos no está disponible."); // Usar modal
+                    return;
+                }
 
-            addLocalThought(thoughtText); // Guardar localmente para "Ver mis pensamientos"
-            thoughtInput.value = ''; // Limpiar campo
-            charCount.textContent = MAX_CHARS; // Resetear contador
-            charCount.style.color = 'var(--text-color-secondary)';
-            sendThoughtBtn.style.display = 'none'; // Ocultar botón
+                // Añadir el pensamiento a la colección 'thoughts'
+                await addDoc(collection(db, "thoughts"), {
+                    content: thoughtText,
+                    createdAt: serverTimestamp(), // Marca de tiempo del servidor
+                    // Podríamos añadir una ubicación aproximada aquí si la tuviéramos
+                    // location: { lat: ..., lon: ... }
+                });
 
-            alert("¡Pensamiento enviado con éxito!"); // Usar un modal personalizado
-        } catch (e) {
-            console.error("Error al añadir el documento: ", e);
-            alert("Hubo un error al enviar tu pensamiento. Inténtalo de nuevo."); // Usar un modal personalizado
-        }
-    });
+                addLocalThought(thoughtText); // Guardar localmente para "Ver mis pensamientos"
+                thoughtInput.value = ''; // Limpiar campo
+                charCount.textContent = MAX_CHARS; // Resetear contador
+                charCount.style.color = 'var(--text-color-secondary)';
+                sendThoughtBtn.style.display = 'none'; // Ocultar botón
+
+                alert("¡Pensamiento enviado con éxito!"); // Usar un modal personalizado
+                console.log("Pensamiento enviado a Firestore.");
+            } catch (e) {
+                console.error("Error al añadir el documento: ", e);
+                alert("Hubo un error al enviar tu pensamiento. Inténtalo de nuevo."); // Usar un modal personalizado
+            }
+        });
+    } else {
+        console.error("No se pudo adjuntar el listener 'click' al botón de enviar.");
+    }
+
 
     // 3. Obtener y Mostrar Pensamiento Destacado
     const fetchFeaturedThought = async () => {
+        console.log("Intentando obtener pensamiento destacado...");
         try {
-            // Consulta para obtener un pensamiento aleatorio (Firestore no tiene aleatorio nativo)
-            // Una estrategia común es obtener un subconjunto reciente y elegir uno aleatorio
-            // O, si hay muchos, obtener un ID aleatorio y luego el documento.
-            // Por simplicidad, obtendremos los 100 más recientes y elegiremos uno.
+            if (typeof db === 'undefined') {
+                console.error("Error: Firestore (db) no está inicializado para fetchFeaturedThought.");
+                featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">Error: DB no disponible.</p>`;
+                return;
+            }
+
             const q = query(collection(db, "thoughts"), orderBy("createdAt", "desc"), limit(100));
             const querySnapshot = await getDocs(q);
 
@@ -127,10 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const randomIndex = Math.floor(Math.random() * thoughts.length);
                 const featuredThought = thoughts[randomIndex];
                 featuredThoughtBox.innerHTML = `<p class="featured-thought-content">"${featuredThought}"</p>`;
-                featuredThoughtPlaceholder.style.display = 'none'; // Ocultar placeholder
+                if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'none';
+                console.log("Pensamiento destacado cargado:", featuredThought);
             } else {
                 featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">PENSAMIENTO DESTACADO</p>`;
-                featuredThoughtPlaceholder.style.display = 'block'; // Mostrar placeholder si no hay pensamientos
+                if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'block';
+                console.log("No hay pensamientos en Firestore para destacar.");
             }
         } catch (e) {
             console.error("Error al obtener pensamiento destacado: ", e);
@@ -144,45 +193,55 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchFeaturedThought, 1800000);
 
     // 4. Actualizar Conteo Global de Pensamientos en Tiempo Real
-    // onSnapshot es ideal para actualizaciones en tiempo real
-    onSnapshot(collection(db, "thoughts"), (snapshot) => {
-        totalThoughtsCountSpan.textContent = snapshot.size;
-    }, (error) => {
-        console.error("Error al obtener el conteo en tiempo real: ", error);
-        totalThoughtsCountSpan.textContent = "Error";
-    });
+    if (totalThoughtsCountSpan) {
+        // onSnapshot es ideal para actualizaciones en tiempo real
+        onSnapshot(collection(db, "thoughts"), (snapshot) => {
+            totalThoughtsCountSpan.textContent = snapshot.size;
+            console.log("Conteo de pensamientos actualizado:", snapshot.size);
+        }, (error) => {
+            console.error("Error al obtener el conteo en tiempo real: ", error);
+            totalThoughtsCountSpan.textContent = "Error";
+        });
+    } else {
+        console.error("No se pudo adjuntar el listener 'onSnapshot' porque 'totalThoughtsCountSpan' no fue encontrado.");
+    }
+
 
     // 5. Funcionalidad de las Tarjetas Interactivas
 
     // "Ver mis pensamientos"
-    myThoughtsCard.addEventListener('click', () => {
-        const localThoughts = getLocalThoughts();
-        let thoughtsHtml = '';
-        if (localThoughts.length > 0) {
-            thoughtsHtml = localThoughts.map(thought => `<p class="local-thought-item">${thought}</p>`).join('');
-        } else {
-            thoughtsHtml = '<p class="no-thoughts-message">Aún no has escrito pensamientos hoy.</p>';
-        }
+    if (myThoughtsCard) {
+        myThoughtsCard.addEventListener('click', () => {
+            console.log("Clic en 'Ver mis pensamientos'.");
+            const localThoughts = getLocalThoughts();
+            let thoughtsDisplay = '';
+            if (localThoughts.length > 0) {
+                thoughtsDisplay = localThoughts.join('\n\n');
+            } else {
+                thoughtsDisplay = 'Aún no has escrito pensamientos hoy.';
+            }
+            alert(`Tus pensamientos de hoy:\n\n${thoughtsDisplay}`); // Reemplazar con UI real
+        });
+    } else {
+        console.error("No se pudo adjuntar el listener 'click' a 'myThoughtsCard'.");
+    }
 
-        // Aquí podrías mostrar un modal o una nueva sección con estos pensamientos
-        // Por ahora, lo mostraremos en una alerta simple (reemplazar con UI real)
-        alert(`Tus pensamientos de hoy:\n\n${localThoughts.join('\n\n') || 'Aún no has escrito pensamientos hoy.'}`);
-        console.log("Tus pensamientos de hoy:", localThoughts);
-    });
 
     // "Ver por País" - Placeholder para la integración del mapa
-    viewByCountryCard.addEventListener('click', () => {
-        alert("Funcionalidad 'Ver por País' en desarrollo. Aquí se integrará un mapa mundial."); // Reemplazar con UI real
-        console.log("Clic en Ver por País");
-    });
+    if (viewByCountryCard) {
+        viewByCountryCard.addEventListener('click', () => {
+            alert("Funcionalidad 'Ver por País' en desarrollo. Aquí se integrará un mapa mundial."); // Reemplazar con UI real
+            console.log("Clic en Ver por País");
+        });
+    }
+
 
     // "Palabras Destacadas" - Placeholder para la lista de palabras
-    featuredWordsCard.addEventListener('click', () => {
-        const prominentWords = ["paz", "amor", "odio", "guerra", "dinero", "felicidad", "tristeza", "esperanza", "futuro", "cambio"];
-        alert(`Palabras Destacadas:\n\n${prominentWords.join(', ')}`); // Reemplazar con UI real
-        console.log("Clic en Palabras Destacadas");
-    });
-
-    // Asegurarse de que el input tenga foco al cargar si es necesario (opcional)
-    // thoughtInput.focus();
+    if (featuredWordsCard) {
+        featuredWordsCard.addEventListener('click', () => {
+            const prominentWords = ["paz", "amor", "odio", "guerra", "dinero", "felicidad", "tristeza", "esperanza", "futuro", "cambio"];
+            alert(`Palabras Destacadas:\n\n${prominentWords.join(', ')}`); // Reemplazar con UI real
+            console.log("Clic en Palabras Destacadas");
+        });
+    }
 });
