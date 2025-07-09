@@ -74,10 +74,12 @@ body {
     text-align: center;
     min-height: 100px;
     display: flex;
+    flex-direction: column; /* Cambiado a column para centrar el texto y luego el botón */
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
     margin-bottom: 20px; /* Margen inferior para separar */
+    position: relative; /* Importante para posicionar el botón */
 }
 
 .featured-thought-placeholder {
@@ -85,6 +87,7 @@ body {
     font-weight: 600;
     color: var(--placeholder-color);
     text-transform: uppercase;
+    margin-bottom: 10px; /* Espacio entre placeholder y el botón si aparece */
 }
 
 .featured-thought-content {
@@ -92,7 +95,33 @@ body {
     font-style: italic;
     color: var(--text-color-primary);
     margin: 0;
+    flex-grow: 1; /* Permite que el contenido ocupe el espacio principal */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
+
+/* NUEVO: Estilos para el botón de siguiente pensamiento */
+.next-thought-btn {
+    background: none;
+    border: none;
+    color: var(--text-color-secondary);
+    font-size: 1.2em;
+    cursor: pointer;
+    position: absolute; /* Posicionamiento absoluto */
+    bottom: 15px; /* Ajusta la posición desde abajo */
+    right: 15px; /* Ajusta la posición desde la derecha */
+    padding: 5px;
+    border-radius: 50%; /* Para un efecto más suave si el fondo cambia */
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.next-thought-btn:hover {
+    color: var(--text-color-primary);
+    background-color: rgba(0, 0, 0, 0.05); /* Un ligero fondo al pasar el ratón */
+}
+
 
 /* Estilos de las Tarjetas de Estadísticas y Acciones (los 4 flotantes) */
 .stats-and-actions {
@@ -213,15 +242,15 @@ body {
     background-color: #3e8e41;
 }
 
-/* NUEVOS ESTILOS PARA LA SECCIÓN DE PENSAMIENTOS DEL USUARIO */
+/* ESTILOS PARA LA SECCIÓN DE PENSAMIENTOS DEL USUARIO */
 .my-thoughts-display-section {
     background-color: var(--card-bg-color);
     border-radius: 12px;
     box-shadow: var(--shadow-light);
     padding: 20px;
-    margin-bottom: 20px; /* Espacio debajo de esta sección */
+    margin-bottom: 20px;
     box-sizing: border-box;
-    position: relative; /* Para posicionar el botón de cierre */
+    position: relative;
 }
 
 .my-thoughts-header {
@@ -229,7 +258,7 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
-    border-bottom: 1px solid var(--border-color); /* Línea divisoria */
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 10px;
 }
 
@@ -237,7 +266,7 @@ body {
     font-size: 1.2em;
     font-weight: 600;
     color: var(--text-color-primary);
-    margin: 0; /* Eliminar margen por defecto del h3 */
+    margin: 0;
 }
 
 .close-btn {
@@ -246,7 +275,7 @@ body {
     font-size: 1.8em;
     color: var(--text-color-secondary);
     cursor: pointer;
-    line-height: 1; /* Asegura que la 'x' no tenga un espacio extra */
+    line-height: 1;
     padding: 0;
     margin: 0;
     transition: color 0.2s ease;
@@ -257,33 +286,33 @@ body {
 }
 
 .my-thoughts-list {
-    max-height: 300px; /* Limita la altura de la lista y añade scroll */
+    max-height: 300px;
     overflow-y: auto;
-    padding-right: 10px; /* Espacio para la barra de scroll */
+    padding-right: 10px;
 }
 
 .my-thought-item {
-    font-family: 'Roboto Mono', monospace; /* Tipografía para los pensamientos */
+    font-family: 'Roboto Mono', monospace;
     font-size: 0.9em;
     color: var(--text-color-primary);
-    background-color: var(--bg-color); /* Fondo ligero para cada pensamiento */
+    background-color: var(--bg-color);
     padding: 10px 15px;
     border-radius: 8px;
-    margin-bottom: 10px; /* Espacio entre pensamientos */
+    margin-bottom: 10px;
     line-height: 1.4;
-    word-wrap: break-word; /* Asegura que las palabras largas se rompan */
-    white-space: pre-wrap; /* Mantiene saltos de línea y espacios del usuario */
+    word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .my-thought-item:last-child {
-    margin-bottom: 0; /* No hay margen inferior en el último elemento */
+    margin-bottom: 0;
 }
 
 .my-thought-date {
     font-size: 0.75em;
     color: var(--text-color-secondary);
     margin-top: 5px;
-    display: block; /* Asegura que la fecha esté en su propia línea */
+    display: block;
 }
 
 .no-thoughts-message {
@@ -318,6 +347,12 @@ body {
 
     .featured-thought-placeholder {
         font-size: 1.1em;
+    }
+
+    .next-thought-btn {
+        bottom: 10px;
+        right: 10px;
+        font-size: 1em;
     }
 
     .stats-and-actions {
