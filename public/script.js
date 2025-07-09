@@ -1,9 +1,18 @@
 // Importa las funciones necesarias de los SDKs de Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, FieldValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// Importamos FieldValue explícitamente para depurar, aunque ya estaba en la línea de abajo
+import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, FieldValue, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM completamente cargado. Iniciando script.js...");
+
+    // *** NUEVO: Depuración de FieldValue ***
+    console.log("Valor de FieldValue al inicio del script:", FieldValue);
+    console.log("Tipo de FieldValue al inicio del script:", typeof FieldValue);
+    if (FieldValue && typeof FieldValue === 'object') {
+        console.log("FieldValue.increment existe:", typeof FieldValue.increment === 'function');
+    }
+    // *************************************
 
     // Tu configuración de Firebase (proporcionada por el usuario)
     const firebaseConfig = {
@@ -39,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const myThoughtsCard = document.getElementById('myThoughtsCard');
     const viewByCountryCard = document.getElementById('viewByCountryCard');
-    // CAMBIO: Nueva referencia para la tarjeta "Ecos del Pensamiento"
     const ecosThoughtsCard = document.getElementById('ecosThoughtsCard');
 
     // Elementos del DOM para la sección de pensamientos del usuario
@@ -206,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Intentando obtener pensamiento destacado...");
         try {
             if (!db) { // Verificar si db está inicializado
-                console.error("Error: Firestore (db) no está inicializado para fetchFeaturedThought.");
+                console.error("Error: Firestore (db) no está inicializado para fetchFeaturedThought. No se puede obtener pensamiento.");
                 featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">Error: DB no disponible.</p>`;
                 return;
             }
@@ -223,20 +231,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 const featuredThoughtData = thoughtsWithIds[randomIndex]; // Obtener el objeto completo
 
                 // Incrementar el contador de encuentros para este pensamiento
-                const thoughtRef = doc(db, "thoughts", featuredThoughtData.id);
-                await updateDoc(thoughtRef, {
-                    encounters: FieldValue.increment(1) // Incrementar en 1
-                });
-                console.log(`Contador de encuentros incrementado para el pensamiento ID: ${featuredThoughtData.id}`);
+                // Solo si el pensamiento tiene un ID válido y db está disponible
+                if (featuredThoughtData.id && db) {
+                    const thoughtRef = doc(db, "thoughts", featuredThoughtData.id);
+                    // *** NUEVO: Depuración de FieldValue.increment antes de usarlo ***
+                    console.log("Antes de incrementar: FieldValue.increment es", typeof FieldValue.increment);
+                    // ***************************************************************
+                    await updateDoc(thoughtRef, {
+                        encounters: FieldValue.increment(1) // Incrementar en 1
+                    });
+                    console.log(`Contador de encuentros incrementado para el pensamiento ID: ${featuredThoughtData.id}`);
+                } else {
+                    console.warn("No se pudo incrementar el contador de encuentros: ID de pensamiento o DB no disponible.");
+                }
 
 
-                const featuredThoughtContent = featuredThoughtBox.querySelector('.featured-thought-content');
+                const currentThoughtContent = featuredThoughtBox.querySelector('.featured-thought-content');
                 const featuredThoughtPlaceholder = featuredThoughtBox.querySelector('.featured-thought-placeholder');
 
 
-                if (featuredThoughtContent) {
-                    featuredThoughtContent.textContent = `"${featuredThoughtData.content}"`;
-                    featuredThoughtContent.style.display = 'flex';
+                if (currentThoughtContent) {
+                    currentThoughtContent.textContent = `"${featuredThoughtData.content}"`;
+                    currentThoughtContent.style.display = 'flex';
                 } else {
                     const newContent = document.createElement('p');
                     newContent.classList.add('featured-thought-content');
@@ -306,18 +322,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     let encountersCount = '...'; // Placeholder mientras se carga
                     try {
                         if (db && localThought.id) { // Asegurarse de que db e id existan
-                            const thoughtDoc = await getDocs(query(collection(db, "thoughts"), limit(1), orderBy("createdAt", "desc"))); // Fetch the thought by its ID
-                            // This is a simplified approach. A more robust way would be to fetch the specific doc by ID.
-                            // For now, we are just getting the latest thoughts, which might not include the specific thought by ID.
-                            // A better approach would be: const docSnap = await getDoc(doc(db, "thoughts", localThought.id));
-                            // If docSnap.exists(), encountersCount = docSnap.data().encounters;
-                            // For now, let's assume localThought.id is the actual ID and fetch it directly.
-                            const docSnap = await getDoc(doc(db, "thoughts", localThought.id));
+                            const docSnap = await getDoc(doc(db, "thoughts", localThought.id)); // Obtener el documento por su ID
                             if (docSnap.exists()) {
                                 encountersCount = docSnap.data().encounters || 0;
                             } else {
-                                encountersCount = 'N/A'; // No encontrado en Firestore
+                                encountersCount = 'N/A (No encontrado en DB)'; // No encontrado en Firestore
                             }
+                        } else {
+                            encountersCount = 'N/A (Sin ID/DB)'; // Si no hay ID o DB
                         }
                     } catch (e) {
                         console.error("Error al obtener encuentros para el pensamiento:", localThought.id, e);
