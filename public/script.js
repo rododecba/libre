@@ -15,10 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
         appId: "1:339942652190:web:595ce692456b9df806f10f"
     };
 
+    let db; // Declara db aquí para que sea accesible en todo el ámbito
+
     // Inicializa Firebase
     try {
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app); // Obtiene la instancia de Firestore
+        db = getFirestore(app); // Asigna la instancia de Firestore
         console.log("Firebase inicializado y Firestore conectado.");
     } catch (error) {
         console.error("Error al inicializar Firebase:", error);
@@ -39,10 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewByCountryCard = document.getElementById('viewByCountryCard');
     const featuredWordsCard = document.getElementById('featuredWordsCard');
 
-    // Verificar que los elementos DOM existen
+    // Verificar que los elementos DOM existen y loguear si no
     if (!thoughtInput) console.error("Error: Elemento 'thoughtInput' no encontrado.");
     if (!charCount) console.error("Error: Elemento 'charCount' no encontrado.");
-    if (!sendThoughtBtn) console.error("Error: Elemento 'sendThoughtBtn' no encontrado.");
+    if (!sendThoughtBtn) console.error("Error: Elemento 'sendThoughtBtn' no encontrado. Asegúrate de que el ID 'sendThoughtBtn' esté en tu HTML.");
     if (!featuredThoughtBox) console.error("Error: Elemento 'featuredThoughtBox' no encontrado.");
     if (!totalThoughtsCountSpan) console.error("Error: Elemento 'totalThoughtsCountSpan' no encontrado.");
     if (!myThoughtsCard) console.error("Error: Elemento 'myThoughtsCard' no encontrado.");
@@ -77,19 +79,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Lógica de la Aplicación ---
 
-    // 1. Contador de Caracteres y Botón de Enviar
+    // Función para manejar el envío de un pensamiento (reutilizable para clic de botón y tecla Enter)
+    const sendThought = async () => {
+        console.log("Intentando enviar pensamiento...");
+        const thoughtText = thoughtInput.value.trim();
+        if (!thoughtText) {
+            alert("Por favor, escribe un pensamiento antes de enviar.");
+            return;
+        }
+
+        const localThoughts = getLocalThoughts();
+        if (localThoughts.length >= THOUGHTS_PER_DAY_LIMIT) {
+            alert(`Lo siento, solo puedes escribir ${THOUGHTS_PER_DAY_LIMIT} pensamientos por día.`);
+            return;
+        }
+
+        try {
+            if (!db) { // Verificar si db está inicializado
+                console.error("Error: Firestore (db) no está inicializado.");
+                alert("Error interno: La base de datos no está disponible.");
+                return;
+            }
+
+            await addDoc(collection(db, "thoughts"), {
+                content: thoughtText,
+                createdAt: serverTimestamp(),
+            });
+
+            addLocalThought(thoughtText);
+            thoughtInput.value = ''; // Limpiar campo
+            charCount.textContent = MAX_CHARS; // Resetear contador
+            charCount.style.color = 'var(--text-color-secondary)';
+            sendThoughtBtn.style.display = 'none'; // Ocultar botón
+
+            alert("¡Pensamiento enviado con éxito!");
+            console.log("Pensamiento enviado a Firestore.");
+        } catch (e) {
+            console.error("Error al añadir el documento: ", e);
+            alert("Hubo un error al enviar tu pensamiento. Inténtalo de nuevo.");
+        }
+    };
+
+
+    // 1. Contador de Caracteres, Botón de Enviar y Tecla Enter
     if (charCount) {
         charCount.textContent = MAX_CHARS; // Inicializar
     }
 
     if (thoughtInput && charCount && sendThoughtBtn) {
+        // Listener para el recuento de caracteres y visibilidad del botón
         thoughtInput.addEventListener('input', () => {
             console.log("Evento 'input' detectado en thoughtInput. Valor actual:", thoughtInput.value);
             const remaining = MAX_CHARS - thoughtInput.value.length;
             charCount.textContent = remaining;
             charCount.style.color = remaining < 50 ? 'orange' : (remaining < 10 ? 'red' : 'var(--text-color-secondary)');
 
-            // Mostrar/ocultar el botón de enviar
             if (thoughtInput.value.trim().length > 0) {
                 sendThoughtBtn.style.display = 'block';
                 console.log("Botón de enviar visible.");
@@ -98,58 +142,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Botón de enviar oculto.");
             }
         });
+
+        // Listener para la tecla Enter
+        thoughtInput.addEventListener('keydown', (event) => {
+            // Solo si es 'Enter' y no 'Shift+Enter' (para permitir saltos de línea manuales)
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevenir el comportamiento por defecto (nueva línea)
+                sendThought(); // Llamar a la función de envío
+            }
+        });
+
     } else {
-        console.error("No se pudo adjuntar el listener 'input' porque faltan elementos DOM.");
+        console.error("No se pudo adjuntar el listener 'input' o 'keydown' porque faltan elementos DOM. Revisa 'thoughtInput', 'charCount', 'sendThoughtBtn'.");
     }
 
 
-    // 2. Enviar Pensamiento a Firestore
+    // 2. Enviar Pensamiento a Firestore (ahora manejado por la función sendThought)
     if (sendThoughtBtn) {
-        sendThoughtBtn.addEventListener('click', async () => {
-            console.log("Clic en el botón de enviar.");
-            const thoughtText = thoughtInput.value.trim();
-            if (!thoughtText) {
-                alert("Por favor, escribe un pensamiento antes de enviar."); // Usar un modal personalizado en un entorno real
-                return;
-            }
-
-            const localThoughts = getLocalThoughts();
-            if (localThoughts.length >= THOUGHTS_PER_DAY_LIMIT) {
-                alert(`Lo siento, solo puedes escribir ${THOUGHTS_PER_DAY_LIMIT} pensamientos por día.`); // Usar un modal personalizado
-                return;
-            }
-
-            try {
-                // Asegúrate de que 'db' esté definido y sea una instancia válida de Firestore
-                if (typeof db === 'undefined') {
-                    console.error("Error: Firestore (db) no está inicializado.");
-                    alert("Error interno: La base de datos no está disponible."); // Usar modal
-                    return;
-                }
-
-                // Añadir el pensamiento a la colección 'thoughts'
-                await addDoc(collection(db, "thoughts"), {
-                    content: thoughtText,
-                    createdAt: serverTimestamp(), // Marca de tiempo del servidor
-                    // Podríamos añadir una ubicación aproximada aquí si la tuviéramos
-                    // location: { lat: ..., lon: ... }
-                });
-
-                addLocalThought(thoughtText); // Guardar localmente para "Ver mis pensamientos"
-                thoughtInput.value = ''; // Limpiar campo
-                charCount.textContent = MAX_CHARS; // Resetear contador
-                charCount.style.color = 'var(--text-color-secondary)';
-                sendThoughtBtn.style.display = 'none'; // Ocultar botón
-
-                alert("¡Pensamiento enviado con éxito!"); // Usar un modal personalizado
-                console.log("Pensamiento enviado a Firestore.");
-            } catch (e) {
-                console.error("Error al añadir el documento: ", e);
-                alert("Hubo un error al enviar tu pensamiento. Inténtalo de nuevo."); // Usar un modal personalizado
-            }
-        });
+        sendThoughtBtn.addEventListener('click', sendThought); // Adjunta la función sendThought reutilizable
     } else {
-        console.error("No se pudo adjuntar el listener 'click' al botón de enviar.");
+        console.error("No se pudo adjuntar el listener 'click' al botón de enviar. Revisa 'sendThoughtBtn'.");
     }
 
 
@@ -157,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchFeaturedThought = async () => {
         console.log("Intentando obtener pensamiento destacado...");
         try {
-            if (typeof db === 'undefined') {
+            if (!db) { // Verificar si db está inicializado
                 console.error("Error: Firestore (db) no está inicializado para fetchFeaturedThought.");
                 featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">Error: DB no disponible.</p>`;
                 return;
