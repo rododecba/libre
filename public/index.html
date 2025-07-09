@@ -29,6 +29,10 @@
             <section class="featured-thought-section">
                 <div class="featured-thought-box">
                     <p class="featured-thought-placeholder">PENSAMIENTO DESTACADO</p>
+                    <!-- NUEVO: Botón para pasar al siguiente pensamiento -->
+                    <button id="nextThoughtBtn" class="next-thought-btn" title="Ver otro pensamiento">
+                        <i class="fas fa-redo-alt"></i> <!-- Icono de recargar/refrescar -->
+                    </button>
                 </div>
             </section>
 
@@ -51,14 +55,12 @@
                 </div>
             </section>
 
-            <!-- NUEVA SECCIÓN PARA MOSTRAR LOS PENSAMIENTOS DEL USUARIO -->
             <section id="myThoughtsDisplaySection" class="my-thoughts-display-section" style="display: none;">
                 <div class="my-thoughts-header">
                     <h3 class="section-title">Tus Pensamientos Recientes</h3>
                     <button id="closeMyThoughts" class="close-btn">&times;</button>
                 </div>
                 <div id="myThoughtsList" class="my-thoughts-list">
-                    <!-- Los pensamientos se cargarán aquí con JavaScript -->
                     <p class="no-thoughts-message">Aún no has escrito pensamientos hoy.</p>
                 </div>
             </section>
