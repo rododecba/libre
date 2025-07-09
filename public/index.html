@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIBRE</title>
+    <!-- Enlace a la hoja de estilos CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Enlace a Font Awesome para los iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts: Inter (para el texto general) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Roboto Mono (para la descripción y campo de texto) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="app-title">LIBRE</h1>
+            <p class="app-description">
+                Es un espacio silencioso donde cualquier persona, desde cualquier rincón del mundo, puede soltar un pensamiento.<br>
+                No hay likes. No hay cuentos. Solo palabras. Liviano, anónimo y humano.
+            </p>
+        </header>
+
+        <main class="main-content">
+            <section class="featured-thought-section">
+                <div class="featured-thought-box">
+                    <p class="featured-thought-placeholder">PENSAMIENTO DESTACADO</p>
+                </div>
+            </section>
+
+            <section class="stats-and-actions">
+                <div class="card" id="myThoughtsCard">
+                    <i class="fas fa-brain card-icon"></i>
+                    <p class="card-text">Ver mis pensamientos</p>
+                </div>
+                <div class="card" id="viewByCountryCard">
+                    <i class="fas fa-globe-americas card-icon"></i>
+                    <p class="card-text">Ver por País</p>
+                </div>
+                <div class="card" id="featuredWordsCard">
+                    <i class="fas fa-star card-icon"></i>
+                    <p class="card-text">Palabras Destacadas</p>
+                </div>
+                <div class="card stat-card" id="totalThoughtsCard">
+                    <i class="fas fa-comments card-icon"></i>
+                    <p class="card-text"><span id="totalThoughtsCount">0</span> pensamientos escritos</p>
+                </div>
+            </section>
+
+            <section class="write-thought-section">
+                <div class="write-thought-box">
+                    <div class="textarea-wrapper">
+                        <!-- Icono de lápiz eliminado para simplificar la alineación -->
+                        <textarea class="thought-input" id="thoughtInput" placeholder="Escribe aquí tu pensamiento..." maxlength="500"></textarea>
+                    </div>
+                    <div class="char-count">
+                        <span id="charCount">500</span>
+                    </div>
+                    <button class="send-thought-btn" id="sendThoughtBtn" style="display: none;">Enviar</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Enlace al archivo JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
