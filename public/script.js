@@ -41,6 +41,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewByCountryCard = document.getElementById('viewByCountryCard');
     const featuredWordsCard = document.getElementById('featuredWordsCard');
 
+    // NUEVOS ELEMENTOS DEL DOM para la sección de pensamientos del usuario
+    const myThoughtsDisplaySection = document.getElementById('myThoughtsDisplaySection');
+    const myThoughtsList = document.getElementById('myThoughtsList');
+    const closeMyThoughtsBtn = document.getElementById('closeMyThoughts');
+
+
     // Verificar que los elementos DOM existen y loguear si no
     if (!thoughtInput) console.error("Error: Elemento 'thoughtInput' no encontrado.");
     if (!charCount) console.error("Error: Elemento 'charCount' no encontrado.");
@@ -48,6 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!featuredThoughtBox) console.error("Error: Elemento 'featuredThoughtBox' no encontrado.");
     if (!totalThoughtsCountSpan) console.error("Error: Elemento 'totalThoughtsCountSpan' no encontrado.");
     if (!myThoughtsCard) console.error("Error: Elemento 'myThoughtsCard' no encontrado.");
+    if (!myThoughtsDisplaySection) console.error("Error: Elemento 'myThoughtsDisplaySection' no encontrado.");
+    if (!myThoughtsList) console.error("Error: Elemento 'myThoughtsList' no encontrado.");
+    if (!closeMyThoughtsBtn) console.error("Error: Elemento 'closeMyThoughtsBtn' no encontrado.");
 
 
     const MAX_CHARS = 500; // Límite de caracteres por pensamiento
@@ -68,13 +77,32 @@ document.addEventListener('DOMContentLoaded', () => {
         return stored ? JSON.parse(stored) : [];
     };
 
-    // Función para guardar un pensamiento localmente
-    const addLocalThought = (thought) => {
+    // Función para guardar un pensamiento localmente (ahora guarda también timestamp)
+    const addLocalThought = (thoughtContent) => {
         const today = getTodayDate();
         const thoughts = getLocalThoughts();
-        thoughts.push(thought);
+        const newThought = {
+            content: thoughtContent,
+            timestamp: new Date().toISOString() // Guarda la fecha y hora en formato ISO
+        };
+        thoughts.push(newThought);
         localStorage.setItem(`thoughts_${today}`, JSON.stringify(thoughts));
-        console.log("Pensamiento guardado localmente:", thought);
+        console.log("Pensamiento guardado localmente:", newThought);
+    };
+
+    // Función para formatear la fecha y hora
+    const formatThoughtDateTime = (isoString) => {
+        const date = new Date(isoString);
+        const options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false // Formato 24 horas
+        };
+        return date.toLocaleDateString('es-ES', options);
     };
 
     // --- Lógica de la Aplicación ---
@@ -106,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 createdAt: serverTimestamp(),
             });
 
-            addLocalThought(thoughtText);
+            addLocalThought(thoughtText); // Guardar localmente con fecha/hora
             thoughtInput.value = ''; // Limpiar campo
             charCount.textContent = MAX_CHARS; // Resetear contador
             charCount.style.color = 'var(--text-color-secondary)';
@@ -221,21 +249,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 5. Funcionalidad de las Tarjetas Interactivas
 
-    // "Ver mis pensamientos"
-    if (myThoughtsCard) {
+    // "Ver mis pensamientos" - Ahora despliega la sección de pensamientos
+    if (myThoughtsCard && myThoughtsDisplaySection && myThoughtsList && closeMyThoughtsBtn) {
         myThoughtsCard.addEventListener('click', () => {
-            console.log("Clic en 'Ver mis pensamientos'.");
+            console.log("Clic en 'Ver mis pensamientos'. Mostrando sección.");
             const localThoughts = getLocalThoughts();
-            let thoughtsDisplay = '';
+            myThoughtsList.innerHTML = ''; // Limpiar lista antes de añadir
+
             if (localThoughts.length > 0) {
-                thoughtsDisplay = localThoughts.join('\n\n');
+                // Ordenar los pensamientos por fecha de creación (más recientes primero)
+                localThoughts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                localThoughts.forEach(thought => {
+                    const thoughtItem = document.createElement('p');
+                    thoughtItem.classList.add('my-thought-item');
+                    // Usar innerHTML para interpretar <br> si el usuario los puso
+                    thoughtItem.innerHTML = `${thought.content}<span class="my-thought-date">${formatThoughtDateTime(thought.timestamp)}</span>`;
+                    myThoughtsList.appendChild(thoughtItem);
+                });
             } else {
-                thoughtsDisplay = 'Aún no has escrito pensamientos hoy.';
+                const noThoughtsMessage = document.createElement('p');
+                noThoughtsMessage.classList.add('no-thoughts-message');
+                noThoughtsMessage.textContent = 'Aún no has escrito pensamientos hoy.';
+                myThoughtsList.appendChild(noThoughtsMessage);
             }
-            alert(`Tus pensamientos de hoy:\n\n${thoughtsDisplay}`); // Reemplazar con UI real
+            myThoughtsDisplaySection.style.display = 'block'; // Mostrar la sección
         });
+
+        // Botón de cierre para la sección de pensamientos del usuario
+        closeMyThoughtsBtn.addEventListener('click', () => {
+            console.log("Clic en cerrar pensamientos. Ocultando sección.");
+            myThoughtsDisplaySection.style.display = 'none'; // Ocultar la sección
+        });
+
     } else {
-        console.error("No se pudo adjuntar el listener 'click' a 'myThoughtsCard'.");
+        console.error("No se pudo adjuntar el listener 'click' a 'myThoughtsCard' o faltan elementos de la sección de pensamientos.");
     }
 
 
