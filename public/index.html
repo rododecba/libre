@@ -51,10 +51,21 @@
                 </div>
             </section>
 
+            <!-- NUEVA SECCIÓN PARA MOSTRAR LOS PENSAMIENTOS DEL USUARIO -->
+            <section id="myThoughtsDisplaySection" class="my-thoughts-display-section" style="display: none;">
+                <div class="my-thoughts-header">
+                    <h3 class="section-title">Tus Pensamientos Recientes</h3>
+                    <button id="closeMyThoughts" class="close-btn">&times;</button>
+                </div>
+                <div id="myThoughtsList" class="my-thoughts-list">
+                    <!-- Los pensamientos se cargarán aquí con JavaScript -->
+                    <p class="no-thoughts-message">Aún no has escrito pensamientos hoy.</p>
+                </div>
+            </section>
+
             <section class="write-thought-section">
                 <div class="write-thought-box">
                     <div class="textarea-wrapper">
-                        <!-- Icono de lápiz eliminado para simplificar la alineación -->
                         <textarea class="thought-input" id="thoughtInput" placeholder="Escribe aquí tu pensamiento..." maxlength="500"></textarea>
                     </div>
                     <div class="char-count">
@@ -66,7 +77,7 @@
         </main>
     </div>
 
-    <!-- Enlace al archivo JavaScript - ¡CORRECCIÓN AQUÍ: type="module"! -->
+    <!-- Enlace al archivo JavaScript -->
     <script src="script.js" type="module"></script>
 </body>
 </html>
