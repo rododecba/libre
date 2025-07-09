@@ -41,10 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewByCountryCard = document.getElementById('viewByCountryCard');
     const featuredWordsCard = document.getElementById('featuredWordsCard');
 
-    // NUEVOS ELEMENTOS DEL DOM para la sección de pensamientos del usuario
+    // Elementos del DOM para la sección de pensamientos del usuario
     const myThoughtsDisplaySection = document.getElementById('myThoughtsDisplaySection');
     const myThoughtsList = document.getElementById('myThoughtsList');
     const closeMyThoughtsBtn = document.getElementById('closeMyThoughts');
+
+    // NUEVO: Referencia al botón de siguiente pensamiento
+    const nextThoughtBtn = document.getElementById('nextThoughtBtn');
 
 
     // Verificar que los elementos DOM existen y loguear si no
@@ -57,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!myThoughtsDisplaySection) console.error("Error: Elemento 'myThoughtsDisplaySection' no encontrado.");
     if (!myThoughtsList) console.error("Error: Elemento 'myThoughtsList' no encontrado.");
     if (!closeMyThoughtsBtn) console.error("Error: Elemento 'closeMyThoughtsBtn' no encontrado.");
+    if (!nextThoughtBtn) console.error("Error: Elemento 'nextThoughtBtn' no encontrado.");
 
 
     const MAX_CHARS = 500; // Límite de caracteres por pensamiento
@@ -64,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Funciones de Utilidad ---
 
-    // Función para obtener la fecha de hoy en formato YYYY-MM-DD
+    // Función para obtener la fecha de hoy en formato ISO (YYYY-MM-DD)
     const getTodayDate = () => {
         const now = new Date();
         return now.toISOString().split('T')[0]; // "YYYY-MM-DD"
@@ -203,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const q = query(collection(db, "thoughts"), orderBy("createdAt", "desc"), limit(100));
+            const q = query(collection(db, "thoughts"), orderBy("createdAt", "desc"), limit(100)); // Obtiene los 100 más recientes
             const querySnapshot = await getDocs(q);
 
             if (!querySnapshot.empty) {
@@ -213,10 +217,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const randomIndex = Math.floor(Math.random() * thoughts.length);
                 const featuredThought = thoughts[randomIndex];
-                featuredThoughtBox.innerHTML = `<p class="featured-thought-content">"${featuredThought}"</p>`;
-                if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'none';
+                // featuredThoughtBox.innerHTML = `<p class="featured-thought-content">"${featuredThought}"</p>`;
+                // Mejorar la actualización para no sobrescribir el botón
+                const currentThoughtContent = featuredThoughtBox.querySelector('.featured-thought-content');
+                const currentThoughtPlaceholder = featuredThoughtBox.querySelector('.featured-thought-placeholder');
+
+                if (currentThoughtContent) {
+                    currentThoughtContent.textContent = `"${featuredThought}"`;
+                    currentThoughtContent.style.display = 'flex'; // Asegurar que el contenido se muestre
+                } else {
+                    // Si no existe, crearlo (esto no debería pasar si el HTML está bien)
+                    const newContent = document.createElement('p');
+                    newContent.classList.add('featured-thought-content');
+                    newContent.textContent = `"${featuredThought}"`;
+                    // Insertar antes del botón si existe, o al final
+                    if (nextThoughtBtn) {
+                        featuredThoughtBox.insertBefore(newContent, nextThoughtBtn);
+                    } else {
+                        featuredThoughtBox.appendChild(newContent);
+                    }
+                }
+
+                if (currentThoughtPlaceholder) currentThoughtPlaceholder.style.display = 'none'; // Ocultar placeholder
                 console.log("Pensamiento destacado cargado:", featuredThought);
             } else {
+                // Si no hay pensamientos, mostrar el placeholder
                 featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">PENSAMIENTO DESTACADO</p>`;
                 if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'block';
                 console.log("No hay pensamientos en Firestore para destacar.");
@@ -232,9 +257,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Actualizar cada 30 minutos (1800000 ms)
     setInterval(fetchFeaturedThought, 1800000);
 
+    // NUEVO: Listener para el botón de siguiente pensamiento
+    if (nextThoughtBtn) {
+        nextThoughtBtn.addEventListener('click', () => {
+            console.log("Clic en 'Ver otro pensamiento'.");
+            fetchFeaturedThought(); // Llama a la función para cargar un nuevo pensamiento
+        });
+    }
+
+
     // 4. Actualizar Conteo Global de Pensamientos en Tiempo Real
     if (totalThoughtsCountSpan) {
-        // onSnapshot es ideal para actualizaciones en tiempo real
         onSnapshot(collection(db, "thoughts"), (snapshot) => {
             totalThoughtsCountSpan.textContent = snapshot.size;
             console.log("Conteo de pensamientos actualizado:", snapshot.size);
