@@ -1,18 +1,10 @@
 // Importa las funciones necesarias de los SDKs de Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-// Importamos FieldValue explícitamente para depurar, aunque ya estaba en la línea de abajo
-import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, FieldValue, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+// CAMBIO: Importar 'increment' directamente junto con las otras funciones
+import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM completamente cargado. Iniciando script.js...");
-
-    // *** NUEVO: Depuración de FieldValue ***
-    console.log("Valor de FieldValue al inicio del script:", FieldValue);
-    console.log("Tipo de FieldValue al inicio del script:", typeof FieldValue);
-    if (FieldValue && typeof FieldValue === 'object') {
-        console.log("FieldValue.increment existe:", typeof FieldValue.increment === 'function');
-    }
-    // *************************************
 
     // Tu configuración de Firebase (proporcionada por el usuario)
     const firebaseConfig = {
@@ -234,11 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Solo si el pensamiento tiene un ID válido y db está disponible
                 if (featuredThoughtData.id && db) {
                     const thoughtRef = doc(db, "thoughts", featuredThoughtData.id);
-                    // *** NUEVO: Depuración de FieldValue.increment antes de usarlo ***
-                    console.log("Antes de incrementar: FieldValue.increment es", typeof FieldValue.increment);
-                    // ***************************************************************
+                    // CAMBIO: Usar 'increment' directamente
                     await updateDoc(thoughtRef, {
-                        encounters: FieldValue.increment(1) // Incrementar en 1
+                        encounters: increment(1) // Incrementar en 1
                     });
                     console.log(`Contador de encuentros incrementado para el pensamiento ID: ${featuredThoughtData.id}`);
                 } else {
