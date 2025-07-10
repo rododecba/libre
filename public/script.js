@@ -168,7 +168,6 @@ async function fetchRandomThought() {
         });
 
         if (thoughts.length > 0) {
-            const randomIndex = Math.floor(Math.random() * thoughts.length);
             featuredThoughtPlaceholder.style.display = 'none';
             featuredThoughtContent.textContent = thoughts[randomIndex];
         } else {
@@ -470,7 +469,7 @@ timeCapsuleThoughtInput.addEventListener('input', () => {
         timeCapsuleCharCount.style.color = 'red';
         launchTimeCapsuleBtn.disabled = true;
     } else {
-        timeCapsuleCharCount.style.color = '';
+        charCount.style.color = '';
         launchTimeCapsuleBtn.disabled = false;
     }
 });
