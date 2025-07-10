@@ -1,6 +1,6 @@
 import { db, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, where, doc, getDoc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
-import { L } from './lib/leaflet/leaflet-src.esm.js'; // Import Leaflet
+import './lib/leaflet/leaflet-src.esm.js'; // Import Leaflet (esto hace que L esté disponible globalmente)
 import 'https://unpkg.com/leaflet-geosearch@3.11.0/dist/geosearch.umd.js'; // Import GeoSearch
 
 // Initialize Firebase Auth
