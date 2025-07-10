@@ -138,50 +138,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funciones de Firebase ---
 
     // 1. Lanzar Pensamiento (Normal)
-    async function loadMyThoughts() {
-        if (myThoughtsList) myThoughtsList.innerHTML = ''; // Limpiar lista
-        const userId = localStorage.getItem('anonymousUserId');
+    // ESTA FUNCIÓN FUE ENVUELTA CORRECTAMENTE.
+    async function launchThought() { 
+        const thoughtText = thoughtInput.value.trim();
 
-        if (!userId) {
-            if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'block';
+        if (thoughtText.length === 0 || thoughtText.length > MAX_CHARS_THOUGHT) {
+            alert("El pensamiento no puede estar vacío o exceder los " + MAX_CHARS_THOUGHT + " caracteres.");
             return;
         }
-
-        // --- CALCULAR FECHA DE HACE 30 DÍAS ---
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        // Firebase Timestamp es un objeto, por lo que la comparación directa con Date() funciona bien.
-
-        // Modifica la consulta para incluir el filtro de 30 días
-        const q = query(
-            collection(db, "thoughts"),
-            where("userId", "==", userId),
-            where("timestamp", ">=", thirtyDaysAgo), // FILTRO: Mayor o igual a hace 30 días
-            orderBy("timestamp", "desc")
-        );
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-            if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'block';
-        } else {
-            if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'none';
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const li = document.createElement('li');
-                li.classList.add('my-thought-item');
-                const timestamp = data.timestamp ? data.timestamp.toDate() : new Date();
-                const formattedDate = timestamp.toLocaleDateString('es-ES', {
-                    year: 'numeric', month: 'long', day: 'numeric',
-                    hour: '2-digit', minute: '2-digit'
-                });
-
-                // Aquí se añade el contador de encontrados
-                const foundCountText = data.foundCount !== undefined ? ` (Encontrado ${data.foundCount} veces)` : '';
-                li.innerHTML = `${data.text}<span class="my-thought-date">${formattedDate}${foundCountText}</span>`;
-                if (myThoughtsList) myThoughtsList.appendChild(li);
-            });
-        }
-    }
 
         // Generar un ID de usuario anónimo basado en IP (simulado o real si usas una función de backend)
         // Para un entorno de navegador, esto es un placeholder. En un entorno real, usarías una función de Cloud Functions.
@@ -225,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
             thoughtInput.value = '';
             charCount.textContent = `0/${MAX_CHARS_THOUGHT}`;
             alert("¡Pensamiento lanzado al mar!");
+            // Opcional: Recargar los pensamientos del usuario para que vea el nuevo (descomentar si es necesario)
+            // loadMyThoughts(); 
         } catch (e) {
             console.error("Error al añadir pensamiento: ", e);
             alert("Hubo un error al lanzar tu pensamiento. Inténtalo de nuevo.");
@@ -284,7 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (featuredThoughtContent) featuredThoughtContent.style.display = 'block';
 
         const thought = allThoughts[currentThoughtIndex];
-        if (featuredThoughtContent) featuredThoughtContent.textContent = `"${thought.text}"`;
+        // Asegúrate de que el objeto thought tenga la propiedad 'text' antes de intentar acceder a ella
+        if (featuredThoughtContent && thought && thought.text) featuredThoughtContent.textContent = `"${thought.text}"`;
 
         currentThoughtIndex = (currentThoughtIndex + 1) % allThoughts.length; // Ciclar
     }
@@ -306,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 5. Cargar Mis Pensamientos
+    // 5. Cargar Mis Pensamientos -- VERSIÓN CORRECTA CON FILTRO DE 30 DÍAS
     async function loadMyThoughts() {
         if (myThoughtsList) myThoughtsList.innerHTML = ''; // Limpiar lista
         const userId = localStorage.getItem('anonymousUserId');
@@ -316,23 +283,37 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const q = query(collection(db, "thoughts"), where("userId", "==", userId), orderBy("timestamp", "desc"));
+        // --- CALCULAR FECHA DE HACE 30 DÍAS ---
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        // Firebase Timestamp es un objeto, por lo que la comparación directa con Date() funciona bien.
+
+        // Modifica la consulta para incluir el filtro de 30 días
+        const q = query(
+            collection(db, "thoughts"),
+            where("userId", "==", userId),
+            where("timestamp", ">=", thirtyDaysAgo), // FILTRO: Mayor o igual a hace 30 días
+            orderBy("timestamp", "desc")
+        );
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
             if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'block';
         } else {
             if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'none';
-            querySnapshot.forEach((doc) => {
+            querySnapshot.forEach((docSnap) => { // Usar docSnap para ser consistente
+                const data = docSnap.data();
                 const li = document.createElement('li');
-                li.classList.add('my-thought-item'); // Añadir clase para estilos
-                // Formatear la fecha
-                const timestamp = doc.data().timestamp ? doc.data().timestamp.toDate() : new Date();
+                li.classList.add('my-thought-item');
+                const timestamp = data.timestamp ? data.timestamp.toDate() : new Date();
                 const formattedDate = timestamp.toLocaleDateString('es-ES', {
                     year: 'numeric', month: 'long', day: 'numeric',
                     hour: '2-digit', minute: '2-digit'
                 });
-                li.innerHTML = `${doc.data().text}<span class="my-thought-date">${formattedDate}</span>`;
+
+                // Aquí se añade el contador de encontrados
+                const foundCountText = data.foundCount !== undefined ? ` (Encontrado ${data.foundCount} veces)` : '';
+                li.innerHTML = `${data.text}<span class="my-thought-date">${formattedDate}${foundCountText}</span>`;
                 if (myThoughtsList) myThoughtsList.appendChild(li);
             });
         }
@@ -449,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Cargar todos los pensamientos para el destacado (solo los últimos 100 para eficiencia)
         const qAll = query(collection(db, "thoughts"), orderBy("timestamp", "desc"), limit(100));
         const querySnapshotAll = await getDocs(qAll);
-        allThoughts = querySnapshotAll.docs.map(doc => doc.data());
+        allThoughts = querySnapshotAll.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })); // Asegúrate de obtener el ID si lo necesitas
         loadFeaturedThought(); // Cargar el primer pensamiento destacado
 
         setupGlobalThoughtCounter(); // Iniciar el contador global en tiempo real
