@@ -242,8 +242,11 @@ body {
     background-color: #3e8e41;
 }
 
-/* ESTILOS PARA LA SECCIÓN DE PENSAMIENTOS DEL USUARIO (Ahora "Ecos de mis Pensamientos") */
-.my-thoughts-display-section {
+/* ESTILOS PARA LAS SECCIONES SUPERPUESTAS (MY THOUGHTS, TIME CAPSULE, COUNTRY, INFO SECTIONS) */
+.my-thoughts-display-section,
+.time-capsule-section,
+.view-by-country-section,
+.info-section { /* Clase para las nuevas secciones de info */
     background-color: var(--card-bg-color);
     border-radius: 12px;
     box-shadow: var(--shadow-light);
@@ -251,9 +254,12 @@ body {
     margin-bottom: 20px;
     box-sizing: border-box;
     position: relative;
+    /* Z-index para asegurar que estén por encima del contenido principal */
+    z-index: 100; 
 }
 
-.my-thoughts-header {
+.my-thoughts-header,
+.info-section-header { /* Encabezado común para todas las secciones superpuestas */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -262,7 +268,8 @@ body {
     padding-bottom: 10px;
 }
 
-.my-thoughts-display-section .section-title {
+.my-thoughts-display-section .section-title,
+.info-section .section-title {
     font-size: 1.2em;
     font-weight: 600;
     color: var(--text-color-primary);
@@ -324,17 +331,7 @@ body {
 }
 
 /* --- ESTILOS PARA LA NUEVA SECCIÓN DE CÁPSULA DEL TIEMPO --- */
-.time-capsule-section {
-    background-color: var(--card-bg-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-light);
-    padding: 20px;
-    margin-bottom: 20px;
-    box-sizing: border-box;
-    position: relative;
-}
-
-.time-capsule-content {
+.time-capsule-section .time-capsule-content {
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -373,16 +370,6 @@ body {
 }
 
 /* --- ESTILOS PARA LA SECCIÓN DE VER POR PAÍS --- */
-.view-by-country-section {
-    background-color: var(--card-bg-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-light);
-    padding: 20px;
-    margin-bottom: 20px;
-    box-sizing: border-box;
-    position: relative;
-}
-
 .view-by-country-section .map-container {
     height: 400px; /* Altura mínima para que el mapa sea visible */
     background-color: var(--bg-color); /* Fondo si el mapa no carga */
@@ -391,6 +378,92 @@ body {
     margin-bottom: 15px; /* Espacio debajo del mapa */
 }
 
+/* --- ESTILOS PARA LAS NUEVAS SECCIONES DE INFORMACIÓN ("Acerca de", "FAQ") --- */
+.info-section-content {
+    max-height: 400px; /* Limita la altura y añade scroll si es necesario */
+    overflow-y: auto;
+    padding-right: 10px; /* Para el espacio del scrollbar */
+    line-height: 1.6;
+}
+
+.info-section-content p {
+    margin-bottom: 1em;
+    font-size: 0.95em;
+    color: var(--text-color-primary);
+}
+
+.info-section-content h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-color-primary);
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+.info-section-content ul {
+    list-style: disc;
+    margin-left: 20px;
+    padding: 0;
+    margin-bottom: 1.5em;
+}
+
+.info-section-content li {
+    margin-bottom: 0.5em;
+    font-size: 0.95em;
+    color: var(--text-color-primary);
+}
+
+.faq-item {
+    margin-bottom: 1.5em;
+    padding-bottom: 1.5em;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.faq-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.faq-item h3 {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+    font-size: 1em;
+}
+
+.faq-item p {
+    font-size: 0.9em;
+    color: var(--text-color-secondary);
+}
+
+/* --- ESTILOS PARA EL PIE DE PÁGINA --- */
+.footer {
+    text-align: center;
+    padding: 20px 0 30px; /* Más padding abajo */
+    font-size: 0.85em;
+    color: var(--text-color-secondary);
+    margin-top: 20px;
+}
+
+.footer-links {
+    margin-top: 10px;
+}
+
+.footer-links a {
+    color: var(--text-color-secondary);
+    text-decoration: none;
+    margin: 0 8px;
+    transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: var(--text-color-primary);
+}
+
+.footer-separator {
+    color: var(--text-color-secondary);
+    margin: 0 4px;
+}
 
 /* Media Queries para responsividad */
 @media (max-width: 768px) {
@@ -476,7 +549,8 @@ body {
         margin-bottom: 15px;
     }
 
-    .my-thoughts-display-section .section-title {
+    .my-thoughts-display-section .section-title,
+    .info-section .section-title {
         font-size: 1.1em;
     }
 
@@ -506,6 +580,24 @@ body {
         font-size: 0.9em;
         padding: 8px;
     }
+
+    /* Info sections on smaller screens */
+    .info-section {
+        padding: 15px;
+    }
+
+    .info-section-content {
+        max-height: 350px; /* Ajuste para móviles */
+    }
+
+    .info-section-content p,
+    .info-section-content li {
+        font-size: 0.9em;
+    }
+
+    .faq-item h3 {
+        font-size: 0.95em;
+    }
 }
 
 @media (max-width: 480px) {
@@ -515,5 +607,15 @@ body {
 
     .time-capsule-date-input {
         max-width: 100%;
+    }
+
+    .footer-links {
+        flex-direction: column; /* Apila los enlaces en móviles */
+    }
+    .footer-links a, .footer-separator {
+        margin: 5px 0; /* Más espacio vertical */
+    }
+    .footer-separator {
+        display: none; /* Oculta el separador al apilar */
     }
 }
