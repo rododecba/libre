@@ -1,10 +1,28 @@
-import { db, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, where, doc, getDoc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
+// --- Importaciones de Firebase ---
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, where, doc, getDoc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
-import './lib/leaflet/leaflet-src.esm.js'; // Import Leaflet (esto hace que L esté disponible globalmente)
+
+// --- Importaciones de Leaflet ---
+import './lib/leaflet/leaflet-src.esm.js'; 
 import 'https://unpkg.com/leaflet-geosearch@3.11.0/dist/geosearch.umd.js'; // Import GeoSearch
 
+// --- TU CONFIGURACIÓN DE FIREBASE REAL ---
+const firebaseConfig = {
+    apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
+    authDomain: "libre-c5bf7.firebaseapp.com",
+    projectId: "libre-c5bf7",
+    storageBucket: "libre-c5bf7.firebasestorage.app",
+    messagingSenderId: "339942652190",
+    appId: "1:339942652190:web:595ce692456b9df806f10f"
+};
+
+// --- Inicialización de Firebase ---
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app); // Obtiene la instancia de Firestore
+const auth = getAuth(app);     // Obtiene la instancia de Auth
+
 // Initialize Firebase Auth
-const auth = getAuth();
 let anonymousUserId = localStorage.getItem('anonymousUserId');
 
 // Helper function for anonymous sign-in
@@ -168,6 +186,7 @@ async function fetchRandomThought() {
         });
 
         if (thoughts.length > 0) {
+            const randomIndex = Math.floor(Math.random() * thoughts.length); // Defined here
             featuredThoughtPlaceholder.style.display = 'none';
             featuredThoughtContent.textContent = thoughts[randomIndex];
         } else {
