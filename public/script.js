@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, getDoc, increment, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // Importar Leaflet (asegúrate de que la ruta sea correcta)
-import "lib/leaflet/leaflet.js"; 
+import "./lib/leaflet/leaflet.js"; 
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM completamente cargado. Iniciando script.js...");
