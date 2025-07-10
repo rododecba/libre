@@ -361,14 +361,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // "Ecos del Pensamiento" - Listener para la nueva tarjeta
-    if (ecosThoughtsCard) {
-        ecosThoughtsCard.addEventListener('click', () => {
-            // Podríamos mostrar una estadística general de encuentros aquí, o simplemente
-            // dirigir al usuario a "Ver mis pensamientos" si es la forma principal de ver ecos.
-            // Por ahora, mostrará una alerta simple.
-            alert("Aquí se mostrarán estadísticas o un resumen de los 'Ecos de tus Pensamientos'.");
-            console.log("Clic en Ecos del Pensamiento");
-            // Opcional: myThoughtsCard.click(); para abrir directamente "Ver mis pensamientos"
-        });
-    }
+if (ecosThoughtsCard) {
+    ecosThoughtsCard.addEventListener('click', () => {
+        console.log("Clic en Ecos del Pensamiento. Redirigiendo a 'Ver mis pensamientos'.");
+        // Simular un clic en la tarjeta "Ver mis pensamientos" para abrir la sección
+        myThoughtsCard.click();
+        // Opcional: Podríamos añadir una clase temporal o un mensaje en myThoughtsList
+        // para indicar que se llegó desde "Ecos del Pensamiento" si fuera necesario.
+    });
+}
 });
