@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, getDoc, increment, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// IMPORTANTE: Añadido 'setDoc' a las importaciones de firestore
+import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, getDoc, increment, where, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // Importar Leaflet (asegúrate de que la ruta sea correcta)
 import "./lib/leaflet/leaflet.js"; 
@@ -7,32 +8,34 @@ import "./lib/leaflet/leaflet.js";
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM completamente cargado. Iniciando script.js...");
 
-    // --- Configuración de Firebase (asegúrate de reemplazar con tus credenciales) ---
+    // --- Configuración de Firebase ---
+    // ¡Asegúrate de que estas credenciales sean las correctas de tu proyecto de Firebase!
     const firebaseConfig = {
-  apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
-  authDomain: "libre-c5bf7.firebaseapp.com",
-  projectId: "libre-c5bf7",
-  storageBucket: "libre-c5bf7.firebasestorage.app",
-  messagingSenderId: "339942652190",
-  appId: "1:339942652190:web:595ce692456b9df806f10f"
-};
+        apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
+        authDomain: "libre-c5bf7.firebaseapp.com",
+        projectId: "libre-c5bf7",
+        storageBucket: "libre-c5bf7.firebasestorage.app",
+        messagingSenderId: "339942652190",
+        appId: "1:339942652190:web:595ce692456b9df806f10f"
+    };
 
     // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
     // --- Elementos del DOM ---
+    // Nota: Los IDs han sido estandarizados y corregidos para coincidir con index.html
     const thoughtInput = document.getElementById('thoughtInput');
     const charCount = document.getElementById('charCount');
-    const launchThoughtBtn = document.getElementById('launchThoughtBtn');
+    const launchThoughtBtn = document.getElementById('launchThoughtBtn'); // Corregido ID
     const featuredThoughtContent = document.getElementById('featuredThoughtContent');
     const featuredThoughtPlaceholder = document.getElementById('featuredThoughtPlaceholder');
     const nextThoughtBtn = document.getElementById('nextThoughtBtn');
     const globalThoughtCountElement = document.getElementById('globalThoughtCount');
 
     // Secciones y botones de navegación
-    const mainSection = document.getElementById('mainSection');
-    const myThoughtsSection = document.getElementById('myThoughtsSection');
+    const mainSection = document.getElementById('mainSection'); // Ahora es el DIV que envuelve el contenido principal
+    const myThoughtsSection = document.getElementById('myThoughtsSection'); // Corregido ID
     const viewByCountrySection = document.getElementById('viewByCountrySection');
     const timeCapsuleSection = document.getElementById('timeCapsuleSection');
 
@@ -50,20 +53,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Elementos de la sección "Cápsula del Tiempo"
     const timeCapsuleDateInput = document.getElementById('timeCapsuleDate');
-    const timeCapsuleThoughtInput = document.getElementById('timeCapsuleThoughtInput');
+    const timeCapsuleThoughtInput = document.getElementById('timeCapsuleThoughtInput'); // Corregido ID
     const timeCapsuleCharCount = document.getElementById('timeCapsuleCharCount');
-    const launchTimeCapsuleBtn = document.getElementById('launchTimeCapsuleBtn');
+    const launchTimeCapsuleBtn = document.getElementById('launchTimeCapsuleBtn'); // Corregido ID
     const timeCapsuleList = document.getElementById('timeCapsuleList');
-    const noTimeCapsulesMessage = document.getElementById('noTimeCapsulesMessage');
+    const noTimeCapsulesMessage = document.getElementById('noTimeCapsulesMessage'); // Corregido ID
 
     // Elementos de la sección "Ver por País"
-    const mapContainer = document.getElementById('mapContainer'); // Asegúrate de que este ID existe en tu HTML
+    const mapContainer = document.getElementById('mapContainer'); 
     const countryThoughtsList = document.getElementById('countryThoughtsList');
     const noCountryThoughtsMessage = document.getElementById('noCountryThoughtsMessage');
 
     // --- Constantes y Variables ---
-    const MAX_CHARS_THOUGHT = 500; // Límite de caracteres por pensamiento normal
-    const MAX_CHARS_TIME_CAPSULE = 500; // Límite de caracteres para cápsula del tiempo
+    const MAX_CHARS_THOUGHT = 200; // Límite de caracteres por pensamiento normal (ajustado a 200)
+    const MAX_CHARS_TIME_CAPSULE = 200; // Límite de caracteres para cápsula del tiempo (ajustado a 200)
     const THOUGHTS_PER_DAY_LIMIT = 3; // Límite de pensamientos por día
 
     let currentThoughtIndex = 0; // Para el pensamiento destacado
@@ -76,29 +79,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para ocultar todas las secciones y mostrar solo la principal
     function hideAllSections() {
-        mainSection.style.display = 'block'; // Asegura que la sección principal siempre sea visible
-        myThoughtsSection.style.display = 'none';
-        viewByCountrySection.style.display = 'none';
-        timeCapsuleSection.style.display = 'none';
+        // Asegura que mainSection siempre esté visible cuando se vuelve a la "home"
+        if (mainSection) {
+            mainSection.style.display = 'block'; 
+        }
+        if (myThoughtsSection) {
+            myThoughtsSection.style.display = 'none';
+        }
+        if (viewByCountrySection) {
+            viewByCountrySection.style.display = 'none';
+        }
+        if (timeCapsuleSection) {
+            timeCapsuleSection.style.display = 'none';
+        }
     }
 
     // Función para mostrar una sección específica
     function showSection(section) {
-        hideAllSections();
-        section.style.display = 'block';
+        hideAllSections(); // Primero oculta todo
+        if (mainSection) { // Oculta la sección principal si se va a mostrar otra
+            mainSection.style.display = 'none';
+        }
+        if (section) { // Muestra la sección deseada
+            section.style.display = 'block';
+        }
     }
 
     // --- Contadores de Caracteres ---
+    // Se agregan checks para evitar errores si los elementos no se encuentran (aunque ya deberían existir con las correcciones de ID)
     if (thoughtInput && charCount) {
         thoughtInput.addEventListener('input', () => {
             const currentLength = thoughtInput.value.length;
             charCount.textContent = `${currentLength}/${MAX_CHARS_THOUGHT}`;
             if (currentLength > MAX_CHARS_THOUGHT) {
                 charCount.style.color = 'red';
-                launchThoughtBtn.disabled = true;
+                if (launchThoughtBtn) launchThoughtBtn.disabled = true;
             } else {
                 charCount.style.color = 'var(--text-color-secondary)';
-                launchThoughtBtn.disabled = false;
+                if (launchThoughtBtn) launchThoughtBtn.disabled = false;
             }
         });
     }
@@ -109,10 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
             timeCapsuleCharCount.textContent = `${currentLength}/${MAX_CHARS_TIME_CAPSULE}`;
             if (currentLength > MAX_CHARS_TIME_CAPSULE) {
                 timeCapsuleCharCount.style.color = 'red';
-                launchTimeCapsuleBtn.disabled = true;
+                if (launchTimeCapsuleBtn) launchTimeCapsuleBtn.disabled = true;
             } else {
                 timeCapsuleCharCount.style.color = 'var(--text-color-secondary)';
-                launchTimeCapsuleBtn.disabled = false;
+                if (launchTimeCapsuleBtn) launchTimeCapsuleBtn.disabled = false;
             }
         });
     }
@@ -123,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function launchThought() {
         const thoughtText = thoughtInput.value.trim();
         if (thoughtText.length === 0 || thoughtText.length > MAX_CHARS_THOUGHT) {
-            alert("El pensamiento no puede estar vacío o exceder los 500 caracteres.");
+            alert("El pensamiento no puede estar vacío o exceder los " + MAX_CHARS_THOUGHT + " caracteres.");
             return;
         }
 
@@ -137,13 +155,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-        const userThoughtsTodayRef = collection(db, `users/${userId}/dailyThoughts/${today}/thoughts`);
+        const userDailyThoughtDocRef = doc(db, `users/${userId}/dailyThoughts`, today); // Referencia al documento del día
 
         try {
-            const q = query(userThoughtsTodayRef, limit(THOUGHTS_PER_DAY_LIMIT + 1)); // Obtener hasta el límite + 1
-            const snapshot = await getDocs(q);
+            const dailyThoughtDoc = await getDoc(userDailyThoughtDocRef);
+            let thoughtsToday = 0;
 
-            if (snapshot.size >= THOUGHTS_PER_DAY_LIMIT) {
+            if (dailyThoughtDoc.exists()) {
+                thoughtsToday = dailyThoughtDoc.data().count || 0;
+            }
+
+            if (thoughtsToday >= THOUGHTS_PER_DAY_LIMIT) {
                 alert(`Has alcanzado el límite de ${THOUGHTS_PER_DAY_LIMIT} pensamientos por día.`);
                 return;
             }
@@ -155,16 +177,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 userId: userId // Guardar el ID anónimo
             });
 
-            // Registrar el pensamiento para el límite diario
-            await addDoc(userThoughtsTodayRef, {
-                timestamp: serverTimestamp()
-            });
+            // Incrementar el contador de pensamientos del usuario para el día
+            await setDoc(userDailyThoughtDocRef, { count: increment(1) }, { merge: true });
 
             // Incrementar el contador global
             const globalCounterRef = doc(db, "counters", "globalThoughts");
-            await updateDoc(globalCounterRef, {
-                count: increment(1)
-            });
+            await setDoc(globalCounterRef, { count: increment(1) }, { merge: true }); // Usar setDoc con merge para crear si no existe
 
             thoughtInput.value = '';
             charCount.textContent = `0/${MAX_CHARS_THOUGHT}`;
@@ -181,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const releaseDate = timeCapsuleDateInput.value;
 
         if (thoughtText.length === 0 || thoughtText.length > MAX_CHARS_TIME_CAPSULE) {
-            alert("El pensamiento de la cápsula no puede estar vacío o exceder los 500 caracteres.");
+            alert("El pensamiento de la cápsula no puede estar vacío o exceder los " + MAX_CHARS_TIME_CAPSULE + " caracteres.");
             return;
         }
         if (!releaseDate) {
@@ -219,16 +237,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Cargar Pensamiento Destacado
     async function loadFeaturedThought() {
         if (allThoughts.length === 0) {
-            featuredThoughtPlaceholder.style.display = 'block';
-            featuredThoughtContent.style.display = 'none';
+            if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'block';
+            if (featuredThoughtContent) featuredThoughtContent.style.display = 'none';
             return;
         }
 
-        featuredThoughtPlaceholder.style.display = 'none';
-        featuredThoughtContent.style.display = 'block';
+        if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'none';
+        if (featuredThoughtContent) featuredThoughtContent.style.display = 'block';
 
         const thought = allThoughts[currentThoughtIndex];
-        featuredThoughtContent.textContent = `"${thought.text}"`;
+        if (featuredThoughtContent) featuredThoughtContent.textContent = `"${thought.text}"`;
 
         currentThoughtIndex = (currentThoughtIndex + 1) % allThoughts.length; // Ciclar
     }
@@ -238,25 +256,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const globalCounterRef = doc(db, "counters", "globalThoughts");
         onSnapshot(globalCounterRef, (docSnap) => {
             if (docSnap.exists()) {
-                globalThoughtCountElement.textContent = docSnap.data().count;
+                if (globalThoughtCountElement) globalThoughtCountElement.textContent = docSnap.data().count;
             } else {
-                // Si el documento no existe, crearlo con 0
-                setDoc(globalCounterRef, { count: 0 });
-                globalThoughtCountElement.textContent = 0;
+                // Si el documento no existe, crearlo con 0. merge: true es importante aquí.
+                setDoc(globalCounterRef, { count: 0 }, { merge: true });
+                if (globalThoughtCountElement) globalThoughtCountElement.textContent = 0;
             }
         }, (error) => {
             console.error("Error al escuchar el contador global:", error);
-            globalThoughtCountElement.textContent = "Error";
+            if (globalThoughtCountElement) globalThoughtCountElement.textContent = "Error";
         });
     }
 
     // 5. Cargar Mis Pensamientos
     async function loadMyThoughts() {
-        myThoughtsList.innerHTML = ''; // Limpiar lista
+        if (myThoughtsList) myThoughtsList.innerHTML = ''; // Limpiar lista
         const userId = localStorage.getItem('anonymousUserId');
 
         if (!userId) {
-            noMyThoughtsMessage.style.display = 'block';
+            if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'block';
             return;
         }
 
@@ -264,33 +282,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            noMyThoughtsMessage.style.display = 'block';
+            if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'block';
         } else {
-            noMyThoughtsMessage.style.display = 'none';
+            if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'none';
             querySnapshot.forEach((doc) => {
                 const li = document.createElement('li');
-                li.textContent = doc.data().text;
-                myThoughtsList.appendChild(li);
+                li.classList.add('my-thought-item'); // Añadir clase para estilos
+                // Formatear la fecha
+                const timestamp = doc.data().timestamp ? doc.data().timestamp.toDate() : new Date();
+                const formattedDate = timestamp.toLocaleDateString('es-ES', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+                li.innerHTML = `${doc.data().text}<span class="my-thought-date">${formattedDate}</span>`;
+                if (myThoughtsList) myThoughtsList.appendChild(li);
             });
         }
     }
 
     // 6. Cargar Cápsulas del Tiempo Liberadas
     async function loadReleasedTimeCapsules() {
-        timeCapsuleList.innerHTML = ''; // Limpiar lista
-        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        if (timeCapsuleList) timeCapsuleList.innerHTML = ''; // Limpiar lista
+        const today = new Date();
+        const todayISO = today.toISOString().slice(0, 10); // YYYY-MM-DD
 
-        const q = query(collection(db, "timeCapsules"), where("releaseDate", "<=", today), orderBy("releaseDate", "asc"));
+        // Consulta para obtener cápsulas cuya fecha de liberación es hoy o anterior
+        // Ordenar por fecha de liberación ascendente para ver las más antiguas primero
+        const q = query(collection(db, "timeCapsules"), where("releaseDate", "<=", todayISO), orderBy("releaseDate", "asc"));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            noTimeCapsulesMessage.style.display = 'block';
+            if (noTimeCapsulesMessage) noTimeCapsulesMessage.style.display = 'block';
         } else {
-            noTimeCapsulesMessage.style.display = 'none';
-            querySnapshot.forEach((doc) => {
+            if (noTimeCapsulesMessage) noTimeCapsulesMessage.style.display = 'none';
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
                 const li = document.createElement('li');
-                li.textContent = doc.data().text;
-                timeCapsuleList.appendChild(li);
+                li.classList.add('my-thought-item'); // Reutilizar el estilo de item de pensamiento
+                // Añadir un pequeño indicador de que es una cápsula si es necesario, o solo el texto
+                li.textContent = `Cápsula: "${data.text}" (Liberada: ${data.releaseDate})`; // Puedes ajustar el formato
+                if (timeCapsuleList) timeCapsuleList.appendChild(li);
+
+                // Opcional: Marcar como liberada en la DB si aún no lo está
+                // Esta lógica se podría hacer una vez por día en un Cloud Function para eficiencia
+                // if (!data.isReleased) {
+                //     updateDoc(doc(db, "timeCapsules", docSnap.id), { isReleased: true });
+                // }
             });
         }
     }
@@ -326,14 +363,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Inicializar el mapa solo si no ha sido inicializado antes
             if (map === null) {
-                // Centrar el mapa en un lugar neutral (ej. España) o global
                 const initialLat = 40.416775; // Latitud para España
                 const initialLng = -3.703790; // Longitud para España
                 const initialZoom = 6; // Zoom para ver el país
 
                 map = L.map('mapContainer').setView([initialLat, initialLng], initialZoom);
 
-                // Añadir una capa de tiles (OpenStreetMap es el más común)
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
