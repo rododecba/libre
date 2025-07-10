@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-// IMPORTANTE: Añadido 'setDoc' a las importaciones de firestore
-import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, getDoc, increment, where, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// IMPORTANTE: Añadido 'Timestamp' a las importaciones de firestore para la cápsula del tiempo
+import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, getDoc, increment, where, setDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // Importar Leaflet (asegúrate de que la ruta sea correcta)
 import "./lib/leaflet/leaflet.js"; 
@@ -27,15 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Nota: Los IDs han sido estandarizados y corregidos para coincidir con index.html
     const thoughtInput = document.getElementById('thoughtInput');
     const charCount = document.getElementById('charCount');
-    const launchThoughtBtn = document.getElementById('launchThoughtBtn'); // Corregido ID
+    const launchThoughtBtn = document.getElementById('launchThoughtBtn'); 
     const featuredThoughtContent = document.getElementById('featuredThoughtContent');
     const featuredThoughtPlaceholder = document.getElementById('featuredThoughtPlaceholder');
     const nextThoughtBtn = document.getElementById('nextThoughtBtn');
     const globalThoughtCountElement = document.getElementById('globalThoughtCount');
 
     // Secciones y botones de navegación
-    const mainSection = document.getElementById('mainSection'); // Ahora es el DIV que envuelve el contenido principal
-    const myThoughtsSection = document.getElementById('myThoughtsSection'); // Corregido ID
+    const mainSection = document.getElementById('mainSection'); 
+    const myThoughtsSection = document.getElementById('myThoughtsSection'); 
     const viewByCountrySection = document.getElementById('viewByCountrySection');
     const timeCapsuleSection = document.getElementById('timeCapsuleSection');
 
@@ -53,11 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Elementos de la sección "Cápsula del Tiempo"
     const timeCapsuleDateInput = document.getElementById('timeCapsuleDate');
-    const timeCapsuleThoughtInput = document.getElementById('timeCapsuleThoughtInput'); // Corregido ID
+    const timeCapsuleThoughtInput = document.getElementById('timeCapsuleThoughtInput'); 
     const timeCapsuleCharCount = document.getElementById('timeCapsuleCharCount');
-    const launchTimeCapsuleBtn = document.getElementById('launchTimeCapsuleBtn'); // Corregido ID
+    const launchTimeCapsuleBtn = document.getElementById('launchTimeCapsuleBtn'); 
     const timeCapsuleList = document.getElementById('timeCapsuleList');
-    const noTimeCapsulesMessage = document.getElementById('noTimeCapsulesMessage'); // Corregido ID
+    const noTimeCapsulesMessage = document.getElementById('noTimeCapsulesMessage'); 
 
     // Elementos de la sección "Ver por País"
     const mapContainer = document.getElementById('mapContainer'); 
@@ -65,12 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const noCountryThoughtsMessage = document.getElementById('noCountryThoughtsMessage');
 
     // --- Constantes y Variables ---
-    const MAX_CHARS_THOUGHT = 500; // Límite de caracteres por pensamiento normal (ajustado a 500)
-    const MAX_CHARS_TIME_CAPSULE = 500; // Límite de caracteres para cápsula del tiempo (ajustado a 500)
-    const THOUGHTS_PER_DAY_LIMIT = 3; // Límite de pensamientos por día
+    const MAX_CHARS_THOUGHT = 500; 
+    const MAX_CHARS_TIME_CAPSULE = 500; 
+    const THOUGHTS_PER_DAY_LIMIT = 3; 
 
-    let currentThoughtIndex = 0; // Para el pensamiento destacado
-    let allThoughts = []; // Para almacenar todos los pensamientos para el destacado
+    let currentThoughtIndex = 0; 
+    let allThoughts = []; 
 
     // Variable global para almacenar la instancia del mapa Leaflet
     let map = null; 
@@ -79,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para ocultar todas las secciones y mostrar solo la principal
     function hideAllSections() {
-        // Asegura que mainSection siempre esté visible cuando se vuelve a la "home"
         if (mainSection) {
             mainSection.style.display = 'block'; 
         }
@@ -96,17 +95,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para mostrar una sección específica
     function showSection(section) {
-        hideAllSections(); // Primero oculta todo
-        if (mainSection) { // Oculta la sección principal si se va a mostrar otra
+        hideAllSections(); 
+        if (mainSection) { 
             mainSection.style.display = 'none';
         }
-        if (section) { // Muestra la sección deseada
+        if (section) { 
             section.style.display = 'block';
         }
     }
 
     // --- Contadores de Caracteres ---
-    // Se agregan checks para evitar errores si los elementos no se encuentran (aunque ya deberían existir con las correcciones de ID)
     if (thoughtInput && charCount) {
         thoughtInput.addEventListener('input', () => {
             const currentLength = thoughtInput.value.length;
@@ -138,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funciones de Firebase ---
 
     // 1. Lanzar Pensamiento (Normal)
-    // ESTA FUNCIÓN FUE ENVUELTA CORRECTAMENTE.
     async function launchThought() { 
         const thoughtText = thoughtInput.value.trim();
 
@@ -147,17 +144,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Generar un ID de usuario anónimo basado en IP (simulado o real si usas una función de backend)
-        // Para un entorno de navegador, esto es un placeholder. En un entorno real, usarías una función de Cloud Functions.
-        // Para este ejemplo, usaremos un ID de sesión simple o un ID de dispositivo si es posible.
         let userId = localStorage.getItem('anonymousUserId');
         if (!userId) {
             userId = 'anon_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('anonymousUserId', userId);
         }
 
-        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-        const userDailyThoughtDocRef = doc(db, `users/${userId}/dailyThoughts`, today); // Referencia al documento del día
+        const today = new Date().toISOString().slice(0, 10); 
+        const userDailyThoughtDocRef = doc(db, `users/${userId}/dailyThoughts`, today); 
 
         try {
             const dailyThoughtDoc = await getDoc(userDailyThoughtDocRef);
@@ -176,21 +170,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 text: thoughtText,
                 timestamp: serverTimestamp(),
                 type: "normal",
-                userId: userId // Guardar el ID anónimo
+                userId: userId 
             });
 
-            // Incrementar el contador de pensamientos del usuario para el día
             await setDoc(userDailyThoughtDocRef, { count: increment(1) }, { merge: true });
 
-            // Incrementar el contador global
             const globalCounterRef = doc(db, "counters", "globalThoughts");
-            await setDoc(globalCounterRef, { count: increment(1) }, { merge: true }); // Usar setDoc con merge para crear si no existe
+            await setDoc(globalCounterRef, { count: increment(1) }, { merge: true }); 
 
             thoughtInput.value = '';
             charCount.textContent = `0/${MAX_CHARS_THOUGHT}`;
             alert("¡Pensamiento lanzado al mar!");
-            // Opcional: Recargar los pensamientos del usuario para que vea el nuevo (descomentar si es necesario)
-            // loadMyThoughts(); 
         } catch (e) {
             console.error("Error al añadir pensamiento: ", e);
             alert("Hubo un error al lanzar tu pensamiento. Inténtalo de nuevo.");
@@ -200,23 +190,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Lanzar Cápsula del Tiempo
     async function launchTimeCapsule() {
         const thoughtText = timeCapsuleThoughtInput.value.trim();
-        const releaseDate = timeCapsuleDateInput.value;
+        const releaseDateInput = timeCapsuleDateInput.value; // Obtiene el valor del input datetime-local
 
         if (thoughtText.length === 0 || thoughtText.length > MAX_CHARS_TIME_CAPSULE) {
             alert("El pensamiento de la cápsula no puede estar vacío o exceder los " + MAX_CHARS_TIME_CAPSULE + " caracteres.");
             return;
         }
-        if (!releaseDate) {
-            alert("Por favor, selecciona una fecha de liberación para tu cápsula del tiempo.");
+        if (!releaseDateInput) {
+            alert("Por favor, selecciona una fecha y hora de liberación para tu cápsula del tiempo.");
             return;
         }
 
-        const selectedDate = new Date(releaseDate);
+        const selectedDateTime = new Date(releaseDateInput); // Convierte el string "YYYY-MM-DDTHH:MM" a un objeto Date
         const now = new Date();
-        now.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
-
-        if (selectedDate <= now) {
-            alert("La fecha de liberación debe ser en el futuro.");
+        
+        // Compara el objeto Date completo (fecha y hora)
+        if (selectedDateTime <= now) {
+            alert("La fecha y hora de liberación debe ser en el futuro.");
             return;
         }
 
@@ -224,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await addDoc(collection(db, "timeCapsules"), {
                 text: thoughtText,
                 creationTimestamp: serverTimestamp(),
-                releaseDate: releaseDate, // Guardar como string YYYY-MM-DD
+                releaseDate: Timestamp.fromDate(selectedDateTime), // ¡Guardamos como Timestamp!
                 isReleased: false
             });
 
@@ -250,10 +240,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (featuredThoughtContent) featuredThoughtContent.style.display = 'block';
 
         const thought = allThoughts[currentThoughtIndex];
-        // Asegúrate de que el objeto thought tenga la propiedad 'text' antes de intentar acceder a ella
         if (featuredThoughtContent && thought && thought.text) featuredThoughtContent.textContent = `"${thought.text}"`;
 
-        currentThoughtIndex = (currentThoughtIndex + 1) % allThoughts.length; // Ciclar
+        currentThoughtIndex = (currentThoughtIndex + 1) % allThoughts.length; 
     }
 
     // 4. Actualizar Contador Global en Tiempo Real
@@ -263,7 +252,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (docSnap.exists()) {
                 if (globalThoughtCountElement) globalThoughtCountElement.textContent = docSnap.data().count;
             } else {
-                // Si el documento no existe, crearlo con 0. merge: true es importante aquí.
                 setDoc(globalCounterRef, { count: 0 }, { merge: true });
                 if (globalThoughtCountElement) globalThoughtCountElement.textContent = 0;
             }
@@ -273,9 +261,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 5. Cargar Mis Pensamientos -- VERSIÓN CORRECTA CON FILTRO DE 30 DÍAS
+    // 5. Cargar Mis Pensamientos -- VERSIÓN CON FILTRO DE 30 DÍAS
     async function loadMyThoughts() {
-        if (myThoughtsList) myThoughtsList.innerHTML = ''; // Limpiar lista
+        if (myThoughtsList) myThoughtsList.innerHTML = ''; 
         const userId = localStorage.getItem('anonymousUserId');
 
         if (!userId) {
@@ -283,16 +271,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- CALCULAR FECHA DE HACE 30 DÍAS ---
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        // Firebase Timestamp es un objeto, por lo que la comparación directa con Date() funciona bien.
-
-        // Modifica la consulta para incluir el filtro de 30 días
+        
         const q = query(
             collection(db, "thoughts"),
             where("userId", "==", userId),
-            where("timestamp", ">=", thirtyDaysAgo), // FILTRO: Mayor o igual a hace 30 días
+            where("timestamp", ">=", thirtyDaysAgo), 
             orderBy("timestamp", "desc")
         );
         const querySnapshot = await getDocs(q);
@@ -301,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'block';
         } else {
             if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'none';
-            querySnapshot.forEach((docSnap) => { // Usar docSnap para ser consistente
+            querySnapshot.forEach((docSnap) => { 
                 const data = docSnap.data();
                 const li = document.createElement('li');
                 li.classList.add('my-thought-item');
@@ -311,7 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     hour: '2-digit', minute: '2-digit'
                 });
 
-                // Aquí se añade el contador de encontrados
                 const foundCountText = data.foundCount !== undefined ? ` (Encontrado ${data.foundCount} veces)` : '';
                 li.innerHTML = `${data.text}<span class="my-thought-date">${formattedDate}${foundCountText}</span>`;
                 if (myThoughtsList) myThoughtsList.appendChild(li);
@@ -321,13 +305,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 6. Cargar Cápsulas del Tiempo Liberadas
     async function loadReleasedTimeCapsules() {
-        if (timeCapsuleList) timeCapsuleList.innerHTML = ''; // Limpiar lista
-        const today = new Date();
-        const todayISO = today.toISOString().slice(0, 10); // YYYY-MM-DD
-
-        // Consulta para obtener cápsulas cuya fecha de liberación es hoy o anterior
-        // Ordenar por fecha de liberación ascendente para ver las más antiguas primero
-        const q = query(collection(db, "timeCapsules"), where("releaseDate", "<=", todayISO), orderBy("releaseDate", "asc"));
+        if (timeCapsuleList) timeCapsuleList.innerHTML = ''; 
+        
+        // La comparación ahora es con el Timestamp actual de Firebase
+        const q = query(
+            collection(db, "timeCapsules"), 
+            where("releaseDate", "<=", Timestamp.now()), // ¡Compara con el Timestamp actual!
+            orderBy("releaseDate", "asc")
+        );
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
@@ -337,9 +322,16 @@ document.addEventListener('DOMContentLoaded', () => {
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
                 const li = document.createElement('li');
-                li.classList.add('my-thought-item'); // Reutilizar el estilo de item de pensamiento
-                // Añadir un pequeño indicador de que es una cápsula si es necesario, o solo el texto
-                li.textContent = `Cápsula: "${data.text}" (Liberada: ${data.releaseDate})`; // Puedes ajustar el formato
+                li.classList.add('my-thought-item'); 
+                
+                // Formatear el Timestamp de liberación
+                const releaseTimestamp = data.releaseDate ? data.releaseDate.toDate() : new Date();
+                const formattedReleaseDate = releaseTimestamp.toLocaleDateString('es-ES', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+
+                li.textContent = `Cápsula: "${data.text}" (Liberada: ${formattedReleaseDate})`; 
                 if (timeCapsuleList) timeCapsuleList.appendChild(li);
 
                 // Opcional: Marcar como liberada en la DB si aún no lo está
@@ -372,15 +364,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (myThoughtsCard) {
         myThoughtsCard.addEventListener('click', () => {
             showSection(myThoughtsSection);
-            loadMyThoughts(); // Cargar los pensamientos del usuario al abrir la sección
+            loadMyThoughts(); 
         });
     }
 
     if (viewByCountryCard && viewByCountrySection && closeViewByCountryBtn && mapContainer) {
         viewByCountryCard.addEventListener('click', () => {
-            showSection(viewByCountrySection); // Ocultar otras secciones y mostrar 'Ver por País'
+            showSection(viewByCountrySection); 
 
-            // Inicializar el mapa solo si no ha sido inicializado antes
             if (map === null) {
                 const initialLat = 40.416775; // Latitud para España
                 const initialLng = -3.703790; // Longitud para España
@@ -392,25 +383,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
 
-                // Opcional: Añadir un marcador simple para probar
                 L.marker([initialLat, initialLng]).addTo(map)
                     .bindPopup('Centro de España (Placeholder)').openPopup();
 
                 console.log("Mapa Leaflet inicializado.");
             } else {
-                // Si el mapa ya está inicializado, asegúrate de que se reajusta bien
                 map.invalidateSize();
                 console.log("Mapa ya inicializado. Recargando vista.");
             }
-            // Por ahora, no hay pensamientos por país para cargar, pero aquí iría la lógica
-            // loadThoughtsByCountry(); 
         });
     }
 
     if (timeCapsuleCard) {
         timeCapsuleCard.addEventListener('click', () => {
             showSection(timeCapsuleSection);
-            loadReleasedTimeCapsules(); // Cargar las cápsulas liberadas al abrir la sección
+            loadReleasedTimeCapsules(); 
         });
     }
 
@@ -427,15 +414,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Inicialización al Cargar la Página ---
     async function initializeAppOnLoad() {
-        // Cargar todos los pensamientos para el destacado (solo los últimos 100 para eficiencia)
         const qAll = query(collection(db, "thoughts"), orderBy("timestamp", "desc"), limit(100));
         const querySnapshotAll = await getDocs(qAll);
-        allThoughts = querySnapshotAll.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })); // Asegúrate de obtener el ID si lo necesitas
-        loadFeaturedThought(); // Cargar el primer pensamiento destacado
+        allThoughts = querySnapshotAll.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })); 
+        loadFeaturedThought(); 
 
-        setupGlobalThoughtCounter(); // Iniciar el contador global en tiempo real
+        setupGlobalThoughtCounter(); 
 
-        hideAllSections(); // Asegurarse de que solo la sección principal sea visible al inicio
+        hideAllSections(); 
     }
 
     initializeAppOnLoad();
