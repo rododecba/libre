@@ -1,690 +1,575 @@
-// Importa las funciones necesarias de Firebase SDK
+// Importa las funciones necesarias de los SDKs de Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+// Importar 'increment' directamente junto con las otras funciones
+import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, FieldValue, getDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, orderBy, limit, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Variables globales de Firebase (proporcionadas por el entorno Canvas)
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-// Inicializa Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM completamente cargado. Iniciando script.js...");
 
-let userId = null; // Para almacenar el ID del usuario actual
-let isAuthReady = false; // Bandera para indicar que la autenticación ha sido verificada
-let map = null; // Variable global para la instancia del mapa Leaflet
+    // Variables globales de Firebase (proporcionadas por el entorno Canvas)
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-// Referencias a elementos del DOM
-const navButtons = document.querySelectorAll('.nav-button');
-const contentSections = document.querySelectorAll('.content-section');
-const sendThoughtButton = document.getElementById('sendThoughtButton');
-const thoughtInput = document.getElementById('thoughtInput');
-const charCount = document.getElementById('charCount');
-const featuredThoughtDisplay = document.getElementById('featuredThoughtDisplay');
-const myThoughtsList = document.getElementById('myThoughtsList');
-const messageBox = document.getElementById('messageBox');
-const messageText = document.getElementById('messageText');
-const messageIcon = document.getElementById('messageIcon');
-const userIdDisplay = document.getElementById('userIdDisplay');
-const nextThoughtBtn = document.getElementById('nextThoughtBtn'); // Asegurarse de que esta referencia exista
-const totalThoughtsCount = document.getElementById('totalThoughtsCount'); // Referencia al contador global
+    let db; // Declara db aquí para que sea accesible en todo el ámbito
+    let userId = null; // Para almacenar el ID del usuario actual
+    let isAuthReady = false; // Bandera para indicar que la autenticación ha sido verificada
 
-// Referencias al modal de confirmación
-const confirmModal = document.getElementById('confirmModal');
-const modalMessage = document.getElementById('modalMessage');
-const confirmButton = document.getElementById('confirmButton');
-const cancelButton = document.getElementById('cancelButton');
+    // Inicializa Firebase
+    try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app); // Asigna la instancia de Firestore
+        const auth = getAuth(app); // Inicializa Auth
+        console.log("Firebase inicializado y Firestore conectado.");
 
-// Constantes
-const MAX_CHARS = 280;
-
-// --- Funciones de Utilidad ---
-
-/**
- * Muestra un mensaje de estado en la interfaz.
- * @param {string} message - El texto del mensaje.
- * @param {'success'|'error'|'loading'} type - El tipo de mensaje (para aplicar estilos).
- * @param {number} duration - Duración en milisegundos antes de ocultar el mensaje (0 para no ocultar automáticamente).
- */
-function showMessage(message, type, duration = 3000) {
-    messageText.textContent = message;
-    messageBox.className = `message-box show ${type}`;
-    messageIcon.className = ''; // Limpia iconos anteriores
-    if (type === 'success') messageIcon.classList.add('fas', 'fa-check-circle');
-    if (type === 'error') messageIcon.classList.add('fas', 'fa-exclamation-triangle');
-    if (type === 'loading') messageIcon.classList.add('fas', 'fa-spinner', 'fa-spin');
-
-    if (duration > 0) {
-        setTimeout(() => {
-            messageBox.classList.remove('show');
-        }, duration);
-    }
-}
-
-/**
- * Oculta el mensaje de estado.
- */
-function hideMessage() {
-    messageBox.classList.remove('show');
-}
-
-/**
- * Muestra el modal de confirmación y devuelve una promesa que se resuelve con true/false.
- * @param {string} message - El mensaje a mostrar en el modal.
- * @returns {Promise<boolean>} - True si el usuario confirma, false si cancela.
- */
-function showConfirmModal(message) {
-    return new Promise((resolve) => {
-        modalMessage.textContent = message;
-        confirmModal.classList.add('show');
-
-        // Restaurar botones de confirmación/cancelación
-        confirmButton.style.display = 'inline-block';
-        cancelButton.style.display = 'inline-block';
-
-        const onConfirm = () => {
-            confirmModal.classList.remove('show');
-            confirmButton.removeEventListener('click', onConfirm);
-            cancelButton.removeEventListener('click', onCancel);
-            resolve(true);
-        };
-
-        const onCancel = () => {
-            confirmModal.classList.remove('show');
-            confirmButton.removeEventListener('click', onConfirm);
-            cancelButton.removeEventListener('click', onCancel);
-            resolve(false);
-        };
-
-        confirmButton.addEventListener('click', onConfirm);
-        cancelButton.addEventListener('click', onCancel);
-    });
-}
-
-/**
- * Activa la sección de contenido seleccionada.
- * @param {string} sectionId - El ID de la sección a activar.
- */
-function activateSection(sectionId) {
-    contentSections.forEach(section => {
-        section.classList.remove('active');
-    });
-    document.getElementById(sectionId).classList.add('active');
-    console.log(`Sección activa: ${sectionId}`);
-
-    // Si la sección del mapa se activa, inicializa o invalida el tamaño del mapa
-    if (sectionId === 'mapDisplaySection') {
-        console.log('Activando sección del mapa.');
-        // Asegurarse de que L (Leaflet) esté disponible
-        if (typeof L === 'undefined') {
-            console.error('Leaflet (L) no está cargado. Asegúrate de que leaflet.js se carga ANTES de script.js.');
-            showMessage('Error: El mapa no pudo cargarse. Recarga la página.', 'error');
-            return;
-        }
-        if (map) {
-            console.log('Mapa ya inicializado, invalidando tamaño.');
-            map.invalidateSize(); // Asegura que el mapa se renderice correctamente si ya existe
-        } else {
-            console.log('Inicializando mapa por primera vez.');
-            initializeMap(); // Inicializa el mapa si aún no se ha hecho
-        }
-        // Centra el mapa en una vista global al activarse
-        if (map) {
-            map.setView([20, 0], 2); // Centra el mapa en el mundo con un zoom bajo
-            loadThoughtsForMap(); // Carga los pensamientos en el mapa
-        }
-    }
-}
-
-// --- Funciones de Geolocalización y Geocodificación Inversa ---
-
-/**
- * Obtiene la ubicación del usuario (país y ciudad) usando la API de geolocalización
- * y un servicio de geocodificación inversa.
- * @returns {Promise<{country: string|null, city: string|null}>}
- */
-async function getUserLocation() {
-    return new Promise((resolve) => {
-        if (!navigator.geolocation) {
-            console.warn('Geolocation is not supported by your browser.');
-            resolve({ country: null, city: null });
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                try {
-                    // Usar Nominatim de OpenStreetMap para geocodificación inversa
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`);
-                    const data = await response.json();
-
-                    const country = data.address.country || null;
-                    const city = data.address.city || data.address.town || data.address.village || null;
-
-                    console.log('Ubicación obtenida:', { country, city });
-                    resolve({ country, city });
-                } catch (error) {
-                    console.error('Error during reverse geocoding:', error);
-                    resolve({ country: null, city: null });
+        // Autenticación de Firebase
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                console.log('Usuario autenticado:', userId);
+                document.getElementById('userIdDisplay').textContent = `Tu ID de usuario: ${userId}`;
+            } else {
+                // Si no hay token inicial, inicia sesión anónimamente
+                if (!initialAuthToken) {
+                    try {
+                        const anonUser = await signInAnonymously(auth);
+                        userId = anonUser.user.uid;
+                        console.log('Sesión anónima iniciada:', userId);
+                        document.getElementById('userIdDisplay').textContent = `Tu ID de usuario: ${userId}`;
+                    } catch (error) {
+                        console.error("Error al iniciar sesión anónimamente:", error);
+                        // showMessage('Error al iniciar sesión. Algunas funciones pueden no estar disponibles.', 'error', 0); // Reemplazar con modal
+                    }
+                } else {
+                    // Si hay un token inicial, úsalo para iniciar sesión
+                    try {
+                        const customUser = await signInWithCustomToken(auth, initialAuthToken);
+                        userId = customUser.user.uid;
+                        console.log('Sesión con token personalizado iniciada:', userId);
+                        document.getElementById('userIdDisplay').textContent = `Tu ID de usuario: ${userId}`;
+                    } catch (error) {
+                        console.error("Error al iniciar sesión con token personalizado:", error);
+                        // showMessage('Error al iniciar sesión con token. Algunas funciones pueden no estar disponibles.', 'error', 0); // Reemplazar con modal
+                    }
                 }
-            },
-            (error) => {
-                console.warn('Geolocation error:', error.message);
-                // Si el usuario deniega el permiso o hay un error, resuelve con null
-                resolve({ country: null, city: null });
-            },
-            {
-                enableHighAccuracy: false, // No necesitamos alta precisión para el país
-                timeout: 10000, // 10 segundos de timeout
-                maximumAge: 0 // No usar una posición en caché
             }
-        );
-    });
-}
+            isAuthReady = true; // La autenticación ha sido verificada
+            // Una vez que la autenticación está lista, carga los datos iniciales
+            fetchFeaturedThought();
+            fetchMyThoughts();
 
-// --- Funciones de Firestore ---
-
-/**
- * Guarda un nuevo pensamiento en Firestore.
- * Incluye la geolocalización si está disponible.
- * @param {string} thoughtText - El texto del pensamiento.
- */
-async function saveThought(thoughtText) {
-    if (!userId) {
-        showMessage('Error: Usuario no autenticado.', 'error');
-        return;
-    }
-
-    showMessage('Enviando pensamiento...', 'loading', 0); // Muestra mensaje de carga indefinido
-
-    try {
-        const { country, city } = await getUserLocation(); // Intenta obtener la ubicación
-
-        const thoughtData = {
-            text: thoughtText,
-            timestamp: serverTimestamp(), // Marca de tiempo del servidor
-            userId: userId,
-            country: country, // Guarda el país
-            city: city, // Guarda la ciudad (puede ser null)
-            encounters: 0 // Inicializa el contador de encuentros
-        };
-
-        // Guarda en la colección pública para que otros usuarios puedan verlos
-        const thoughtsCollectionRef = collection(db, `artifacts/${appId}/public/data/thoughts`);
-        await addDoc(thoughtsCollectionRef, thoughtData);
-
-        showMessage('¡Pensamiento enviado con éxito!', 'success');
-        thoughtInput.value = ''; // Limpia el input
-        charCount.textContent = `0/${MAX_CHARS}`; // Resetea el contador
-        fetchFeaturedThought(); // Actualiza el pensamiento destacado
-        fetchMyThoughts(); // Actualiza la lista de mis pensamientos
-    } catch (e) {
-        console.error("Error al añadir documento: ", e);
-        showMessage('Error al enviar el pensamiento. Inténtalo de nuevo.', 'error');
-    }
-}
-
-/**
- * Busca un pensamiento destacado aleatorio de la colección pública.
- */
-async function fetchFeaturedThought() {
-    if (!isAuthReady) {
-        console.log('Auth no está lista para buscar pensamiento destacado.');
-        return;
-    }
-
-    featuredThoughtDisplay.innerHTML = '<p>Cargando pensamiento destacado...</p>';
-    featuredThoughtDisplay.classList.add('loading');
-
-    try {
-        const thoughtsCollectionRef = collection(db, `artifacts/${appId}/public/data/thoughts`);
-        // Obtener todos los documentos y luego elegir uno al azar en el cliente
-        // Esto es para evitar problemas de índices con orderBy y limit en Firestore
-        const snapshot = await getDocs(thoughtsCollectionRef);
-        const thoughts = [];
-        snapshot.forEach(doc => {
-            thoughts.push({ id: doc.id, ...doc.data() });
+            // Actualizar Conteo Global de Pensamientos en Tiempo Real
+            const totalThoughtsCountSpan = document.getElementById('totalThoughtsCount');
+            if (totalThoughtsCountSpan) {
+                onSnapshot(collection(db, `artifacts/${appId}/public/data/thoughts`), (snapshot) => {
+                    totalThoughtsCountSpan.textContent = `${snapshot.size} pensamientos escritos`;
+                    console.log("Conteo de pensamientos actualizado:", snapshot.size);
+                }, (error) => {
+                    console.error("Error al obtener el conteo en tiempo real: ", error);
+                    totalThoughtsCountSpan.textContent = "Error al cargar conteo";
+                });
+            } else {
+                console.error("No se pudo adjuntar el listener 'onSnapshot' porque 'totalThoughtsCountSpan' no fue encontrado.");
+            }
         });
 
-        if (thoughts.length > 0) {
-            const randomIndex = Math.floor(Math.random() * thoughts.length);
-            const thought = thoughts[randomIndex];
+    } catch (error) {
+        console.error("Error al inicializar Firebase:", error);
+        // alert("Error al conectar con Firebase. Revisa la consola para más detalles."); // Reemplazar con modal
+        return; // Detener la ejecución si Firebase no se inicializa
+    }
 
-            // Incrementar el contador de encuentros
-            if (thought.id) {
-                const thoughtRef = doc(db, `artifacts/${appId}/public/data/thoughts`, thought.id);
-                await updateDoc(thoughtRef, {
-                    encounters: increment(1)
-                });
-                console.log(`Contador de encuentros incrementado para el pensamiento ID: ${thought.id}`);
-            }
 
-            const date = thought.timestamp ? new Date(thought.timestamp.toDate()).toLocaleString() : 'Fecha desconocida';
-            const countryInfo = thought.country ? `<br>De: <strong>${thought.country}</strong>` : ''; // Muestra el país
-            const encountersInfo = thought.encounters !== undefined ? `<br>Encontrado: <strong>${thought.encounters + 1}</strong> veces` : ''; // +1 porque se acaba de incrementar
+    // Referencias a elementos del DOM
+    const thoughtInput = document.getElementById('thoughtInput');
+    const charCount = document.getElementById('charCount');
+    const sendThoughtBtn = document.getElementById('sendThoughtBtn');
+    const featuredThoughtBox = document.querySelector('.featured-thought-box');
+    const featuredThoughtPlaceholder = document.querySelector('.featured-thought-placeholder');
+    // const totalThoughtsCountSpan = document.getElementById('totalThoughtsCount'); // Ya definida arriba
 
-            featuredThoughtDisplay.innerHTML = `
-                <p>${thought.text}</p>
-                <div class="meta-info">
-                    Enviado: <strong>${date}</strong>
-                    ${countryInfo}
-                    ${encountersInfo}
-                </div>
-                <i class="fas fa-language translate-icon" title="Traducir con Google Translate"></i>
-            `;
-            // Añadir listener para el icono de traducción
-            const translateIcon = featuredThoughtDisplay.querySelector('.translate-icon');
-            if (translateIcon) {
-                translateIcon.addEventListener('click', () => openGoogleTranslate(thought.text));
-            }
-        } else {
-            featuredThoughtDisplay.innerHTML = '<p>Aún no hay pensamientos. ¡Sé el primero en enviar uno!</p>';
+    const myThoughtsCard = document.getElementById('myThoughtsCard');
+    const viewByCountryCard = document.getElementById('viewByCountryCard');
+    const ecosThoughtsCard = document.getElementById('ecosThoughtsCard');
+
+    // Elementos del DOM para la sección de pensamientos del usuario
+    const myThoughtsDisplaySection = document.getElementById('myThoughtsDisplaySection');
+    const myThoughtsList = document.getElementById('myThoughtsList');
+    const closeMyThoughtsBtn = document.getElementById('closeMyThoughts');
+
+    const nextThoughtBtn = document.getElementById('nextThoughtBtn');
+
+    // Referencias al modal de confirmación
+    const confirmModal = document.getElementById('confirmModal');
+    const modalMessage = document.getElementById('modalMessage');
+    const confirmButton = document.getElementById('confirmButton');
+    const cancelButton = document.getElementById('cancelButton');
+
+    // Referencias al messageBox (para reemplazar alerts)
+    const messageBox = document.getElementById('messageBox');
+    const messageText = document.getElementById('messageText');
+    const messageIcon = document.getElementById('messageIcon');
+
+
+    // Verificar que los elementos DOM existen y loguear si no
+    if (!thoughtInput) console.error("Error: Elemento 'thoughtInput' no encontrado.");
+    if (!charCount) console.error("Error: Elemento 'charCount' no encontrado.");
+    if (!sendThoughtBtn) console.error("Error: Elemento 'sendThoughtBtn' no encontrado. Asegúrate de que el ID 'sendThoughtBtn' esté en tu HTML.");
+    if (!featuredThoughtBox) console.error("Error: Elemento 'featuredThoughtBox' no encontrado.");
+    // if (!totalThoughtsCountSpan) console.error("Error: Elemento 'totalThoughtsCountSpan' no encontrado."); // Ya definida
+    if (!myThoughtsCard) console.error("Error: Elemento 'myThoughtsCard' no encontrado.");
+    if (!myThoughtsDisplaySection) console.error("Error: Elemento 'myThoughtsDisplaySection' no encontrado.");
+    if (!myThoughtsList) console.error("Error: Elemento 'myThoughtsList' no encontrado.");
+    if (!closeMyThoughtsBtn) console.error("Error: Elemento 'closeMyThoughtsBtn' no encontrado.");
+    if (!nextThoughtBtn) console.error("Error: Elemento 'nextThoughtBtn' no encontrado.");
+    if (!ecosThoughtsCard) console.error("Error: Elemento 'ecosThoughtsCard' no encontrado.");
+    if (!confirmModal) console.error("Error: Elemento 'confirmModal' no encontrado.");
+    if (!messageBox) console.error("Error: Elemento 'messageBox' no encontrado.");
+
+
+    const MAX_CHARS = 500; // Límite de caracteres por pensamiento
+    const THOUGHTS_PER_DAY_LIMIT = 3; // Límite de pensamientos por día
+
+    // --- Funciones de Utilidad ---
+
+    /**
+     * Muestra un mensaje de estado en la interfaz.
+     * @param {string} message - El texto del mensaje.
+     * @param {'success'|'error'|'loading'} type - El tipo de mensaje (para aplicar estilos).
+     * @param {number} duration - Duración en milisegundos antes de ocultar el mensaje (0 para no ocultar automáticamente).
+     */
+    function showMessage(message, type, duration = 3000) {
+        messageText.textContent = message;
+        messageBox.className = `message-box show ${type}`;
+        messageIcon.className = ''; // Limpia iconos anteriores
+        if (type === 'success') messageIcon.classList.add('fas', 'fa-check-circle');
+        if (type === 'error') messageIcon.classList.add('fas', 'fa-exclamation-triangle');
+        if (type === 'loading') messageIcon.classList.add('fas', 'fa-spinner', 'fa-spin');
+
+        if (duration > 0) {
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, duration);
         }
-    } catch (e) {
-        console.error("Error al obtener pensamiento destacado: ", e);
-        featuredThoughtDisplay.innerHTML = '<p class="error-message">Error al cargar el pensamiento destacado.</p>';
-    } finally {
-        featuredThoughtDisplay.classList.remove('loading');
-    }
-}
-
-/**
- * Busca y muestra los pensamientos enviados por el usuario actual.
- */
-async function fetchMyThoughts() {
-    if (!userId || !isAuthReady) {
-        console.log('Auth o userId no están listos para buscar mis pensamientos.');
-        myThoughtsList.innerHTML = '<li><p>Cargando tus pensamientos...</p></li>';
-        return;
     }
 
-    myThoughtsList.innerHTML = ''; // Limpia la lista antes de cargar
+    /**
+     * Oculta el mensaje de estado.
+     */
+    function hideMessage() {
+        messageBox.classList.remove('show');
+    }
 
-    try {
-        // Consulta la colección pública de pensamientos filtrando por el userId
-        const q = query(
-            collection(db, `artifacts/${appId}/public/data/thoughts`),
-            where("userId", "==", userId)
-            // orderBy("timestamp", "desc") // Firestore requiere índice para orderBy. Si hay problemas, ordenar en cliente.
-        );
+    /**
+     * Muestra el modal de confirmación y devuelve una promesa que se resuelve con true/false.
+     * @param {string} message - El mensaje a mostrar en el modal.
+     * @returns {Promise<boolean>} - True si el usuario confirma, false si cancela.
+     */
+    function showConfirmModal(message) {
+        return new Promise((resolve) => {
+            modalMessage.textContent = message;
+            confirmModal.classList.add('show');
 
-        onSnapshot(q, async (snapshot) => { // Hacemos el callback async para usar await en getDoc
-            myThoughtsList.innerHTML = ''; // Limpia para actualizar en tiempo real
-            if (snapshot.empty) {
-                myThoughtsList.innerHTML = '<li><p>Aún no has enviado ningún pensamiento. ¡Anímate!</p></li>';
+            // Restaurar botones de confirmación/cancelación
+            confirmButton.style.display = 'inline-block';
+            cancelButton.style.display = 'inline-block';
+
+            const onConfirm = () => {
+                confirmModal.classList.remove('show');
+                confirmButton.removeEventListener('click', onConfirm);
+                cancelButton.removeEventListener('click', onCancel);
+                resolve(true);
+            };
+
+            const onCancel = () => {
+                confirmModal.classList.remove('show');
+                confirmButton.removeEventListener('click', onConfirm);
+                cancelButton.removeEventListener('click', onCancel);
+                resolve(false);
+            };
+
+            confirmButton.addEventListener('click', onConfirm);
+            cancelButton.addEventListener('click', onCancel);
+        });
+    }
+
+    // Función para obtener la fecha de hoy en formato ISO (YYYY-MM-DD)
+    const getTodayDate = () => {
+        const now = new Date();
+        return now.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    };
+
+    // Función para obtener los pensamientos locales del día
+    const getLocalThoughts = () => {
+        const today = getTodayDate();
+        const stored = localStorage.getItem(`thoughts_${today}`);
+        return stored ? JSON.parse(stored) : [];
+    };
+
+    // Función para guardar un pensamiento localmente (ahora guarda también timestamp Y ID de Firestore)
+    const addLocalThought = (thoughtContent, thoughtId) => {
+        const today = getTodayDate();
+        const thoughts = getLocalThoughts();
+        const newThought = {
+            content: thoughtContent,
+            timestamp: new Date().toISOString(), // Guarda la fecha y hora en formato ISO
+            id: thoughtId // Guarda el ID del documento de Firestore
+        };
+        thoughts.push(newThought);
+        localStorage.setItem(`thoughts_${today}`, JSON.stringify(thoughts));
+        console.log("Pensamiento guardado localmente:", newThought);
+    };
+
+    // Función para formatear la fecha y hora
+    const formatThoughtDateTime = (isoString) => {
+        const date = new Date(isoString);
+        const options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false // Formato 24 horas
+        };
+        return date.toLocaleDateString('es-ES', options);
+    };
+
+    // --- Lógica de la Aplicación ---
+
+    // Función para manejar el envío de un pensamiento (reutilizable para clic de botón y tecla Enter)
+    const sendThought = async () => {
+        console.log("Intentando enviar pensamiento...");
+        const thoughtText = thoughtInput.value.trim();
+        if (!thoughtText) {
+            showMessage("Por favor, escribe un pensamiento antes de enviar.", "error");
+            return;
+        }
+
+        const localThoughts = getLocalThoughts();
+        if (localThoughts.length >= THOUGHTS_PER_DAY_LIMIT) {
+            showMessage(`Lo siento, solo puedes escribir ${THOUGHTS_PER_DAY_LIMIT} pensamientos por día.`, "error");
+            return;
+        }
+
+        try {
+            if (!db) { // Verificar si db está inicializado
+                console.error("Error: Firestore (db) no está inicializado.");
+                showMessage("Error interno: La base de datos no está disponible.", "error");
                 return;
             }
-            const thoughts = [];
-            snapshot.forEach(doc => {
-                thoughts.push({ id: doc.id, ...doc.data() });
+            if (!userId) {
+                showMessage("Error: Usuario no autenticado. Recarga la página.", "error");
+                return;
+            }
+
+            showMessage('Enviando pensamiento...', 'loading', 0); // Muestra mensaje de carga indefinido
+
+            // Añadir el pensamiento a la colección 'thoughts' con un contador de encuentros inicial
+            const docRef = await addDoc(collection(db, `artifacts/${appId}/public/data/thoughts`), {
+                content: thoughtText,
+                createdAt: serverTimestamp(),
+                encounters: 0, // NUEVO: Contador de encuentros inicializado a 0
+                userId: userId // Guarda el ID del usuario que envió el pensamiento
             });
 
-            // Ordenar por fecha de forma descendente en el cliente
-            thoughts.sort((a, b) => {
-                const dateA = a.timestamp ? a.timestamp.toDate() : new Date(0);
-                const dateB = b.timestamp ? b.timestamp.toDate() : new Date(0);
-                return dateB - dateA;
-            });
+            addLocalThought(thoughtText, docRef.id); // Guardar localmente con fecha/hora e ID del documento
+            thoughtInput.value = ''; // Limpiar campo
+            charCount.textContent = MAX_CHARS; // Resetear contador
+            charCount.style.color = 'var(--text-color-secondary)';
+            sendThoughtBtn.style.display = 'none'; // Ocultar botón
 
-            for (const thought of thoughts) { // Usamos for...of para await dentro del bucle
-                const li = document.createElement('li');
-                const date = thought.timestamp ? new Date(thought.timestamp.toDate()).toLocaleString() : 'Fecha desconocida';
-                const countryInfo = thought.country ? `<br>De: <strong>${thought.country}</strong>` : ''; // Muestra el país
+            showMessage("¡Pensamiento enviado con éxito!", "success");
+            console.log("Pensamiento enviado a Firestore con ID:", docRef.id);
+        } catch (e) {
+            console.error("Error al añadir el documento: ", e);
+            showMessage("Hubo un error al enviar tu pensamiento. Inténtalo de nuevo.", "error");
+        }
+    };
 
-                let encountersCount = thought.encounters !== undefined ? thought.encounters : 'N/A'; // Obtener encuentros del documento
-                // Si necesitas el valor más actualizado, podrías hacer un getDoc aquí, pero onSnapshot ya debería darte el valor actual.
-                // const docSnap = await getDoc(doc(db, `artifacts/${appId}/public/data/thoughts`, thought.id));
-                // if (docSnap.exists()) { encountersCount = docSnap.data().encounters; }
 
-                li.innerHTML = `
-                    <p>${thought.text}</p>
-                    <div class="meta-info">
-                        Enviado: <strong>${date}</strong>
-                        ${countryInfo}
-                        <br>Encontrado: <strong>${encountersCount}</strong> veces
-                    </div>
-                    <button class="delete-button" data-id="${thought.id}" title="Eliminar pensamiento">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                    <i class="fas fa-language translate-icon" title="Traducir con Google Translate"></i>
-                `;
-                myThoughtsList.appendChild(li);
+    // 1. Contador de Caracteres, Botón de Enviar y Tecla Enter
+    if (charCount) {
+        charCount.textContent = MAX_CHARS; // Inicializar
+    }
 
-                // Añadir listener para el botón de eliminar
-                li.querySelector('.delete-button').addEventListener('click', (e) => {
-                    const thoughtId = e.currentTarget.dataset.id;
-                    deleteThought(thoughtId);
+    if (thoughtInput && charCount && sendThoughtBtn) {
+        // Listener para el recuento de caracteres y visibilidad del botón
+        thoughtInput.addEventListener('input', () => {
+            console.log("Evento 'input' detectado en thoughtInput. Valor actual:", thoughtInput.value);
+            const remaining = MAX_CHARS - thoughtInput.value.length;
+            charCount.textContent = remaining;
+            charCount.style.color = remaining < 50 ? 'orange' : (remaining < 10 ? 'red' : '#777'); // Usar color directo si var no está definida
+
+            if (thoughtInput.value.trim().length > 0) {
+                sendThoughtBtn.style.display = 'block';
+                console.log("Botón de enviar visible.");
+            } else {
+                sendThoughtBtn.style.display = 'none';
+                console.log("Botón de enviar oculto.");
+            }
+        });
+
+        // Listener para la tecla Enter
+        thoughtInput.addEventListener('keydown', (event) => {
+            // Solo si es 'Enter' y no 'Shift+Enter' (para permitir saltos de línea manuales)
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevenir el comportamiento por defecto (nueva línea)
+                sendThought(); // Llamar a la función de envío
+            }
+        });
+
+    } else {
+        console.error("No se pudo adjuntar el listener 'input' o 'keydown' porque faltan elementos DOM. Revisa 'thoughtInput', 'charCount', 'sendThoughtBtn'.");
+    }
+
+
+    // 2. Enviar Pensamiento a Firestore (ahora manejado por la función sendThought)
+    if (sendThoughtBtn) {
+        sendThoughtBtn.addEventListener('click', sendThought); // Adjunta la función sendThought reutilizable
+    } else {
+        console.error("No se pudo adjuntar el listener 'click' al botón de enviar. Revisa 'sendThoughtBtn'.");
+    }
+
+
+    // 3. Obtener y Mostrar Pensamiento Destacado
+    const fetchFeaturedThought = async () => {
+        console.log("Intentando obtener pensamiento destacado...");
+        try {
+            if (!db) { // Verificar si db está inicializado
+                console.error("Error: Firestore (db) no está inicializado para fetchFeaturedThought. No se puede obtener pensamiento.");
+                featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">Error: DB no disponible.</p>`;
+                return;
+            }
+
+            const q = query(collection(db, `artifacts/${appId}/public/data/thoughts`), orderBy("createdAt", "desc"), limit(100)); // Obtiene los 100 más recientes
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const thoughtsWithIds = [];
+                querySnapshot.forEach((doc) => {
+                    thoughtsWithIds.push({ id: doc.id, ...doc.data() }); // Guardar ID y datos
                 });
-                 // Añadir listener para el icono de traducción
-                const translateIcon = li.querySelector('.translate-icon');
-                if (translateIcon) {
-                    translateIcon.addEventListener('click', () => openGoogleTranslate(thought.text));
-                }
-            }
-        });
-    } catch (e) {
-        console.error("Error al obtener mis pensamientos: ", e);
-        myThoughtsList.innerHTML = '<li><p class="error-message">Error al cargar tus pensamientos.</p></li>';
-    }
-}
+                const randomIndex = Math.floor(Math.random() * thoughtsWithIds.length);
+                const featuredThoughtData = thoughtsWithIds[randomIndex]; // Obtener el objeto completo
 
-/**
- * Elimina un pensamiento de Firestore.
- * @param {string} thoughtId - El ID del documento del pensamiento a eliminar.
- */
-async function deleteThought(thoughtId) {
-    const confirmed = await showConfirmModal('¿Estás seguro de que quieres eliminar este pensamiento? Esta acción no se puede deshacer.');
-    if (!confirmed) {
-        return;
-    }
-
-    showMessage('Eliminando pensamiento...', 'loading', 0);
-    try {
-        // Eliminar de la colección pública (donde se guardan todos los pensamientos)
-        const thoughtDocRef = doc(db, `artifacts/${appId}/public/data/thoughts`, thoughtId);
-        await deleteDoc(thoughtDocRef);
-        showMessage('Pensamiento eliminado con éxito.', 'success');
-        fetchFeaturedThought(); // Actualiza el pensamiento destacado
-        // fetchMyThoughts() se actualizará automáticamente por onSnapshot
-    } catch (e) {
-        console.error("Error al eliminar documento: ", e);
-        showMessage('Error al eliminar el pensamiento. Inténtalo de nuevo.', 'error');
-    }
-}
-
-// --- Funciones de Mapa (Leaflet.js) ---
-
-/**
- * Inicializa el mapa Leaflet.
- */
-function initializeMap() {
-    console.log('Intentando inicializar mapa...');
-    if (map) {
-        console.log('Mapa ya existe, removiendo instancia anterior.');
-        map.remove(); // Elimina la instancia del mapa si ya existe para evitar duplicados
-        map = null;
-    }
-
-    const mapElement = document.getElementById('map');
-    if (!mapElement) {
-        console.error('Elemento #map no encontrado en el DOM. No se puede inicializar el mapa.');
-        showMessage('Error: Contenedor del mapa no encontrado.', 'error');
-        return;
-    }
-
-    if (typeof L === 'undefined') {
-        console.error('Leaflet (L) no está disponible. No se puede inicializar el mapa.');
-        showMessage('Error: Librería de mapa no cargada.', 'error');
-        return;
-    }
-
-    map = L.map('map').setView([20, 0], 2); // Centra el mapa en el mundo, zoom 2
-    console.log('Mapa Leaflet creado.');
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-    console.log('Capa de tiles de OpenStreetMap añadida.');
-
-    // Carga los pensamientos para mostrarlos en el mapa
-    loadThoughtsForMap();
-}
-
-/**
- * Carga todos los pensamientos de Firestore y los muestra como marcadores en el mapa.
- */
-async function loadThoughtsForMap() {
-    if (!isAuthReady) {
-        console.log('Auth no está lista para cargar pensamientos para el mapa.');
-        return;
-    }
-
-    if (!map) {
-        console.error('Mapa no inicializado. No se pueden cargar los pensamientos en el mapa.');
-        return;
-    }
-
-    showMessage('Cargando pensamientos en el mapa...', 'loading', 0);
-
-    try {
-        const thoughtsCollectionRef = collection(db, `artifacts/${appId}/public/data/thoughts`);
-        const snapshot = await getDocs(thoughtsCollectionRef);
-        const thoughtsByCountry = {}; // Agrupar pensamientos por país
-
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.country) {
-                if (!thoughtsByCountry[data.country]) {
-                    thoughtsByCountry[data.country] = {
-                        count: 0,
-                        thoughts: [],
-                        latlng: null // Para almacenar las coordenadas del país
-                    };
-                }
-                thoughtsByCountry[data.country].count++;
-                thoughtsByCountry[data.country].thoughts.push(data.text);
-            }
-        });
-
-        // Para cada país con pensamientos, obtener sus coordenadas y añadir un marcador
-        for (const country in thoughtsByCountry) {
-            if (thoughtsByCountry.hasOwnProperty(country)) {
-                // Usar Nominatim para obtener las coordenadas del país
-                console.log(`Buscando coordenadas para el país: ${country}`);
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(country)}&format=json&limit=1`);
-                const data = await response.json();
-
-                if (data.length > 0) {
-                    const lat = parseFloat(data[0].lat);
-                    const lon = parseFloat(data[0].lon);
-                    thoughtsByCountry[country].latlng = [lat, lon];
-                    console.log(`Coordenadas para ${country}: [${lat}, ${lon}]`);
-
-                    const popupContent = `
-                        <b>${country}</b><br>
-                        Pensamientos: ${thoughtsByCountry[country].count}<br>
-                        <button class="action-button view-country-thoughts-button" data-country="${country}">Ver pensamientos</button>
-                    `;
-                    const marker = L.marker([lat, lon]).addTo(map)
-                        .bindPopup(popupContent);
-
-                    // Añadir listener al botón dentro del popup cuando se abre
-                    marker.on('popupopen', function() {
-                        const button = document.querySelector(`.view-country-thoughts-button[data-country="${country}"]`);
-                        if (button) {
-                            button.addEventListener('click', () => displayThoughtsForCountry(country));
-                        }
+                // Incrementar el contador de encuentros para este pensamiento
+                // Solo si el pensamiento tiene un ID válido y db está disponible
+                if (featuredThoughtData.id && db) {
+                    const thoughtRef = doc(db, `artifacts/${appId}/public/data/thoughts`, featuredThoughtData.id);
+                    await updateDoc(thoughtRef, {
+                        encounters: increment(1) // Incrementar en 1
                     });
+                    console.log(`Contador de encuentros incrementado para el pensamiento ID: ${featuredThoughtData.id}`);
                 } else {
-                    console.warn(`No se encontraron coordenadas para el país: ${country}`);
+                    console.warn("No se pudo incrementar el contador de encuentros: ID de pensamiento o DB no disponible.");
                 }
+
+
+                const currentThoughtContent = featuredThoughtBox.querySelector('.featured-thought-content');
+                // const featuredThoughtPlaceholder = featuredThoughtBox.querySelector('.featured-thought-placeholder'); // Ya definida
+
+                // Actualizar el contenido del pensamiento destacado
+                if (currentThoughtContent) {
+                    currentThoughtContent.textContent = `"${featuredThoughtData.content}"`;
+                    currentThoughtContent.style.display = 'flex';
+                } else {
+                    const newContent = document.createElement('p');
+                    newContent.classList.add('featured-thought-content');
+                    newContent.textContent = `"${featuredThoughtData.content}"`;
+                    if (nextThoughtBtn) {
+                        featuredThoughtBox.insertBefore(newContent, nextThoughtBtn);
+                    } else {
+                        featuredThoughtBox.appendChild(newContent);
+                    }
+                }
+
+                if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'none';
+                console.log("Pensamiento destacado cargado:", featuredThoughtData.content);
+            } else {
+                featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">PENSAMIENTO DESTACADO</p>`;
+                if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'block';
+                console.log("No hay pensamientos en Firestore para destacar.");
             }
+        } catch (e) {
+            console.error("Error al obtener o actualizar pensamiento destacado: ", e);
+            featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">Error al cargar pensamiento.</p>`;
         }
-        showMessage('Mapa actualizado con pensamientos.', 'success');
-    } catch (e) {
-        console.error("Error al cargar pensamientos para el mapa: ", e);
-        showMessage('Error al cargar pensamientos en el mapa.', 'error');
-    }
-}
+    };
 
-/**
- * Muestra una lista de pensamientos para un país específico.
- * Esto podría ser un modal o una nueva sección. Por ahora, lo imprimimos en consola.
- * @param {string} country - El nombre del país.
- */
-async function displayThoughtsForCountry(country) {
-    showMessage(`Cargando pensamientos de ${country}...`, 'loading', 0);
-    try {
-        const q = query(
-            collection(db, `artifacts/${appId}/public/data/thoughts`),
-            where("country", "==", country)
-        );
-        const snapshot = await getDocs(q);
-        let thoughtsHtml = `<h3>Pensamientos de ${country}</h3><ul>`;
+    // Cargar el primer pensamiento destacado al inicio
+    // fetchFeaturedThought(); // Se llama después de que la autenticación está lista
+    // Actualizar cada 30 minutos (1800000 ms)
+    setInterval(fetchFeaturedThought, 1800000);
 
-        if (snapshot.empty) {
-            thoughtsHtml += `<li>No hay pensamientos registrados para ${country} aún.</li>`;
-        } else {
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString() : 'Fecha desconocida';
-                thoughtsHtml += `<li><p>${data.text}</p><div class="meta-info">Enviado: ${date}</div><i class="fas fa-language translate-icon" title="Traducir con Google Translate" data-text="${data.text}"></i></li>`;
-            });
-        }
-        thoughtsHtml += `</ul><button class="action-button close-country-thoughts-button">Cerrar</button>`;
-
-        // Mostrar esto en un modal o una sección dedicada
-        // Por simplicidad, usaremos el modal de confirmación como un modal genérico
-        showGenericModal(thoughtsHtml, () => {
-            // Añadir listeners de traducción a los iconos dentro del modal
-            document.querySelectorAll('#confirmModal .translate-icon').forEach(icon => { // Usar #confirmModal
-                icon.addEventListener('click', (e) => {
-                    openGoogleTranslate(e.target.dataset.text);
-                });
-            });
-            // Listener para el botón de cerrar
-            document.querySelector('#confirmModal .close-country-thoughts-button').addEventListener('click', () => { // Usar #confirmModal
-                document.getElementById('confirmModal').classList.remove('show');
-            });
+    // Listener para el botón de siguiente pensamiento
+    if (nextThoughtBtn) {
+        nextThoughtBtn.addEventListener('click', () => {
+            console.log("Clic en 'Ver otro pensamiento'.");
+            fetchFeaturedThought(); // Llama a la función para cargar un nuevo pensamiento
         });
-        hideMessage();
-    } catch (e) {
-        console.error(`Error al obtener pensamientos para ${country}: `, e);
-        showMessage(`Error al cargar pensamientos de ${country}.`, 'error');
     }
-}
-
-/**
- * Función genérica para mostrar un modal con contenido HTML arbitrario.
- * @param {string} htmlContent - El contenido HTML a insertar en el modal.
- * @param {function} onShowCallback - Callback a ejecutar después de que el modal se muestre.
- */
-function showGenericModal(htmlContent, onShowCallback = () => {}) {
-    const genericModal = document.getElementById('confirmModal'); // Reutilizamos el modal de confirmación
-    const genericModalContent = genericModal.querySelector('.modal-content');
-
-    // Ocultamos los botones de confirmación/cancelación estándar del modal
-    confirmButton.style.display = 'none';
-    cancelButton.style.display = 'none';
-
-    // Insertamos el contenido y mostramos el modal
-    genericModalContent.innerHTML = htmlContent;
-    genericModal.classList.add('show');
-
-    // Ejecutar el callback después de mostrar el modal para añadir listeners
-    onShowCallback();
-}
 
 
-// --- Funciones de Traducción ---
-
-/**
- * Abre Google Translate en una nueva pestaña con el texto dado.
- * @param {string} text - El texto a traducir.
- */
-function openGoogleTranslate(text) {
-    const encodedText = encodeURIComponent(text);
-    // Podemos pre-seleccionar el idioma de origen (auto) y el de destino (español, por ejemplo)
-    // O dejarlo en auto/auto para que el usuario elija
-    window.open(`https://translate.google.com/?sl=auto&tl=es&text=${encodedText}&op=translate`, '_blank');
-}
+    // 4. Actualizar Conteo Global de Pensamientos en Tiempo Real
+    // Movido a la sección de autenticación para asegurar que db y appId estén listos
 
 
-// --- Event Listeners ---
+    // 5. Funcionalidad de las Tarjetas Interactivas
 
-// Navegación entre secciones
-navButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const sectionId = button.dataset.section;
-        activateSection(sectionId);
-    });
-});
+    // "Ver mis pensamientos" - Ahora despliega la sección de pensamientos con contador de encuentros
+    if (myThoughtsCard && myThoughtsDisplaySection && myThoughtsList && closeMyThoughtsBtn) {
+        myThoughtsCard.addEventListener('click', async () => { // Hacemos la función async
+            console.log("Clic en 'Ver mis pensamientos'. Mostrando sección.");
+            const localThoughts = getLocalThoughts();
+            myThoughtsList.innerHTML = ''; // Limpiar lista antes de añadir
 
-// Contador de caracteres para el input de pensamiento
-thoughtInput.addEventListener('input', () => {
-    const currentLength = thoughtInput.value.length;
-    charCount.textContent = `${currentLength}/${MAX_CHARS}`;
-    if (currentLength > MAX_CHARS) {
-        thoughtInput.classList.add('error');
-        sendThoughtButton.disabled = true;
-    } else {
-        thoughtInput.classList.remove('error');
-        sendThoughtButton.disabled = false;
-    }
-});
-
-// Enviar pensamiento
-sendThoughtButton.addEventListener('click', () => {
-    const thoughtText = thoughtInput.value.trim();
-    if (thoughtText.length > 0 && thoughtText.length <= MAX_CHARS) {
-        saveThought(thoughtText);
-    } else {
-        showMessage('El pensamiento no puede estar vacío o exceder los 280 caracteres.', 'error');
-    }
-});
-
-// Listener para el botón "Ver otro pensamiento"
-if (nextThoughtBtn) {
-    nextThoughtBtn.addEventListener('click', fetchFeaturedThought);
-}
-
-
-// --- Inicialización de la Aplicación ---
-
-// Autenticación de Firebase
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        userId = user.uid;
-        console.log('Usuario autenticado:', userId);
-        userIdDisplay.textContent = `Tu ID de usuario: ${userId}`;
-    } else {
-        // Si no hay token inicial, inicia sesión anónimamente
-        if (!initialAuthToken) {
-            try {
-                const anonUser = await signInAnonymously(auth);
-                userId = anonUser.user.uid;
-                console.log('Sesión anónima iniciada:', userId);
-                userIdDisplay.textContent = `Tu ID de usuario: ${userId}`;
-            } catch (error) {
-                console.error("Error al iniciar sesión anónimamente:", error);
-                showMessage('Error al iniciar sesión. Algunas funciones pueden no estar disponibles.', 'error', 0);
+            if (!userId || !isAuthReady) {
+                myThoughtsList.innerHTML = '<li><p>Cargando tus pensamientos...</p></li>';
+                showMessage("Iniciando sesión... Por favor, espera.", "loading", 0);
+                return;
             }
-        } else {
-            // Si hay un token inicial, úsalo para iniciar sesión
-            try {
-                const customUser = await signInWithCustomToken(auth, initialAuthToken);
-                userId = customUser.user.uid;
-                console.log('Sesión con token personalizado iniciada:', userId);
-                userIdDisplay.textContent = `Tu ID de usuario: ${userId}`;
-            } catch (error) {
-                console.error("Error al iniciar sesión con token personalizado:", error);
-                showMessage('Error al iniciar sesión con token. Algunas funciones pueden no estar disponibles.', 'error', 0);
+
+            if (localThoughts.length > 0) {
+                // Ordenar los pensamientos por fecha de creación (más recientes primero)
+                localThoughts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                for (const localThought of localThoughts) { // Usamos for...of para await
+                    let encountersCount = '...'; // Placeholder mientras se carga
+                    try {
+                        if (db && localThought.id) { // Asegurarse de que db e id existan
+                            const docSnap = await getDoc(doc(db, `artifacts/${appId}/public/data/thoughts`, localThought.id)); // Obtener el documento por su ID
+                            if (docSnap.exists()) {
+                                encountersCount = docSnap.data().encounters || 0;
+                            } else {
+                                encountersCount = 'N/A (No encontrado en DB)'; // No encontrado en Firestore
+                            }
+                        } else {
+                            encountersCount = 'N/A (Sin ID/DB)'; // Si no hay ID o DB
+                        }
+                    } catch (e) {
+                        console.error("Error al obtener encuentros para el pensamiento:", localThought.id, e);
+                        encountersCount = 'Error';
+                    }
+
+                    const thoughtItem = document.createElement('p');
+                    thoughtItem.classList.add('my-thought-item');
+                    thoughtItem.innerHTML = `${localThought.content}<br><span class="my-thought-date">${formatThoughtDateTime(localThought.timestamp)}</span><span class="my-thought-encounters">Encontrado: ${encountersCount} veces</span>`;
+                    myThoughtsList.appendChild(thoughtItem);
+                }
+            } else {
+                const noThoughtsMessage = document.createElement('p');
+                noThoughtsMessage.classList.add('no-thoughts-message');
+                noThoughtsMessage.textContent = 'Aún no has escrito pensamientos hoy.';
+                myThoughtsList.appendChild(noThoughtsMessage);
             }
+            myThoughtsDisplaySection.style.display = 'block'; // Mostrar la sección
+            hideMessage(); // Ocultar mensaje de carga
+        });
+
+        // Botón de cierre para la sección de pensamientos del usuario
+        closeMyThoughtsBtn.addEventListener('click', () => {
+            console.log("Clic en cerrar pensamientos. Ocultando sección.");
+            myThoughtsDisplaySection.style.display = 'none'; // Ocultar la sección
+        });
+
+    } else {
+        console.error("No se pudo adjuntar el listener 'click' a 'myThoughtsCard' o faltan elementos de la sección de pensamientos.");
+    }
+
+    // Función para obtener y mostrar los pensamientos del usuario (para onSnapshot)
+    async function fetchMyThoughts() {
+        if (!userId || !isAuthReady) {
+            console.log('Auth o userId no están listos para buscar mis pensamientos.');
+            return;
+        }
+        try {
+            const q = query(
+                collection(db, `artifacts/${appId}/public/data/thoughts`),
+                where("userId", "==", userId)
+            );
+            onSnapshot(q, (snapshot) => {
+                myThoughtsList.innerHTML = ''; // Limpia la lista para actualizar en tiempo real
+                if (snapshot.empty) {
+                    myThoughtsList.innerHTML = '<li><p>Aún no has enviado ningún pensamiento. ¡Anímate!</p></li>';
+                    return;
+                }
+                const thoughts = [];
+                snapshot.forEach(doc => {
+                    thoughts.push({ id: doc.id, ...doc.data() });
+                });
+                thoughts.sort((a, b) => {
+                    const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
+                    const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
+                    return dateB - dateA;
+                });
+
+                thoughts.forEach(thought => {
+                    const li = document.createElement('li');
+                    const date = thought.createdAt ? new Date(thought.createdAt.toDate()).toLocaleString() : 'Fecha desconocida';
+                    const encounters = thought.encounters !== undefined ? thought.encounters : 'N/A';
+                    li.innerHTML = `
+                        <p>${thought.content}</p>
+                        <span class="my-thought-date">Enviado: ${date}</span>
+                        <span class="my-thought-encounters">Encontrado: ${encounters} veces</span>
+                    `;
+                    myThoughtsList.appendChild(li);
+                });
+            }, (error) => {
+                console.error("Error al obtener mis pensamientos en tiempo real: ", error);
+                myThoughtsList.innerHTML = '<li><p>Error al cargar tus pensamientos.</p></li>';
+            });
+        } catch (e) {
+            console.error("Error al configurar listener para mis pensamientos: ", e);
         }
     }
-    isAuthReady = true; // La autenticación ha sido verificada
-    // Una vez que la autenticación está lista, carga los datos iniciales
-    fetchFeaturedThought();
-    fetchMyThoughts();
 
-    // Actualizar Conteo Global de Pensamientos en Tiempo Real
-    // CAMBIO: Usar la ruta correcta para la colección pública
-    const totalThoughtsCollectionRef = collection(db, `artifacts/${appId}/public/data/thoughts`);
-    onSnapshot(totalThoughtsCollectionRef, (snapshot) => {
-        totalThoughtsCount.textContent = `${snapshot.size} pensamientos escritos`;
-        console.log("Conteo de pensamientos actualizado:", snapshot.size);
-    }, (error) => {
-        console.error("Error al obtener el conteo en tiempo real: ", error);
-        totalThoughtsCount.textContent = "Error al cargar conteo";
+
+    // "Ver por País" - Placeholder para la integración del mapa
+    if (viewByCountryCard) {
+        viewByCountryCard.addEventListener('click', () => {
+            showMessage("Funcionalidad 'Ver por País' en desarrollo. Aquí se integrará un mapa mundial.", "info"); // Usar showMessage
+            console.log("Clic en Ver por País");
+            // Ocultar otras secciones y mostrar un mensaje
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            // Podrías tener una sección específica para este mensaje si no quieres usar el modal
+            // Por ahora, solo se muestra el mensaje temporal
+        });
+    }
+
+
+    // "Ecos del Pensamiento" - Listener para la nueva tarjeta
+    if (ecosThoughtsCard) {
+        ecosThoughtsCard.addEventListener('click', () => {
+            showMessage("Aquí se mostrarán estadísticas o un resumen de los 'Ecos de tus Pensamientos'.", "info"); // Usar showMessage
+            console.log("Clic en Ecos del Pensamiento");
+            // Opcional: myThoughtsCard.click(); para abrir directamente "Ver mis pensamientos"
+        });
+    }
+
+    // Navegación entre secciones
+    document.querySelectorAll('.nav-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const sectionId = button.dataset.section;
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            } else {
+                console.error(`Sección con ID ${sectionId} no encontrada.`);
+            }
+        });
     });
-});
 
-// Activa la sección de "Enviar un pensamiento" al cargar la página
-document.addEventListener('DOMContentLoaded', () => {
-    activateSection('sendThoughtSection');
-    charCount.textContent = `0/${MAX_CHARS}`; // Inicializa el contador
+    // Activa la sección de "Enviar un pensamiento" al cargar la página
+    // document.addEventListener('DOMContentLoaded', () => { // Ya envuelto en DOMContentLoaded
+    //     document.getElementById('sendThoughtSection').classList.add('active');
+    //     charCount.textContent = MAX_CHARS; // Inicializa el contador
+    // });
 });
