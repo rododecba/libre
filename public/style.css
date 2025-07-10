@@ -156,17 +156,15 @@ body {
     margin-bottom: 8px;
 }
 
+/* --- Bloque de código para reemplazar en tu CSS --- */
+
 .card-text {
-    font-size: 0.9em;
-    font-weight: 500;
+    /* ESTILOS MODIFICADOS para coincidir con la tarjeta de estadísticas */
+    font-size: 1.4em;
+    font-weight: 600;
     color: var(--text-color-primary);
     margin: 0;
     line-height: 1.2;
-}
-
-.stat-card .card-text {
-    font-size: 1.4em;
-    font-weight: 600;
 }
 
 .stat-card .card-subtitle {
@@ -175,6 +173,8 @@ body {
     color: var(--text-color-secondary);
     margin-top: 5px;
 }
+
+/* --- Fin del bloque de código --- */
 
 /* Estilos de la Caja para Escribir Pensamiento */
 .write-thought-section {
