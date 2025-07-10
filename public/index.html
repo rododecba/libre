@@ -6,7 +6,7 @@
     <title>LIBRE</title>
     <!-- Enlace a la hoja de estilos CSS -->
     <link rel="stylesheet" href="style.css">
-    <!-- Enlace a Font Awesome para los iconos (CDN) -->
+    <!-- Enlace a Font Awesome para los iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts: Inter (para el texto general) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,58 +26,60 @@
         </header>
 
         <main class="main-content">
-            <section id="sendThoughtSection" class="content-section active">
-                <h2>Lanza tu pensamiento al mar</h2>
-                <textarea id="thoughtInput" placeholder="Escribe aquí tu pensamiento..." maxlength="500"></textarea>
-                <div class="char-count" id="charCount">500</div>
-                <button id="sendThoughtBtn" class="action-button" style="display: none;"><i class="fas fa-paper-plane"></i> Enviar Pensamiento</button>
-                <!-- Mensaje de estado (éxito, error, carga) -->
-                <div id="messageBox" class="message-box"><i id="messageIcon"></i> <span id="messageText"></span></div>
-            </section>
-
-            <section id="featuredThoughtSection" class="content-section">
-                <h2>PENSAMIENTO DESTACADO</h2>
-                <div class="featured-thought-box" id="featuredThoughtBox">
+            <section class="featured-thought-section">
+                <div class="featured-thought-box">
                     <p class="featured-thought-placeholder">PENSAMIENTO DESTACADO</p>
-                    <button id="nextThoughtBtn" class="action-button" style="margin-top: 20px;"><i class="fas fa-redo-alt"></i> Ver otro pensamiento</button>
+                    <button id="nextThoughtBtn" class="next-thought-btn" title="Ver otro pensamiento">
+                        <i class="fas fa-redo-alt"></i>
+                    </button>
                 </div>
             </section>
 
-            <section id="myThoughtsDisplaySection" class="content-section">
-                <h2>Tus Pensamientos Recientes</h2>
-                <ul id="myThoughtsList">
-                    <!-- Los pensamientos se cargarán aquí -->
-                </ul>
-                <button id="closeMyThoughts" class="action-button"><i class="fas fa-times"></i> Cerrar</button>
+            <section class="stats-and-actions">
+                <div class="card" id="myThoughtsCard">
+                    <i class="fas fa-brain card-icon"></i>
+                    <p class="card-text">Ver mis pensamientos</p>
+                </div>
+                <div class="card" id="viewByCountryCard">
+                    <i class="fas fa-globe-americas card-icon"></i>
+                    <p class="card-text">Ver por País</p>
+                </div>
+                <!-- CAMBIO: Tarjeta "Ecos del Pensamiento" -->
+                <div class="card" id="ecosThoughtsCard">
+                    <i class="fas fa-wave-square card-icon"></i> <!-- Icono de ondas/eco -->
+                    <p class="card-text">Ecos del Pensamiento</p>
+                </div>
+                <div class="card stat-card" id="totalThoughtsCard">
+                    <i class="fas fa-comments card-icon"></i>
+                    <p class="card-text"><span id="totalThoughtsCount">0</span> pensamientos escritos</p>
+                </div>
             </section>
 
-            <!-- Modal de Confirmación (para reemplazar alerts/confirms) -->
-            <div id="confirmModal" class="modal">
-                <div class="modal-content">
-                    <h3 id="modalTitle">Confirmación</h3>
-                    <p id="modalMessage">¿Estás seguro de esta acción?</p>
-                    <div class="modal-buttons">
-                        <button id="confirmButton" class="modal-button confirm">Confirmar</button>
-                        <button id="cancelButton" class="modal-button cancel">Cancelar</button>
+            <section id="myThoughtsDisplaySection" class="my-thoughts-display-section" style="display: none;">
+                <div class="my-thoughts-header">
+                    <h3 class="section-title">Tus Pensamientos Recientes</h3>
+                    <button id="closeMyThoughts" class="close-btn">&times;</button>
+                </div>
+                <div id="myThoughtsList" class="my-thoughts-list">
+                    <p class="no-thoughts-message">Aún no has escrito pensamientos hoy.</p>
+                </div>
+            </section>
+
+            <section class="write-thought-section">
+                <div class="write-thought-box">
+                    <div class="textarea-wrapper">
+                        <textarea class="thought-input" id="thoughtInput" placeholder="Escribe aquí tu pensamiento..." maxlength="500"></textarea>
                     </div>
+                    <div class="char-count">
+                        <span id="charCount">500</span>
+                    </div>
+                    <button class="send-thought-btn" id="sendThoughtBtn" style="display: none;">Enviar</button>
                 </div>
-            </div>
+            </section>
         </main>
-
-        <footer class="footer">
-            <p id="totalThoughtsCount">0</p>
-            <div class="user-id-display" id="userIdDisplay">Tu ID de usuario: Cargando...</div>
-            <div class="nav-buttons">
-                <button class="nav-button" data-section="sendThoughtSection"><i class="fas fa-edit"></i> Escribir</button>
-                <button class="nav-button" data-section="featuredThoughtSection"><i class="fas fa-eye"></i> Destacado</button>
-                <button class="nav-button" data-section="myThoughtsDisplaySection" id="myThoughtsCard"><i class="fas fa-brain"></i> Mis Pensamientos</button>
-                <button class="nav-button" data-section="viewByCountrySection" id="viewByCountryCard"><i class="fas fa-globe-americas"></i> Ver por País</button>
-                <button class="nav-button" data-section="ecosThoughtsSection" id="ecosThoughtsCard"><i class="fas fa-wave-square"></i> Ecos del Pensamiento</button>
-            </div>
-        </footer>
     </div>
 
-    <!-- Enlace al archivo JavaScript principal -->
+    <!-- Enlace al archivo JavaScript -->
     <script src="script.js" type="module"></script>
 </body>
 </html>
