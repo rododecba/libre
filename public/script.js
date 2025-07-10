@@ -3,10 +3,6 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebas
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, where, doc, getDoc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
 
-// --- ¡Estas líneas de importación se BORRAN de script.js! ---
-// import './lib/leaflet/leaflet-src.esm.js';
-// import 'https://unpkg.com/leaflet-geosearch@3.11.0/dist/geosearch.umd.js';
-
 
 // --- TU CONFIGURACIÓN DE FIREBASE REAL ---
 const firebaseConfig = {
@@ -96,7 +92,8 @@ const faqLink = document.getElementById('faqLink');
 const aboutSection = document.getElementById('aboutSection');
 const faqSection = document.getElementById('faqSection');
 const closeAboutBtn = document.getElementById('closeAboutBtn');
-const closeFaqBtn = document = document.getElementById('closeFaqBtn');
+// LÍNEA CORREGIDA: Eliminado el " = document" extra
+const closeFaqBtn = document.getElementById('closeFaqBtn');
 
 
 // --- Global State ---
