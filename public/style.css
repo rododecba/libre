@@ -1,75 +1,57 @@
-/* Variables CSS */
+/* Variables CSS para colores y sombras */
 :root {
-    --bg-color: #f0f2f5;
-    --card-bg-color: #ffffff;
-    --text-color-primary: #333;
-    --text-color-secondary: #4F4F4F;
-    --border-color: #e0e0e0;
-    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.05);
-    --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.1);
-    --button-bg-color: #4CAF50;
+    --bg-color: #f0f2f5; /* Fondo general, un gris muy claro */
+    --card-bg-color: #ffffff; /* Fondo de las tarjetas y cajas */
+    --text-color-primary: #333; /* Color principal del texto */
+    --text-color-secondary: #4F4F4F; /* Camiado para mejorar el contraste y cumplir WCAG AA */
+    --border-color: #e0e0e0; /* Color del borde sutil */
+    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra suave para las tarjetas */
+    --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra un poco más pronunciada */
+    --button-bg-color: #4CAF50; /* Color de botón (verde) */
     --button-text-color: #ffffff;
     --placeholder-color: #999;
-    --border-radius: 12px;
+    --border-radius: 12px; /* Definido como variable para consistencia */
+    --ready-color: #28a745; /* Color para indicar "listo" o "desplegado" */
 }
 
-/* Reset global */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
+/* Estilos Generales */
+body {
+    font-family: 'Inter', sans-serif; /* Fuente principal para el body */
     margin: 0;
     padding: 0;
-}
-body {
-    font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
     color: var(--text-color-primary);
-    overflow-x: hidden;
-}
-.visually-hidden {
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    border: 0; overflow: hidden;
-    clip: rect(0 0 0 0); white-space: nowrap;
+    box-sizing: border-box;
 }
 
-/* Container */
 .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px 10px 40px;
+    width: 100%;
+    max-width: 800px; /* Ancho máximo para el contenido */
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 20px; /* Espacio entre secciones principales */
+    box-sizing: border-box;
+    padding-top: 40px; /* Espacio superior para "LIBRE" */
 }
 
-/* Overlays */
-.overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    background: rgba(0,0,0,0.4);
-    z-index: 1000;
-}
-.overlay-content {
-    background: var(--card-bg-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-medium);
-    padding: 20px;
-    width: 90%;
-    max-width: 800px;
-    max-height: 90%;
-    overflow-y: auto;
+/* Estilos del Encabezado (Header) */
+.header {
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-/* Header */
-.header { text-align: center; }
-.app-title { font-size: 2.5em; font-weight: 700; margin-bottom: 10px; }
+.app-title {
+    font-size: 2.5em;
+    font-weight: 700;
+    color: var(--text-color-primary);
+    margin-bottom: 10px;
+}
+
 .app-description {
     font-family: 'Roboto Mono', monospace;
     font-size: 0.8em;
@@ -77,165 +59,409 @@ body {
     line-height: 1.5;
     max-width: 600px;
     margin: 0 auto;
+    text-align: center;
     padding: 0 10px;
 }
 
-/* Featured Thought */
+/* Estilos de la Caja de Pensamiento Destacado */
+.featured-thought-section {
+    width: 100%;
+}
+
 .featured-thought-box {
-    background: var(--card-bg-color);
+    background-color: var(--card-bg-color);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-light);
     padding: 40px 20px;
     text-align: center;
-    position: relative;
     min-height: 100px;
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-}
-.featured-thought-placeholder {
-    font-size: 1.2em; font-weight: 600;
-    color: var(--placeholder-color); text-transform: uppercase;
-    margin-bottom: 10px;
-}
-.featured-thought-content {
-    font-size: 1.1em; font-style: italic;
-    color: var(--text-color-primary);
-    margin: 0; flex-grow: 1;
-    display: flex; align-items: center; justify-content: center;
-}
-.next-thought-btn {
-    background: none; border: none;
-    color: var(--text-color-secondary);
-    font-size: 1.2em; cursor: pointer;
-    position: absolute; bottom: 15px; right: 15px;
-    padding: 5px; border-radius: 50%;
-    transition: color 0.2s, background 0.2s;
-}
-.next-thought-btn:hover {
-    color: var(--text-color-primary);
-    background: rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+    position: relative;
 }
 
-/* Stats and Actions */
+.featured-thought-placeholder {
+    font-size: 1.2em;
+    font-weight: 500;
+    color: var(--placeholder-color);
+    margin: 0;
+}
+
+.featured-thought-content {
+    font-size: 1.1em;
+    font-style: italic;
+    color: var(--text-color-primary);
+    margin: 0;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.next-thought-btn {
+    background: none;
+    border: none;
+    color: var(--text-color-secondary);
+    font-size: 1.2em;
+    cursor: pointer;
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    padding: 5px;
+    border-radius: 50%;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.next-thought-btn:hover {
+    color: var(--text-color-primary);
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Estilos de las Tarjetas de Estadísticas y Acciones */
 .stats-and-actions {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 15px; margin-bottom: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
 }
+
 .card {
-    background: var(--card-bg-color);
+    background-color: var(--card-bg-color);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-light);
     padding: 15px;
-    display: flex; flex-direction: column; align-items: center; text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     min-height: 90px;
 }
+
 .card:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-medium);
 }
-.card-icon { font-size: 2em; color: var(--text-color-secondary); margin-bottom: 8px; }
-.card-text { font-size: 0.75em; color: var(--text-color-primary); }
+
+.card-icon {
+    font-size: 2em;
+    color: var(--text-color-secondary);
+    margin-bottom: 8px;
+}
+
+.card-text {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--text-color-primary);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-card .card-text {
+    font-size: 1.4em;
+    font-weight: 600;
+}
+
 .stat-card .card-subtitle {
-    font-size: 0.75em; color: var(--text-color-secondary); margin-top: 5px;
+    display: block;
+    font-size: 0.8em;
+    color: var(--text-color-secondary);
+    margin-top: 5px;
 }
 
-/* Write Thought */
+/* Estilos de la Caja para Escribir Pensamiento */
+.write-thought-section {
+    width: 100%;
+}
+
 .write-thought-box {
-    background: var(--card-bg-color); border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light); padding: 20px;
-    display: flex; flex-direction: column; gap: 15px;
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-sizing: border-box;
 }
-.textarea-wrapper {
-    border-bottom: 1px solid var(--border-color); padding-bottom: 10px;
-}
-.thought-input {
-    width: 100%; border: none; outline: none;
-    font-family: 'Roboto Mono', monospace; font-size: 1em;
-    padding: 5px 0; resize: none; min-height: 50px;
-    background: transparent; color: var(--text-color-primary);
-}
-.thought-input::placeholder {
-    color: var(--placeholder-color); font-size: 0.95em;
-}
-.char-count { text-align: right; font-size: 0.85em; color: var(--text-color-secondary); }
-.send-thought-btn {
-    background: var(--button-bg-color); color: var(--button-text-color);
-    padding: 10px 20px; border: none; border-radius: 8px;
-    cursor: pointer; font-weight: 600; align-self: flex-end;
-    transition: background 0.3s;
-}
-.send-thought-btn:hover { background: #3e8e41; }
 
-/* Lists */
+.textarea-wrapper {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.thought-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1em;
+    padding: 5px 0;
+    resize: none;
+    min-height: 50px;
+    line-height: 1.5;
+    background-color: transparent;
+    color: var(--text-color-primary);
+}
+
+.thought-input::placeholder {
+    font-family: 'Roboto Mono', monospace;
+    color: var(--placeholder-color);
+    font-size: 0.95em;
+}
+
+.write-thought-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.char-count {
+    font-size: 0.85em;
+    color: var(--text-color-secondary);
+    font-family: 'Roboto Mono', monospace;
+}
+
+.send-thought-btn {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+.send-thought-btn:hover:not(:disabled) {
+    background-color: #3e8e41;
+}
+
+.send-thought-btn:disabled {
+    background-color: #9E9E9E;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* ESTILOS PARA LAS SECCIONES SUPERPUESTAS */
+.my-thoughts-display-section,
+.time-capsule-section,
+.view-by-country-section,
+.info-section {
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 100;
+}
+
+.my-thoughts-header,
+.info-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.section-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--text-color-primary);
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    color: var(--text-color-secondary);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+    color: var(--text-color-primary);
+}
+
 .my-thoughts-list, .time-capsule-list, .country-thoughts-list {
-    max-height: 300px; overflow-y: auto; padding: 5px 5px 5px 0; margin: 0;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 5px;
+    margin: 0;
 }
+
 .my-thought-item {
-    background: var(--bg-color); border-radius: 8px;
-    padding: 10px 15px; margin-bottom: 8px;
-    font-family: 'Roboto Mono', monospace; font-size: 0.9em;
-    word-wrap: break-word; white-space: pre-wrap;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.9em;
+    color: var(--text-color-primary);
+    background-color: var(--bg-color);
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    display: flex;
+    flex-direction: column;
+    border-left: 4px solid transparent; /* Espacio para el borde de estado */
+    transition: background-color 0.2s ease;
 }
-.my-thought-item p { margin: 0 0 5px 0; }
+
+.my-thought-item p {
+    margin: 0 0 5px 0;
+}
+
+.my-thought-item:last-child {
+    margin-bottom: 0;
+}
+
 .my-thought-date {
-    font-size: 0.75em; color: var(--text-color-secondary);
-    text-align: right; display: block;
+    font-size: 0.8em;
+    color: var(--text-color-secondary);
+    margin-top: auto; /* Empuja la fecha hacia abajo */
+    text-align: right;
+    display: block;
+    padding-top: 5px;
 }
+
 .no-thoughts-message {
     font-family: 'Roboto Mono', monospace;
-    color: var(--placeholder-color); text-align: center;
+    font-size: 0.9em;
+    color: var(--placeholder-color);
+    text-align: center;
     padding: 20px;
 }
 
-/* Time Capsule */
-.time-capsule-content h3 { margin-top: 20px; font-size: 1.1em; }
-.time-capsule-label { font-size: 0.9em; color: var(--text-color-secondary); }
+/* --- ESTILOS PARA CÁPSULA DEL TIEMPO --- */
+.time-capsule-section .time-capsule-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.time-capsule-section h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-color-primary);
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.time-capsule-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.time-capsule-controls label {
+    font-size: 0.9em;
+    color: var(--text-color-secondary);
+}
+
 .time-capsule-date-input {
-    padding: 10px; border: 1px solid var(--border-color);
-    border-radius: 8px; font-family: 'Roboto Mono', monospace;
-    font-size: 0.95em; background: var(--bg-color);
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.9em;
+    color: var(--text-color-primary);
+    background-color: #fafafa;
 }
 
-/* Map Section */
+/* CORREGIDO: Estilo añadido para cápsulas listas */
+.my-thought-item.time-capsule-ready {
+    border-left-color: var(--ready-color);
+    background-color: #f0fff4;
+}
+.my-thought-item.time-capsule-ready p strong {
+    color: var(--ready-color);
+}
+
+/* --- ESTILOS PARA VER POR PAÍS --- */
 .view-by-country-section .map-container {
-    height: 400px; border-radius: 8px; overflow: hidden;
+    height: 400px;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
 }
 
-/* Info & FAQ */
-.info-section-content h3 { margin-top: 1em; }
-.info-section-content ul { margin: 1em 0; padding-left: 20px; }
-.faq-item { margin-bottom: 1.5em; padding-bottom: 1.5em; border-bottom: 1px solid var(--border-color); }
+/* --- ESTILOS PARA SECCIONES DE INFORMACIÓN --- */
+.info-section-content {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+    line-height: 1.6;
+}
+.info-section-content p, .info-section-content li {
+    font-size: 0.95em;
+    color: var(--text-color-primary);
+}
+.info-section-content h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+.info-section-content ul {
+    list-style-position: inside;
+    padding-left: 0;
+}
+.faq-item {
+    margin-bottom: 1.5em;
+    padding-bottom: 1.5em;
+    border-bottom: 1px solid var(--border-color);
+}
 .faq-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.faq-item h3 { margin-top: 0; }
+.faq-item p { color: var(--text-color-secondary); }
 
-/* Footer */
-.footer { text-align: center; padding: 20px 0 30px; color: var(--text-color-secondary); }
+
+/* --- ESTILOS PARA EL PIE DE PÁGINA --- */
+.footer {
+    text-align: center;
+    padding: 20px 0 30px;
+    font-size: 0.85em;
+    color: var(--text-color-secondary);
+    margin-top: 20px;
+}
 .footer-links { margin-top: 10px; }
-.footer-links a { color: var(--text-color-secondary); text-decoration: none; margin: 0 8px; transition: color 0.2s; }
+.footer-links a { color: var(--text-color-secondary); text-decoration: none; margin: 0 8px; transition: color 0.2s ease; }
 .footer-links a:hover { color: var(--text-color-primary); }
 .footer-separator { margin: 0 4px; }
 
-/* Responsive */
+
+/* Media Queries para responsividad */
 @media (max-width: 768px) {
+    .container { padding: 15px; gap: 15px; padding-top: 30px; }
     .app-title { font-size: 2em; }
     .app-description { font-size: 0.8em; }
-    .featured-thought-box { padding: 30px 15px; }
-    .next-thought-btn { bottom: 10px; right: 10px; font-size: 1em; }
-    .stats-and-actions { gap: 10px; }
-    .card { padding: 12px; min-height: 80px; }
-    .card-icon { font-size: 1.8em; }
-    .card-text, .stat-card .card-text { font-size: 1em; }
-    .write-thought-box { padding: 15px; }
-    .thought-input { font-size: 0.9em; }
-    .char-count { font-size: 0.8em; }
-    .send-thought-btn { padding: 8px 15px; font-size: 0.9em; }
-    .overlay-content { padding: 15px; }
+    .stats-and-actions { grid-template-columns: repeat(2, 1fr); }
+    .write-thought-footer { flex-direction: column; align-items: flex-end; gap: 10px; }
 }
+
 @media (max-width: 480px) {
     .stats-and-actions { grid-template-columns: 1fr; }
-    .footer-links { flex-direction: column; }
-    .footer-links a, .footer-separator { margin: 5px 0; }
+    .time-capsule-controls { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .footer-links { display: flex; flex-direction: column; }
+    .footer-links a { margin: 5px 0; }
     .footer-separator { display: none; }
 }
