@@ -4,21 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LIBRE</title>
-    <!-- Enlace a la hoja de estilos CSS principal -->
+    <!-- Enlace a la hoja de estilos CSS -->
     <link rel="stylesheet" href="style.css">
-
-    <!-- Enlace a Font Awesome de forma local -->
-    <link rel="stylesheet" href="lib/fontawesome/css/all.min.css">
-
+    <!-- Enlace a Font Awesome para los iconos (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts: Inter (para el texto general) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Google Fonts: Roboto Mono (para la descripción y campo de texto) -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-    <!-- Enlace a Leaflet CSS de forma local -->
-    <link rel="stylesheet" href="lib/leaflet/leaflet.css">
 </head>
 <body>
     <div class="container">
@@ -33,33 +28,30 @@
         <main class="main-content">
             <section id="sendThoughtSection" class="content-section active">
                 <h2>Lanza tu pensamiento al mar</h2>
-                <textarea id="thoughtInput" placeholder="Escribe aquí tu pensamiento..." maxlength="280"></textarea>
-                <div class="char-count" id="charCount">0/280</div>
-                <button id="sendThoughtButton" class="action-button"><i class="fas fa-paper-plane"></i> Enviar Pensamiento</button>
+                <textarea id="thoughtInput" placeholder="Escribe aquí tu pensamiento..." maxlength="500"></textarea>
+                <div class="char-count" id="charCount">500</div>
+                <button id="sendThoughtBtn" class="action-button" style="display: none;"><i class="fas fa-paper-plane"></i> Enviar Pensamiento</button>
+                <!-- Mensaje de estado (éxito, error, carga) -->
                 <div id="messageBox" class="message-box"><i id="messageIcon"></i> <span id="messageText"></span></div>
             </section>
 
             <section id="featuredThoughtSection" class="content-section">
                 <h2>PENSAMIENTO DESTACADO</h2>
-                <div class="thought-card" id="featuredThoughtDisplay">
-                    <p>Cargando pensamiento destacado...</p>
+                <div class="featured-thought-box" id="featuredThoughtBox">
+                    <p class="featured-thought-placeholder">PENSAMIENTO DESTACADO</p>
+                    <button id="nextThoughtBtn" class="action-button" style="margin-top: 20px;"><i class="fas fa-redo-alt"></i> Ver otro pensamiento</button>
                 </div>
-                <button id="nextThoughtBtn" class="action-button" style="margin-top: 20px;"><i class="fas fa-redo-alt"></i> Ver otro pensamiento</button>
             </section>
 
-            <section id="myThoughtsSection" class="content-section">
+            <section id="myThoughtsDisplaySection" class="content-section">
                 <h2>Tus Pensamientos Recientes</h2>
                 <ul id="myThoughtsList">
-                    <li><p>Cargando tus pensamientos...</p></li>
+                    <!-- Los pensamientos se cargarán aquí -->
                 </ul>
+                <button id="closeMyThoughts" class="action-button"><i class="fas fa-times"></i> Cerrar</button>
             </section>
 
-            <section id="mapDisplaySection" class="content-section">
-                <h2>Pensamientos en el Mapa</h2>
-                <div id="map"></div>
-            </section>
-
-            <!-- Modal de Confirmación (reutilizado como modal genérico) -->
+            <!-- Modal de Confirmación (para reemplazar alerts/confirms) -->
             <div id="confirmModal" class="modal">
                 <div class="modal-content">
                     <h3 id="modalTitle">Confirmación</h3>
@@ -73,20 +65,18 @@
         </main>
 
         <footer class="footer">
-            <p id="totalThoughtsCount">0 pensamientos escritos</p>
+            <p id="totalThoughtsCount">0</p>
             <div class="user-id-display" id="userIdDisplay">Tu ID de usuario: Cargando...</div>
             <div class="nav-buttons">
                 <button class="nav-button" data-section="sendThoughtSection"><i class="fas fa-edit"></i> Escribir</button>
                 <button class="nav-button" data-section="featuredThoughtSection"><i class="fas fa-eye"></i> Destacado</button>
-                <button class="nav-button" data-section="myThoughtsSection"><i class="fas fa-brain"></i> Mis Pensamientos</button>
-                <button class="nav-button" data-section="mapDisplaySection"><i class="fas fa-globe-americas"></i> Ver por País</button>
+                <button class="nav-button" data-section="myThoughtsDisplaySection" id="myThoughtsCard"><i class="fas fa-brain"></i> Mis Pensamientos</button>
+                <button class="nav-button" data-section="viewByCountrySection" id="viewByCountryCard"><i class="fas fa-globe-americas"></i> Ver por País</button>
+                <button class="nav-button" data-section="ecosThoughtsSection" id="ecosThoughtsCard"><i class="fas fa-wave-square"></i> Ecos del Pensamiento</button>
             </div>
         </footer>
     </div>
 
-    <!-- Enlace a Leaflet JS de forma local - DEBE IR ANTES DE script.js -->
-    <script src="lib/leaflet/leaflet.js"></script>
-    
     <!-- Enlace al archivo JavaScript principal -->
     <script src="script.js" type="module"></script>
 </body>
