@@ -1,429 +1,497 @@
-/* Variables CSS para colores y sombras */
-:root {
-    --bg-color: #f0f2f5; /* Fondo general, un gris muy claro */
-    --card-bg-color: #ffffff; /* Fondo de las tarjetas y cajas */
-    --text-color-primary: #333; /* Color principal del texto */
-    --text-color-secondary: #666; /* Color secundario, para descripciones */
-    --border-color: #e0e0e0; /* Color del borde sutil */
-    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra suave para las tarjetas */
-    --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra un poco más pronunciada */
-    --button-bg-color: #4CAF50; /* Color de botón (verde) */
-    --button-text-color: #ffffff;
-    --placeholder-color: #999;
-}
-
-/* Estilos Generales */
+/* Estilos generales */
 body {
-    font-family: 'Inter', sans-serif; /* Fuente principal para el body */
+    font-family: 'Inter', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: var(--bg-color);
+    background-color: #f0f2f5;
+    color: #333;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
     min-height: 100vh;
-    color: var(--text-color-primary);
-    box-sizing: border-box;
+    overflow-x: hidden; /* Evita el scroll horizontal */
 }
 
 .container {
-    width: 100%;
-    max-width: 800px; /* Ancho máximo para el contenido */
+    max-width: 900px;
+    margin: 20px auto;
     padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px; /* Espacio entre secciones principales */
-    box-sizing: border-box;
-    padding-top: 40px; /* Espacio superior para "LIBRE" */
-}
-
-/* Estilos del Encabezado (Header) */
-.header {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.app-title {
-    font-size: 2.5em;
-    font-weight: 700;
-    color: var(--text-color-primary);
-    margin-bottom: 10px;
-}
-
-.app-description {
-    font-family: 'Roboto Mono', monospace; /* Fuente para la descripción */
-    font-size: 0.8em; /* Tamaño de fuente más pequeño */
-    color: var(--text-color-secondary);
-    line-height: 1.5;
-    max-width: 600px;
-    margin: 0 auto;
-    text-align: center;
-    padding: 0 10px;
-}
-
-/* Estilos de la Caja de Pensamiento Destacado */
-.featured-thought-section {
-    width: 100%;
-}
-
-.featured-thought-box {
-    background-color: var(--card-bg-color);
+    background-color: #fff;
     border-radius: 12px;
-    box-shadow: var(--shadow-light);
-    padding: 40px 20px;
-    text-align: center;
-    min-height: 100px;
-    display: flex;
-    flex-direction: column; /* Cambiado a column para centrar el texto y luego el botón */
-    justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
-    margin-bottom: 20px; /* Margen inferior para separar */
-    position: relative; /* Importante para posicionar el botón */
-}
-
-.featured-thought-placeholder {
-    font-size: 1.2em;
-    font-weight: 600;
-    color: var(--placeholder-color);
-    text-transform: uppercase;
-    margin-bottom: 10px; /* Espacio entre placeholder y el botón si aparece */
-}
-
-.featured-thought-content {
-    font-size: 1.1em;
-    font-style: italic;
-    color: var(--text-color-primary);
-    margin: 0;
-    flex-grow: 1; /* Permite que el contenido ocupe el espacio principal */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-}
-
-/* Estilos para el botón de siguiente pensamiento */
-.next-thought-btn {
-    background: none;
-    border: none;
-    color: var(--text-color-secondary);
-    font-size: 1.2em;
-    cursor: pointer;
-    position: absolute; /* Posicionamiento absoluto */
-    bottom: 15px; /* Ajusta la posición desde abajo */
-    right: 15px; /* Ajusta la posición desde la derecha */
-    padding: 5px;
-    border-radius: 50%; /* Para un efecto más suave si el fondo cambia */
-    transition: color 0.2s ease, background-color 0.2s ease;
-}
-
-.next-thought-btn:hover {
-    color: var(--text-color-primary);
-    background-color: rgba(0, 0, 0, 0.05); /* Un ligero fondo al pasar el ratón */
-}
-
-
-/* Estilos de las Tarjetas de Estadísticas y Acciones (los 4 flotantes) */
-.stats-and-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px; /* Margen inferior para separar */
-}
-
-.card {
-    background-color: var(--card-bg-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-light);
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    cursor: pointer;
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    min-height: 90px;
-}
-
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-medium);
-}
-
-.card-icon {
-    font-size: 2em;
-    color: var(--text-color-secondary);
-    margin-bottom: 8px;
-}
-
-.card-text {
-    font-size: 0.95em;
-    font-weight: 500;
-    color: var(--text-color-primary);
-    margin: 0;
-    line-height: 1.2;
-}
-
-/* Estilos específicos para la tarjeta de estadística */
-.stat-card .card-text {
-    font-size: 1.2em;
-    font-weight: 700;
-    margin-bottom: 0px;
-    line-height: 1.2;
-}
-
-.stat-card .card-subtitle {
-    display: none;
-}
-
-
-/* Estilos de la Caja para Escribir Pensamiento */
-.write-thought-section {
-    width: 100%;
-}
-
-.write-thought-box {
-    background-color: var(--card-bg-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-light);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    box-sizing: border-box;
-    position: relative;
-}
-
-.textarea-wrapper {
-    display: flex;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-}
-
-.thought-input {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
     flex-grow: 1;
-    border: none;
-    outline: none;
-    font-family: 'Roboto Mono', monospace;
-    font-size: 1em;
-    padding: 5px 0;
-    resize: none;
-    min-height: 50px;
-    line-height: 1.5;
-}
-
-.thought-input::placeholder {
-    font-family: 'Roboto Mono', monospace;
-    color: var(--placeholder-color);
-    font-size: 0.95em;
-}
-
-.char-count {
-    text-align: right;
-    font-size: 0.85em;
-    color: var(--text-color-secondary);
-}
-
-.send-thought-btn {
-    background-color: var(--button-bg-color);
-    color: var(--button-text-color);
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-    align-self: flex-end;
-}
-
-.send-thought-btn:hover {
-    background-color: #3e8e41;
-}
-
-/* ESTILOS PARA LA SECCIÓN DE PENSAMIENTOS DEL USUARIO */
-.my-thoughts-display-section {
-    background-color: var(--card-bg-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-light);
-    padding: 20px;
-    margin-bottom: 20px;
-    box-sizing: border-box;
-    position: relative;
-}
-
-.my-thoughts-header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+}
+
+/* Encabezado */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+h1 {
+    font-size: 2.8em;
+    color: #007bff;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.tagline {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.1em;
+    color: #555;
+    margin-top: 0;
+}
+
+/* Botones de navegación */
+.nav-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap; /* Permite que los botones se envuelvan en pantallas pequeñas */
+}
+
+.nav-button, .action-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    display: flex;
     align-items: center;
-    margin-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
+    gap: 8px;
+    font-weight: 500;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
 }
 
-.my-thoughts-display-section .section-title {
+.nav-button:hover, .action-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 123, 255, 0.4);
+}
+
+.nav-button:active, .action-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 123, 255, 0.2);
+}
+
+.nav-button i, .action-button i {
     font-size: 1.2em;
-    font-weight: 600;
-    color: var(--text-color-primary);
-    margin: 0;
 }
 
-.close-btn {
+/* Secciones de contenido */
+.content-section {
+    background-color: #f9f9f9;
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 25px;
+    display: none; /* Oculto por defecto */
+    flex-direction: column;
+    align-items: center; /* Centra el contenido horizontalmente */
+    text-align: center;
+}
+
+.content-section.active {
+    display: flex; /* Muestra la sección activa */
+}
+
+/* Sección "Enviar un pensamiento" */
+#sendThoughtSection textarea {
+    width: calc(100% - 20px); /* Ajusta el ancho para padding */
+    max-width: 600px; /* Limita el ancho máximo del textarea */
+    height: 150px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.05em;
+    margin-bottom: 20px;
+    resize: vertical;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#sendThoughtSection textarea:focus {
+    border-color: #007bff;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.08), 0 0 0 3px rgba(0, 123, 255, 0.2);
+    outline: none;
+}
+
+#sendThoughtSection .char-count {
+    font-size: 0.9em;
+    color: #777;
+    margin-top: -10px;
+    margin-bottom: 15px;
+    text-align: right;
+    width: calc(100% - 20px);
+    max-width: 600px;
+}
+
+/* Sección "Pensamiento destacado" */
+#featuredThoughtSection .thought-card {
+    background-color: #e9f5ff;
+    border: 1px solid #b3d9ff;
+    padding: 25px;
+    border-radius: 10px;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
+    max-width: 600px;
+    width: 100%;
+    text-align: left;
+    position: relative; /* Para posicionar el icono de traducción */
+}
+
+#featuredThoughtSection .thought-card p {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #222;
+    margin-bottom: 15px;
+    word-wrap: break-word;
+}
+
+#featuredThoughtSection .thought-card .meta-info {
+    font-size: 0.9em;
+    color: #666;
+    text-align: right;
+    margin-top: 15px;
+    border-top: 1px solid #cce0ff;
+    padding-top: 10px;
+}
+
+#featuredThoughtSection .thought-card .meta-info strong {
+    color: #007bff;
+}
+
+#featuredThoughtSection .thought-card .translate-icon {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: color 0.3s ease;
+}
+
+#featuredThoughtSection .thought-card .translate-icon:hover {
+    color: #0056b3;
+}
+
+/* Sección "Ver mis pensamientos" */
+#myThoughtsSection ul {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    max-width: 700px;
+}
+
+#myThoughtsSection li {
+    background-color: #f0faff;
+    border: 1px solid #cce0ff;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative; /* Para el botón de eliminar */
+}
+
+#myThoughtsSection li:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.12);
+}
+
+#myThoughtsSection li p {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1em;
+    line-height: 1.5;
+    color: #333;
+    margin-bottom: 10px;
+    word-wrap: break-word;
+    flex-grow: 1;
+}
+
+#myThoughtsSection li .meta-info {
+    font-size: 0.85em;
+    color: #777;
+    text-align: right;
+    margin-top: 5px;
+    padding-top: 8px;
+    border-top: 1px dashed #e0e0e0;
+}
+
+#myThoughtsSection li .delete-button {
     background: none;
     border: none;
-    font-size: 1.8em;
-    color: var(--text-color-secondary);
+    color: #dc3545;
+    font-size: 1.2em;
     cursor: pointer;
-    line-height: 1;
-    padding: 0;
-    margin: 0;
-    transition: color 0.2s ease;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    transition: color 0.3s ease;
+    padding: 5px; /* Aumenta el área de clic */
 }
 
-.close-btn:hover {
-    color: var(--text-color-primary);
+#myThoughtsSection li .delete-button:hover {
+    color: #c82333;
+    transform: scale(1.1);
 }
 
-.my-thoughts-list {
-    max-height: 300px;
-    overflow-y: auto;
-    padding-right: 10px;
-}
-
-.my-thought-item {
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.9em;
-    color: var(--text-color-primary);
-    background-color: var(--bg-color);
-    padding: 10px 15px;
+/* Mensajes de estado (éxito, error, carga) */
+.message-box {
+    padding: 15px;
+    margin-top: 20px;
     border-radius: 8px;
-    margin-bottom: 10px;
-    line-height: 1.4;
-    word-wrap: break-word;
-    white-space: pre-wrap;
+    font-weight: 500;
+    display: none; /* Oculto por defecto */
+    align-items: center;
+    gap: 10px;
+    max-width: 600px;
+    width: 100%;
+    box-sizing: border-box; /* Asegura que padding no aumente el ancho */
 }
 
-.my-thought-item:last-child {
-    margin-bottom: 0;
+.message-box.show {
+    display: flex;
 }
 
-.my-thought-date {
-    font-size: 0.75em;
-    color: var(--text-color-secondary);
-    margin-top: 5px;
-    display: block;
+.message-box.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
 }
 
-.no-thoughts-message {
-    font-family: 'Roboto Mono', monospace;
+.message-box.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.message-box.loading {
+    background-color: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
+}
+
+.message-box i {
+    font-size: 1.4em;
+}
+
+/* Estilos del Modal */
+.modal {
+    display: none; /* Oculto por defecto */
+    position: fixed; /* Permanece encima de todo */
+    z-index: 1000; /* Z-index alto para que esté por encima de otros elementos */
+    left: 0;
+    top: 0;
+    width: 100%; /* Ancho completo */
+    height: 100%; /* Alto completo */
+    overflow: auto; /* Habilitar scroll si es necesario */
+    background-color: rgba(0,0,0,0.6); /* Fondo semi-transparente */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 30px;
+    border: 1px solid #888;
+    width: 90%; /* Ancho responsivo */
+    max-width: 400px; /* Ancho máximo */
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    text-align: center;
+    position: relative;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.modal.show .modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    color: #007bff;
+    font-size: 1.6em;
+    margin-bottom: 20px;
+}
+
+.modal-content p {
+    margin-bottom: 25px;
+    font-size: 1.1em;
+    color: #555;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.modal-button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    font-weight: 500;
+}
+
+.modal-button.confirm {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+}
+
+.modal-button.confirm:hover {
+    background-color: #c82333;
+    box-shadow: 0 6px 15px rgba(220, 53, 69, 0.4);
+}
+
+.modal-button.cancel {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.modal-button.cancel:hover {
+    background-color: #e0e0e0;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+/* Estilos para la sección del mapa */
+#mapDisplaySection {
+    display: none; /* Oculto por defecto */
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+#mapDisplaySection.active {
+    display: flex;
+}
+
+#map {
+    height: 500px; /* Altura fija para el mapa */
+    width: 100%;
+    max-width: 800px; /* Ancho máximo para el mapa */
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    border: 1px solid #e0e0e0;
+}
+
+/* User ID Display */
+.user-id-display {
+    background-color: #e9f5ff;
+    color: #007bff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-top: 20px;
     font-size: 0.9em;
-    color: var(--placeholder-color);
+    font-weight: 600;
+    text-align: center;
+    word-break: break-all; /* Permite que el ID se rompa en varias líneas si es muy largo */
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+
+/* Pie de página */
+footer {
     text-align: center;
     padding: 20px;
+    margin-top: 40px;
+    color: #777;
+    font-size: 0.9em;
+    border-top: 1px solid #eee;
 }
-
 
 /* Media Queries para responsividad */
 @media (max-width: 768px) {
     .container {
+        margin: 10px;
         padding: 15px;
-        gap: 15px;
-        padding-top: 30px;
     }
 
-    .app-title {
+    h1 {
         font-size: 2em;
     }
 
-    .app-description {
-        font-size: 0.8em;
+    .tagline {
+        font-size: 0.9em;
     }
 
-    .featured-thought-box {
-        padding: 30px 15px;
-        margin-bottom: 15px;
-    }
-
-    .featured-thought-placeholder {
-        font-size: 1.1em;
-    }
-
-    .next-thought-btn {
-        bottom: 10px;
-        right: 10px;
+    .nav-button, .action-button {
+        padding: 10px 20px;
         font-size: 1em;
     }
 
-    .stats-and-actions {
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 10px;
-        margin-bottom: 15px;
+    .content-section {
+        padding: 20px;
     }
 
-    .card {
+    #sendThoughtSection textarea {
+        height: 120px;
         padding: 12px;
-        min-height: 80px;
     }
 
-    .card-icon {
-        font-size: 1.8em;
+    #featuredThoughtSection .thought-card,
+    #myThoughtsSection li {
+        padding: 20px;
     }
 
-    .card-text {
-        font-size: 0.9em;
+    #featuredThoughtSection .thought-card p {
+        font-size: 1em;
     }
 
-    .stat-card .card-text {
-        font-size: 1.1em;
+    #myThoughtsSection li p {
+        font-size: 0.95em;
     }
 
-    .write-thought-box {
-        padding: 15px;
+    .modal-content {
+        padding: 20px;
     }
 
-    .thought-input {
-        font-size: 0.9em;
+    .modal-content h3 {
+        font-size: 1.4em;
     }
 
-    .thought-input::placeholder {
-        font-size: 0.85em;
+    .modal-content p {
+        font-size: 1em;
     }
 
-    .char-count {
-        font-size: 0.8em;
-    }
-
-    .send-thought-btn {
-        padding: 8px 15px;
-        font-size: 0.9em;
-    }
-
-    .my-thoughts-display-section {
-        padding: 15px;
-        margin-bottom: 15px;
-    }
-
-    .my-thoughts-display-section .section-title {
-        font-size: 1.1em;
-    }
-
-    .close-btn {
-        font-size: 1.5em;
-    }
-
-    .my-thought-item {
-        font-size: 0.85em;
-        padding: 8px 12px;
-    }
-
-    .my-thought-date {
-        font-size: 0.7em;
+    #map {
+        height: 400px; /* Ajusta la altura del mapa para móviles */
     }
 }
 
 @media (max-width: 480px) {
-    .stats-and-actions {
-        grid-template-columns: 1fr;
+    .nav-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .nav-button, .action-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    #map {
+        height: 300px; /* Altura aún menor para pantallas muy pequeñas */
     }
 }
