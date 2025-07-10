@@ -138,12 +138,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funciones de Firebase ---
 
     // 1. Lanzar Pensamiento (Normal)
-    async function launchThought() {
-        const thoughtText = thoughtInput.value.trim();
-        if (thoughtText.length === 0 || thoughtText.length > MAX_CHARS_THOUGHT) {
-            alert("El pensamiento no puede estar vacío o exceder los " + MAX_CHARS_THOUGHT + " caracteres.");
+    async function loadMyThoughts() {
+        if (myThoughtsList) myThoughtsList.innerHTML = ''; // Limpiar lista
+        const userId = localStorage.getItem('anonymousUserId');
+
+        if (!userId) {
+            if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'block';
             return;
         }
+
+        // --- CALCULAR FECHA DE HACE 30 DÍAS ---
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        // Firebase Timestamp es un objeto, por lo que la comparación directa con Date() funciona bien.
+
+        // Modifica la consulta para incluir el filtro de 30 días
+        const q = query(
+            collection(db, "thoughts"),
+            where("userId", "==", userId),
+            where("timestamp", ">=", thirtyDaysAgo), // FILTRO: Mayor o igual a hace 30 días
+            orderBy("timestamp", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'block';
+        } else {
+            if (noMyThoughtsMessage) noMyThoughtsMessage.style.display = 'none';
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const li = document.createElement('li');
+                li.classList.add('my-thought-item');
+                const timestamp = data.timestamp ? data.timestamp.toDate() : new Date();
+                const formattedDate = timestamp.toLocaleDateString('es-ES', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+
+                // Aquí se añade el contador de encontrados
+                const foundCountText = data.foundCount !== undefined ? ` (Encontrado ${data.foundCount} veces)` : '';
+                li.innerHTML = `${data.text}<span class="my-thought-date">${formattedDate}${foundCountText}</span>`;
+                if (myThoughtsList) myThoughtsList.appendChild(li);
+            });
+        }
+    }
 
         // Generar un ID de usuario anónimo basado en IP (simulado o real si usas una función de backend)
         // Para un entorno de navegador, esto es un placeholder. En un entorno real, usarías una función de Cloud Functions.
