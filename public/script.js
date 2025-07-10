@@ -97,8 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!noCountryThoughtsMessage) console.error("Error: Elemento 'noCountryThoughtsMessage' no encontrado.");
 
 
-    const MAX_CHARS_THOUGHT = 200; // Límite de caracteres por pensamiento normal
-    const MAX_CHARS_TIME_CAPSULE = 500; // Límite de caracteres para cápsula del tiempo (más largo)
+    const MAX_CHARS_THOUGHT = 500; // Límite de caracteres por pensamiento normal, ahora 500
+    const MAX_CHARS_TIME_CAPSULE = 500; // Límite de caracteres para cápsula del tiempo (ya en 500)
     const THOUGHTS_PER_DAY_LIMIT = 3; // Límite de pensamientos por día
 
     // --- Funciones de Utilidad ---
