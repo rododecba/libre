@@ -65,8 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const noCountryThoughtsMessage = document.getElementById('noCountryThoughtsMessage');
 
     // --- Constantes y Variables ---
-    const MAX_CHARS_THOUGHT = 200; // Límite de caracteres por pensamiento normal (ajustado a 200)
-    const MAX_CHARS_TIME_CAPSULE = 200; // Límite de caracteres para cápsula del tiempo (ajustado a 200)
+    const MAX_CHARS_THOUGHT = 500; // Límite de caracteres por pensamiento normal (ajustado a 500)
+    const MAX_CHARS_TIME_CAPSULE = 500; // Límite de caracteres para cápsula del tiempo (ajustado a 500)
     const THOUGHTS_PER_DAY_LIMIT = 3; // Límite de pensamientos por día
 
     let currentThoughtIndex = 0; // Para el pensamiento destacado
