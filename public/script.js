@@ -9,13 +9,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Configuración de Firebase (asegúrate de reemplazar con tus credenciales) ---
     const firebaseConfig = {
-        apiKey: "TU_API_KEY", // Reemplaza con tu API Key de Firebase
-        authDomain: "TU_AUTH_DOMAIN", // Reemplaza con tu Auth Domain
-        projectId: "TU_PROJECT_ID", // Reemplaza con tu Project ID
-        storageBucket: "TU_STORAGE_BUCKET", // Reemplaza con tu Storage Bucket
-        messagingSenderId: "TU_MESSAGING_SENDER_ID", // Reemplaza con tu Messaging Sender ID
-        appId: "TU_APP_ID" // Reemplaza con tu App ID
-    };
+  apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
+  authDomain: "libre-c5bf7.firebaseapp.com",
+  projectId: "libre-c5bf7",
+  storageBucket: "libre-c5bf7.firebasestorage.app",
+  messagingSenderId: "339942652190",
+  appId: "1:339942652190:web:595ce692456b9df806f10f"
+};
 
     // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
