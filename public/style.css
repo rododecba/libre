@@ -242,7 +242,7 @@ body {
     background-color: #3e8e41;
 }
 
-/* ESTILOS PARA LA SECCIÓN DE PENSAMIENTOS DEL USUARIO */
+/* ESTILOS PARA LA SECCIÓN DE PENSAMIENTOS DEL USUARIO (Ahora "Ecos de mis Pensamientos") */
 .my-thoughts-display-section {
     background-color: var(--card-bg-color);
     border-radius: 12px;
@@ -321,6 +321,55 @@ body {
     color: var(--placeholder-color);
     text-align: center;
     padding: 20px;
+}
+
+/* --- ESTILOS PARA LA NUEVA SECCIÓN DE CÁPSULA DEL TIEMPO --- */
+.time-capsule-section {
+    background-color: var(--card-bg-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-light);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.time-capsule-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.time-capsule-section h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-color-primary);
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.time-capsule-section label {
+    font-size: 0.9em;
+    color: var(--text-color-secondary);
+    margin-bottom: -5px;
+}
+
+.time-capsule-date-input {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.95em;
+    color: var(--text-color-primary);
+    background-color: var(--bg-color);
+    max-width: 250px;
+    align-self: flex-start;
+}
+
+.time-capsule-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
 }
 
 
@@ -420,10 +469,28 @@ body {
     .my-thought-date {
         font-size: 0.7em;
     }
+
+    /* Media Queries específicos para la cápsula del tiempo */
+    .time-capsule-section {
+        padding: 15px;
+    }
+
+    .time-capsule-section h3 {
+        font-size: 1em;
+    }
+
+    .time-capsule-date-input {
+        font-size: 0.9em;
+        padding: 8px;
+    }
 }
 
 @media (max-width: 480px) {
     .stats-and-actions {
         grid-template-columns: 1fr;
+    }
+
+    .time-capsule-date-input {
+        max-width: 100%;
     }
 }
