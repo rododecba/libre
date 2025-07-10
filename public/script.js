@@ -1,13 +1,10 @@
-// --- Importaciones Firebase ---
+// --- Importaciones de Firebase ---
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
-import {
-    getFirestore, collection, addDoc, getDocs,
-    query, orderBy, limit, serverTimestamp, where,
-    doc, updateDoc
-} from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, where, doc, getDoc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
 
-// Configuración Firebase
+
+// --- TU CONFIGURACIÓN DE FIREBASE REAL ---
 const firebaseConfig = {
     apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
     authDomain: "libre-c5bf7.firebaseapp.com",
@@ -17,280 +14,533 @@ const firebaseConfig = {
     appId: "1:339942652190:web:595ce692456b9df806f10f"
 };
 
+// --- Inicialización de Firebase ---
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+const db = getFirestore(app); // Obtiene la instancia de Firestore
+const auth = getAuth(app);    // Obtiene la instancia de Auth
 
+// Initialize Firebase Auth
 let anonymousUserId = localStorage.getItem('anonymousUserId');
 
+// Helper function for anonymous sign-in
 async function signInAnonymouslyOnce() {
     if (!anonymousUserId) {
         try {
             const userCredential = await signInAnonymously(auth);
             anonymousUserId = userCredential.user.uid;
             localStorage.setItem('anonymousUserId', anonymousUserId);
+            console.log("Signed in anonymously with UID:", anonymousUserId);
         } catch (error) {
-            console.error("Auth error:", error);
-            anonymousUserId = crypto.randomUUID();
-            localStorage.setItem('anonymousUserId', anonymousUserId);
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.error("Anonymous sign-in failed:", errorCode, errorMessage);
+            // Fallback to local storage UUID if Firebase auth fails
+            if (!anonymousUserId) {
+                anonymousUserId = crypto.randomUUID();
+                localStorage.setItem('anonymousUserId', anonymousUserId);
+                console.warn("Using local UUID as fallback:", anonymousUserId);
+            }
         }
+    } else {
+        console.log("Existing anonymous user ID found:", anonymousUserId);
     }
 }
+
+// Ensure anonymous user is signed in on load
 signInAnonymouslyOnce();
 
-// DOM elements
-const elements = {
-    main: document.getElementById('mainSection'),
-    featuredPlaceholder: document.getElementById('featuredThoughtPlaceholder'),
-    featuredContent: document.getElementById('featuredThoughtContent'),
-    nextBtn: document.getElementById('nextThoughtBtn'),
-    thoughtInput: document.getElementById('thoughtInput'),
-    charCount: document.getElementById('charCount'),
-    launchBtn: document.getElementById('launchThoughtBtn'),
-    globalCount: document.getElementById('globalThoughtCount'),
-    overlays: {
-        my: document.getElementById('myThoughtsOverlay'),
-        time: document.getElementById('timeCapsuleOverlay'),
-        country: document.getElementById('viewByCountryOverlay'),
-        about: document.getElementById('aboutOverlay'),
-        faq: document.getElementById('faqOverlay')
-    },
-    cards: {
-        my: document.getElementById('myThoughtsCard'),
-        view: document.getElementById('viewByCountryCard'),
-        time: document.getElementById('timeCapsuleCard')
-    },
-    closeBtns: {
-        my: document.getElementById('closeMyThoughtsBtn'),
-        time: document.getElementById('closeTimeCapsuleBtn'),
-        view: document.getElementById('closeViewByCountryBtn'),
-        about: document.getElementById('closeAboutBtn'),
-        faq: document.getElementById('closeFaqBtn')
-    },
-    timeInput: document.getElementById('timeCapsuleThoughtInput'),
-    timeCount: document.getElementById('timeCapsuleCharCount'),
-    timeDate: document.getElementById('timeCapsuleDate'),
-    launchTimeBtn: document.getElementById('launchTimeCapsuleBtn'),
-    lists: {
-        my: document.getElementById('myThoughtsList'),
-        time: document.getElementById('timeCapsuleList'),
-        country: document.getElementById('countryThoughtsList')
-    },
-    noMsg: {
-        my: document.getElementById('noMyThoughtsMessage'),
-        time: document.getElementById('noTimeCapsulesMessage'),
-        country: document.getElementById('noCountryThoughtsMessage')
-    },
-    mapContainer: document.getElementById('mapContainer')
-};
 
-const MAX_CHAR = 500;
+// --- HTML Elements ---
+const featuredThoughtPlaceholder = document.getElementById('featuredThoughtPlaceholder');
+const featuredThoughtContent = document.getElementById('featuredThoughtContent');
+const nextThoughtBtn = document.getElementById('nextThoughtBtn');
+const thoughtInput = document.getElementById('thoughtInput');
+const charCount = document.getElementById('charCount');
+const launchThoughtBtn = document.getElementById('launchThoughtBtn');
+const globalThoughtCountDisplay = document.getElementById('globalThoughtCount'); // CORREGIDO: ID correcto
 
-// Utility
+// Card navigation elements
+const mainSection = document.getElementById('mainSection');
+const myThoughtsCard = document.getElementById('myThoughtsCard');
+const viewByCountryCard = document.getElementById('viewByCountryCard');
+const timeCapsuleCard = document.getElementById('timeCapsuleCard');
+
+// Section displays
+const myThoughtsSection = document.getElementById('myThoughtsSection');
+const closeMyThoughtsBtn = document.getElementById('closeMyThoughtsBtn');
+const myThoughtsList = document.getElementById('myThoughtsList');
+const noMyThoughtsMessage = document.getElementById('noMyThoughtsMessage');
+
+const timeCapsuleSection = document.getElementById('timeCapsuleSection');
+const closeTimeCapsuleBtn = document.getElementById('closeTimeCapsuleBtn');
+const timeCapsuleThoughtInput = document.getElementById('timeCapsuleThoughtInput');
+const timeCapsuleCharCount = document.getElementById('timeCapsuleCharCount');
+const timeCapsuleDateInput = document.getElementById('timeCapsuleDate');
+const launchTimeCapsuleBtn = document.getElementById('launchTimeCapsuleBtn');
+const timeCapsuleList = document.getElementById('timeCapsuleList');
+const noTimeCapsulesMessage = document.getElementById('noTimeCapsulesMessage');
+
+const viewByCountrySection = document.getElementById('viewByCountrySection');
+const closeViewByCountryBtn = document.getElementById('closeViewByCountryBtn');
+const mapContainer = document.getElementById('mapContainer');
+const countryThoughtsList = document.getElementById('countryThoughtsList');
+const noCountryThoughtsMessage = document.getElementById('noCountryThoughtsMessage');
+
+// NUEVOS ELEMENTOS PARA ACERCA DE Y FAQ
+const aboutLink = document.getElementById('aboutLink');
+const faqLink = document.getElementById('faqLink');
+const aboutSection = document.getElementById('aboutSection');
+const faqSection = document.getElementById('faqSection');
+const closeAboutBtn = document.getElementById('closeAboutBtn');
+const closeFaqBtn = document.getElementById('closeFaqBtn'); // CORREGIDO: Error de asignación
+
+
+// --- Global State ---
+const MAX_CHAR_COUNT = 500;
+let currentMap = null; // To store the Leaflet map instance
+let currentMarkers = {}; // To store markers on the map
+let countryCoordinatesCache = {}; // NUEVO: Cache para coordenadas de países
+
+
+// --- Utility Functions ---
+
+// Function to get approximate country based on IP (server-side function or external API)
 async function getCountry() {
     try {
-        const res = await fetch('https://ipapi.co/json/');
-        const data = await res.json();
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
         return data.country_name || 'Desconocido';
-    } catch {
+    } catch (error) {
+        console.error("Error getting country:", error);
         return 'Desconocido';
     }
 }
 
-function showOverlay(key) {
-    document.body.style.overflow = 'hidden';
-    elements.overlays[key].style.display = 'flex';
-}
-function hideOverlay(key) {
-    elements.overlays[key].style.display = 'none';
-    document.body.style.overflow = '';
-}
+// Function to hide all main sections and show a specific one
+function showSection(sectionToShow) {
+    mainSection.style.display = 'none';
+    myThoughtsSection.style.display = 'none';
+    timeCapsuleSection.style.display = 'none';
+    viewByCountrySection.style.display = 'none';
+    aboutSection.style.display = 'none';
+    faqSection.style.display = 'none';
 
-// Event listeners for cards and close buttons
-elements.cards.my.addEventListener('click', () => { showOverlay('my'); displayMyThoughts(); });
-elements.cards.view.addEventListener('click', () => { showOverlay('country'); updateCountryMap(); });
-elements.cards.time.addEventListener('click', () => { showOverlay('time'); displayTimeCapsules(); });
-document.getElementById('aboutLink').addEventListener('click', e => { e.preventDefault(); showOverlay('about'); });
-document.getElementById('faqLink').addEventListener('click', e => { e.preventDefault(); showOverlay('faq'); });
-
-Object.values(elements.closeBtns).forEach((btn, idx) => {
-    const keys = ['my','time','view','about','faq'];
-    btn.addEventListener('click', () => hideOverlay(keys[idx]));
-});
-
-window.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-        ['my','time','country','about','faq'].forEach(k => hideOverlay(k));
-    }
-});
-
-// Input char counts
-elements.thoughtInput.addEventListener('input', () => {
-    const len = elements.thoughtInput.value.length;
-    elements.charCount.textContent = `${len}/${MAX_CHAR}`;
-    elements.launchBtn.disabled = len > MAX_CHAR;
-    elements.charCount.style.color = len > MAX_CHAR ? 'red':'';
-});
-elements.nextBtn.addEventListener('click', fetchRandomThought);
-elements.launchBtn.addEventListener('click', async () => {
-    const text = elements.thoughtInput.value.trim();
-    if (!text || text.length > MAX_CHAR) return alert('Texto inválido');
-    const country = await getCountry();
-    await addThought(text, anonymousUserId, country);
-});
-
-// Time capsule events
-elements.timeInput.addEventListener('input', () => {
-    const len = elements.timeInput.value.length;
-    elements.timeCount.textContent = `${len}/${MAX_CHAR}`;
-    elements.launchTimeBtn.disabled = len > MAX_CHAR;
-    elements.timeCount.style.color = len > MAX_CHAR ? 'red':'';
-});
-elements.launchTimeBtn.addEventListener('click', async () => {
-    const msg = elements.timeInput.value.trim();
-    const dt = new Date(elements.timeDate.value);
-    if (!msg || msg.length > MAX_CHAR) return alert('Mensaje inválido');
-    if (isNaN(dt) || dt <= new Date()) return alert('Fecha inválida');
-    await addTimeCapsule(msg, dt, anonymousUserId);
-});
-
-// Firebase operations
-async function addThought(text, userId, country) {
-    try {
-        await addDoc(collection(db,'thoughts'), {
-            text, timestamp: serverTimestamp(), userId, country,
-            expiresAt: new Date(Date.now()+30*24*60*60*1000)
-        });
-        elements.thoughtInput.value=''; elements.charCount.textContent='0/500';
-        updateGlobalCount(); displayMyThoughts(); showOverlay('my');
-    } catch(e) { console.error(e); alert('Error al lanzar pensamiento'); }
+    sectionToShow.style.display = 'block';
 }
 
-async function fetchRandomThought() {
-    elements.featuredPlaceholder.style.display='block';
-    elements.featuredContent.textContent='';
-    const q = query(collection(db,'thoughts'), where('expiresAt','>',new Date()), orderBy('expiresAt','desc'), limit(100));
-    try {
-        const snap = await getDocs(q);
-        const arr = [];
-        snap.forEach(doc=>arr.push(doc.data().text));
-        if(arr.length){
-            const idx=Math.floor(Math.random()*arr.length);
-            elements.featuredPlaceholder.style.display='none';
-            elements.featuredContent.textContent=arr[idx];
-        } else {
-            elements.featuredContent.textContent='Sé el primero en lanzar uno!';
+// Function to hide a specific section and show mainSection
+function hideSection(sectionToHide) {
+    sectionToHide.style.display = 'none';
+    mainSection.offsetHeight; 
+    setTimeout(() => {
+        mainSection.style.display = 'flex'; 
+    }, 100); 
+}
+
+// NUEVO: Función refactorizada para contadores de caracteres
+function setupCharCounter(inputEl, countEl, maxChars, buttonEl) {
+    inputEl.addEventListener('input', () => {
+        const currentLength = inputEl.value.length;
+        countEl.textContent = `${currentLength}/${maxChars}`;
+        
+        const isTooLong = currentLength > maxChars;
+        const isEmpty = inputEl.value.trim().length === 0;
+
+        countEl.style.color = isTooLong ? 'red' : '';
+        if (buttonEl) {
+            buttonEl.disabled = isTooLong || isEmpty;
         }
-    } catch(e){ console.error(e); elements.featuredContent.textContent='Error cargando'; }
+    });
+    // Disparar una vez al inicio para establecer el estado inicial del botón
+    inputEl.dispatchEvent(new Event('input'));
 }
 
-async function updateGlobalCount() {
-    const q = query(collection(db,'thoughts'), where('expiresAt','>',new Date()));
-    const snap = await getDocs(q);
-    elements.globalCount.textContent=snap.size;
+
+// --- Firebase Operations ---
+
+// Add a thought to Firestore
+async function addThought(thoughtText, userId, countryName) {
+    try {
+        await addDoc(collection(db, "thoughts"), {
+            text: thoughtText,
+            timestamp: serverTimestamp(),
+            userId: userId,
+            country: countryName,
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        });
+        console.log("Thought launched!");
+        thoughtInput.value = '';
+        thoughtInput.dispatchEvent(new Event('input')); // Actualiza contador y botón
+        await updateGlobalThoughtCount();
+        await displayMyThoughts(); // Carga los pensamientos antes de mostrar la sección
+        showSection(myThoughtsSection); // MEJORA: Unificación de UX, muestra la sección de "mis pensamientos"
+    } catch (e) {
+        console.error("Error adding document: ", e);
+        alert("Hubo un error al lanzar tu pensamiento. Inténtalo de nuevo.");
+    }
 }
 
-async function displayMyThoughts() {
-    elements.lists.my.innerHTML=''; elements.noMsg.my.style.display='block';
-    const q = query(
-        collection(db,'thoughts'),
-        where('userId','==',anonymousUserId),
-        where('expiresAt','>',new Date()),
-        orderBy('expiresAt','asc'),
-        orderBy('timestamp','desc')
+// Fetch a random thought
+async function fetchRandomThought() {
+    featuredThoughtPlaceholder.style.display = 'block';
+    featuredThoughtContent.textContent = '';
+
+    const thoughtsRef = collection(db, "thoughts");
+    const q = query(thoughtsRef,
+        where("expiresAt", ">", new Date()),
+        orderBy("expiresAt", "desc"),
+        limit(100)
     );
-    const snap = await getDocs(q);
-    if(snap.empty) return;
-    elements.noMsg.my.style.display='none';
-    snap.forEach(docSnap=>{
-        const t=docSnap.data();
-        const d=t.timestamp?.toDate()||new Date();
-        const div=document.createElement('div');
-        div.className='my-thought-item';
-        div.innerHTML=`<p>${t.text}</p><span class="my-thought-date">${d.toLocaleString()}</span>`;
-        elements.lists.my.appendChild(div);
-    });
+
+    try {
+        const querySnapshot = await getDocs(q);
+        const thoughts = [];
+        querySnapshot.forEach((doc) => {
+            thoughts.push(doc.data().text);
+        });
+
+        if (thoughts.length > 0) {
+            const randomIndex = Math.floor(Math.random() * thoughts.length);
+            featuredThoughtPlaceholder.style.display = 'none';
+            featuredThoughtContent.textContent = thoughts[randomIndex];
+        } else {
+            featuredThoughtPlaceholder.style.display = 'none'; // Se oculta para mostrar el contenido
+            featuredThoughtContent.textContent = 'Parece que no hay pensamientos disponibles. ¡Sé el primero en lanzar uno!';
+        }
+    } catch (e) {
+        console.error("Error fetching random thought: ", e);
+        featuredThoughtPlaceholder.style.display = 'none'; // Se oculta para mostrar el error
+        featuredThoughtContent.textContent = 'Error al cargar pensamientos. Inténtalo de nuevo más tarde.';
+    }
 }
 
-async function addTimeCapsule(message, deployAt, userId) {
-    await addDoc(collection(db,'timeCapsules'), {
-        message, deployAt, userId, createdAt: serverTimestamp(), opened:false
-    });
-    elements.timeInput.value=''; elements.timeCount.textContent='0/500'; elements.timeDate.value='';
-    displayTimeCapsules();
+// Update global thought count
+async function updateGlobalThoughtCount() {
+    const thoughtsRef = collection(db, "thoughts");
+    const q = query(thoughtsRef, where("expiresAt", ">", new Date()));
+    try {
+        const querySnapshot = await getDocs(q);
+        globalThoughtCountDisplay.textContent = querySnapshot.size;
+    } catch (e) {
+        console.error("Error updating global thought count:", e);
+    }
+}
+
+// Display user's own thoughts
+async function displayMyThoughts() {
+    myThoughtsList.innerHTML = '';
+    noMyThoughtsMessage.style.display = 'block';
+
+    // IMPORTANTE: Esta consulta requiere un índice compuesto en Firestore.
+    // Colección: thoughts, Campos: userId (Asc), expiresAt (Asc), timestamp (Desc)
+    const thoughtsRef = collection(db, "thoughts");
+    const q = query(thoughtsRef,
+        where("userId", "==", anonymousUserId),
+        where("expiresAt", ">", new Date()), 
+        orderBy("expiresAt", "asc"),
+        orderBy("timestamp", "desc")
+    );
+
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            noMyThoughtsMessage.style.display = 'block';
+        } else {
+            noMyThoughtsMessage.style.display = 'none';
+            querySnapshot.forEach((doc) => {
+                const thought = doc.data();
+                const thoughtItem = document.createElement('div');
+                thoughtItem.className = 'my-thought-item';
+                const date = thought.timestamp ? thought.timestamp.toDate() : new Date();
+                thoughtItem.innerHTML = `
+                    <p>${thought.text}</p>
+                    <span class="my-thought-date">${date.toLocaleString()}</span>
+                `;
+                myThoughtsList.appendChild(thoughtItem);
+            });
+        }
+    } catch (e) {
+        console.error("Error displaying my thoughts: ", e);
+        myThoughtsList.innerHTML = '<p class="error-message">Error al cargar tus pensamientos. Revisa la consola para crear el índice de Firestore si es necesario.</p>';
+        noMyThoughtsMessage.style.display = 'none';
+    }
+}
+
+// --- Time Capsule Functions ---
+
+async function addTimeCapsule(messageText, deployDate, userId) {
+    try {
+        await addDoc(collection(db, "timeCapsules"), {
+            message: messageText,
+            deployAt: deployDate,
+            userId: userId,
+            createdAt: serverTimestamp(),
+            opened: false
+        });
+        console.log("Time Capsule programmed!");
+        timeCapsuleThoughtInput.value = '';
+        timeCapsuleDateInput.value = '';
+        timeCapsuleThoughtInput.dispatchEvent(new Event('input')); // Actualiza contador y botón
+        
+        // MEJORA: Unificación de UX
+        await displayTimeCapsules();
+        showSection(timeCapsuleSection); 
+    } catch (e) {
+        console.error("Error adding time capsule: ", e);
+        alert("Hubo un error al programar tu cápsula. Inténtalo de nuevo.");
+    }
 }
 
 async function displayTimeCapsules() {
-    elements.lists.time.innerHTML=''; elements.noMsg.time.style.display='block';
-    const q = query(collection(db,'timeCapsules'), where('userId','==',anonymousUserId), orderBy('deployAt','asc'));
-    const snap = await getDocs(q);
-    const now=new Date();
-    snap.forEach(async docSnap=>{
-        const c=docSnap.data(), d=c.deployAt.toDate();
-        let text, ready=d<=now && !c.opened;
-        text=ready ? `(DESPLEGADA): ${c.message}` : `Programada: ${d.toLocaleString()}`;
-        const div=document.createElement('div');
-        div.className='my-thought-item';
-        if(ready) div.classList.add('time-capsule-ready');
-        div.innerHTML=`<p>${text}</p>`;
-        elements.lists.time.appendChild(div);
-        if(ready) await updateDoc(doc(db,'timeCapsules',docSnap.id),{opened:true});
-    });
+    timeCapsuleList.innerHTML = '';
+    noTimeCapsulesMessage.style.display = 'block';
+
+    const capsulesRef = collection(db, "timeCapsules");
+    const q = query(capsulesRef,
+        where("userId", "==", anonymousUserId),
+        orderBy("deployAt", "asc")
+    );
+
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            noTimeCapsulesMessage.style.display = 'block';
+        } else {
+            noTimeCapsulesMessage.style.display = 'none';
+            const now = new Date();
+            querySnapshot.forEach(async (docSnap) => {
+                const capsule = docSnap.data();
+                const deployDate = capsule.deployAt.toDate();
+                const isReady = deployDate <= now;
+
+                const capsuleItem = document.createElement('div');
+                capsuleItem.className = 'my-thought-item';
+                if (isReady && !capsule.opened) {
+                    capsuleItem.classList.add('time-capsule-ready'); // CORREGIDO: Ahora el CSS le dará estilo
+                }
+
+                if (isReady) {
+                     capsuleItem.innerHTML = `<p><strong>(DESPLEGADA):</strong> ${capsule.message}</p> <span class="my-thought-date">Programada para: ${deployDate.toLocaleString()}</span>`;
+                } else {
+                     capsuleItem.innerHTML = `<p><strong>Programada para: ${deployDate.toLocaleString()}</strong></p><span class="my-thought-date">Mensaje: ${capsule.message.substring(0, 50)}...</span>`;
+                }
+                
+                timeCapsuleList.appendChild(capsuleItem);
+
+                if (isReady && !capsule.opened) {
+                    await updateDoc(doc(db, "timeCapsules", docSnap.id), {
+                        opened: true
+                    });
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Error displaying time capsules: ", e);
+        timeCapsuleList.innerHTML = '<p class="error-message">Error al cargar tus cápsulas del tiempo.</p>';
+        noTimeCapsulesMessage.style.display = 'none';
+    }
 }
 
-let map, markers={}, geoCoords={};
-function initMap(){ if(map) map.remove(); map=L.map(elements.mapContainer).setView([0,0],1);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(map);
+
+// --- Map and Country-based Thoughts Functions ---
+
+function initializeMap() {
+    if (currentMap) { 
+        currentMap.remove();
+        currentMap = null; 
+    }
+    currentMap = L.map(mapContainer).setView([20, 0], 2); // Vista inicial mejorada
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(currentMap);
 }
 
 async function updateCountryMap() {
-    initMap();
-    const q = query(collection(db,'thoughts'), where('expiresAt','>',new Date()));
-    const snap = await getDocs(q);
-    const counts={};
-    snap.forEach(docSnap=>{ const c=docSnap.data().country||'Desconocido'; counts[c]=(counts[c]||0)+1; });
-    Object.values(markers).forEach(m=>m.remove()); markers={};
-    for(const country in counts){
-        if(country==='Desconocido') continue;
-        if(!geoCoords[country]){
-            const res=await fetch(`https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(country)}&format=json&limit=1`);
-            const data=await res.json();
-            if(data[0]) geoCoords[country]=[parseFloat(data[0].lat),parseFloat(data[0].lon)];
-        }
-        if(geoCoords[country]){
-            const [lat,lon]=geoCoords[country], count=counts[country];
-            const m=L.marker([lat,lon]).addTo(map).bindPopup(`<b>${country}</b>: ${count}`).on('click',()=>displayCountryThoughts(country));
-            markers[country]=m;
+    if (!currentMap) {
+        initializeMap();
+    }
+
+    const thoughtsRef = collection(db, "thoughts");
+    const q = query(thoughtsRef, where("expiresAt", ">", new Date()));
+    const querySnapshot = await getDocs(q);
+
+    const countryCounts = {};
+    querySnapshot.forEach((doc) => {
+        const country = doc.data().country || 'Desconocido';
+        countryCounts[country] = (countryCounts[country] || 0) + 1;
+    });
+
+    // Limpia marcadores existentes
+    for (const key in currentMarkers) {
+        currentMarkers[key].remove();
+    }
+    currentMarkers = {};
+
+    for (const country in countryCounts) {
+        if (country === 'Desconocido') continue;
+
+        // MEJORA: Usar cache para las coordenadas
+        if (countryCoordinatesCache[country]) {
+            addMarkerToMap(country, countryCounts[country], countryCoordinatesCache[country]);
+        } else {
+            const geocodingUrl = `https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(country)}&format=json&limit=1`;
+            try {
+                const response = await fetch(geocodingUrl);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    const coords = [lat, lon];
+                    countryCoordinatesCache[country] = coords; // Guardar en cache
+                    addMarkerToMap(country, countryCounts[country], coords);
+                }
+            } catch (e) {
+                console.error(`Error fetching coordinates for ${country}:`, e);
+            }
         }
     }
 }
 
-async function displayCountryThoughts(country){
-    elements.lists.country.innerHTML=''; elements.noMsg.country.textContent=`No hay pensamientos de ${country}.`;
-    const q = query(
-        collection(db,'thoughts'),
-        where('country','==',country),
-        where('expiresAt','>',new Date()),
-        orderBy('expiresAt','asc'),
-        orderBy('timestamp','desc')
-    );
-    const snap=await getDocs(q);
-    if(snap.empty) return;
-    elements.noMsg.country.style.display='none';
-    snap.forEach(docSnap=>{
-        const t=docSnap.data(), d=t.timestamp?.toDate()||new Date();
-        const div=document.createElement('div');
-        div.className='my-thought-item';
-        div.innerHTML=`<p>"${t.text}"</p><span class="my-thought-date">${d.toLocaleString()} desde ${t.country}</span>`;
-        elements.lists.country.appendChild(div);
-    });
+function addMarkerToMap(country, count, coords) {
+    const [lat, lon] = coords;
+    const marker = L.marker([lat, lon])
+        .addTo(currentMap)
+        .bindPopup(`<b>${country}</b>: ${count} pensamiento(s)`)
+        .on('click', () => displayThoughtsByCountry(country));
+    currentMarkers[country] = marker;
 }
 
-// Initial calls
-fetchRandomThought();
-updateGlobalCount();
+async function displayThoughtsByCountry(country) {
+    countryThoughtsList.innerHTML = '';
+    noCountryThoughtsMessage.style.display = 'block';
 
-// Set time capsule min date
-const tomorrow=new Date();
-tomorrow.setDate(tomorrow.getDate()+1);
-elements.timeDate.min = tomorrow.toISOString().slice(0,16);
+    // IMPORTANTE: Esta consulta requiere un índice compuesto en Firestore.
+    // Colección: thoughts, Campos: country (Asc), expiresAt (Asc), timestamp (Desc)
+    const thoughtsRef = collection(db, "thoughts");
+    const q = query(thoughtsRef,
+        where("country", "==", country),
+        where("expiresAt", ">", new Date()),
+        orderBy("expiresAt", "asc"),
+        orderBy("timestamp", "desc")
+    );
+
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            noCountryThoughtsMessage.textContent = `No hay pensamientos de ${country} aún.`;
+            noCountryThoughtsMessage.style.display = 'block';
+        } else {
+            noCountryThoughtsMessage.style.display = 'none';
+            querySnapshot.forEach((doc) => {
+                const thought = doc.data();
+                const thoughtItem = document.createElement('div');
+                thoughtItem.className = 'my-thought-item';
+                const date = thought.timestamp ? thought.timestamp.toDate() : new Date();
+                thoughtItem.innerHTML = `
+                    <p>"${thought.text}"</p>
+                    <span class="my-thought-date">${date.toLocaleString()} desde ${thought.country}</span>
+                `;
+                countryThoughtsList.appendChild(thoughtItem);
+            });
+        }
+    } catch (e) {
+        console.error("Error displaying thoughts by country: ", e);
+        countryThoughtsList.innerHTML = '<p class="error-message">Error al cargar pensamientos. Revisa la consola para crear el índice de Firestore si es necesario.</p>';
+        noCountryThoughtsMessage.style.display = 'none';
+    }
+}
+
+
+// --- Event Listeners ---
+
+// Launch thought button
+launchThoughtBtn.addEventListener('click', async () => {
+    const thoughtText = thoughtInput.value.trim();
+    if (thoughtText && thoughtText.length <= MAX_CHAR_COUNT) {
+        launchThoughtBtn.disabled = true; // Deshabilita para evitar doble envío
+        const country = await getCountry();
+        await addThought(thoughtText, anonymousUserId, country);
+        launchThoughtBtn.disabled = false; // Rehabilita
+    }
+});
+
+// Next thought button
+nextThoughtBtn.addEventListener('click', fetchRandomThought);
+
+// Card clicks to show sections
+myThoughtsCard.addEventListener('click', () => {
+    displayMyThoughts();
+    showSection(myThoughtsSection);
+});
+
+viewByCountryCard.addEventListener('click', () => {
+    showSection(viewByCountrySection);
+    // Retrasar la inicialización del mapa hasta que la sección sea visible para que se renderice correctamente
+    setTimeout(() => {
+        updateCountryMap();
+    }, 0);
+});
+
+timeCapsuleCard.addEventListener('click', () => {
+    displayTimeCapsules();
+    showSection(timeCapsuleSection);
+});
+
+// Close buttons for sections
+closeMyThoughtsBtn.addEventListener('click', () => hideSection(myThoughtsSection));
+closeViewByCountryBtn.addEventListener('click', () => hideSection(viewByCountrySection));
+closeTimeCapsuleBtn.addEventListener('click', () => hideSection(timeCapsuleSection));
+closeAboutBtn.addEventListener('click', () => hideSection(aboutSection));
+closeFaqBtn.addEventListener('click', () => hideSection(faqSection)); // CORREGIDO
+
+// Time Capsule launch button
+launchTimeCapsuleBtn.addEventListener('click', async () => {
+    const messageText = timeCapsuleThoughtInput.value.trim();
+    const deployDateStr = timeCapsuleDateInput.value;
+    
+    if (!deployDateStr) {
+        alert("Por favor, selecciona una fecha y hora para tu cápsula del tiempo.");
+        return;
+    }
+    const deployDate = new Date(deployDateStr);
+
+    if (!messageText || messageText.length > MAX_CHAR_COUNT) {
+        alert("Por favor, escribe un mensaje válido (máximo 500 caracteres).");
+        return;
+    }
+    if (isNaN(deployDate.getTime()) || deployDate <= new Date()) {
+        alert("Por favor, selecciona una fecha y hora futura válida.");
+        return;
+    }
+
+    launchTimeCapsuleBtn.disabled = true; // Deshabilita para evitar doble envío
+    await addTimeCapsule(messageText, deployDate, anonymousUserId);
+    launchTimeCapsuleBtn.disabled = false; // Rehabilita
+});
+
+
+// Listeners para Acerca de y FAQ
+aboutLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    showSection(aboutSection);
+});
+
+faqLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    showSection(faqSection);
+});
+
+
+// --- Initial Calls ---
+
+// MEJORA: Usar la función refactorizada para los contadores
+setupCharCounter(thoughtInput, charCount, MAX_CHAR_COUNT, launchThoughtBtn);
+setupCharCounter(timeCapsuleThoughtInput, timeCapsuleCharCount, MAX_CHAR_COUNT, launchTimeCapsuleBtn);
+
+fetchRandomThought();
+updateGlobalThoughtCount();
+
+// Set min date for time capsule input to today
+const now = new Date();
+const nowISO = now.toISOString().slice(0, 16);
+timeCapsuleDateInput.min = nowISO;
