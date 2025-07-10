@@ -55,7 +55,7 @@ body {
     font-size: 0.8em; /* Tamaño de fuente más pequeño */
     color: var(--text-color-secondary);
     line-height: 1.5;
-    max-width: 600px;
+    max-width: 600px; /* Esto es clave para el ancho */
     margin: 0 auto;
     text-align: center;
     padding: 0 10px;
