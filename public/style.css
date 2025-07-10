@@ -167,8 +167,9 @@ body {
 
 /* Estilos específicos para la tarjeta de estadística */
 .stat-card .card-text {
-    font-size: 1.2em;
-    font-weight: 700;
+    font-size: 1.2em; /* Tamaño como el contador */
+    font-weight: 700; /* Grosor como el contador */
+    color: var(--text-color-primary);
     margin-bottom: 0px;
     line-height: 1.2;
 }
