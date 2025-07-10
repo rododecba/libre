@@ -11,6 +11,7 @@
     --button-bg-color: #4CAF50; /* Color de botón (verde) */
     --button-text-color: #ffffff;
     --placeholder-color: #999;
+    --border-radius: 12px; /* Definido como variable para consistencia */
 }
 
 /* Estilos Generales */
@@ -69,18 +70,18 @@ body {
 
 .featured-thought-box {
     background-color: var(--card-bg-color);
-    border-radius: 12px;
+    border-radius: var(--border-radius); /* Usando variable */
     box-shadow: var(--shadow-light);
     padding: 40px 20px;
     text-align: center;
     min-height: 100px;
     display: flex;
-    flex-direction: column; /* Cambiado a column para centrar el texto y luego el botón */
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
-    margin-bottom: 20px; /* Margen inferior para separar */
-    position: relative; /* Importante para posicionar el botón */
+    margin-bottom: 20px;
+    position: relative;
 }
 
 .featured-thought-placeholder {
@@ -88,7 +89,7 @@ body {
     font-weight: 600;
     color: var(--placeholder-color);
     text-transform: uppercase;
-    margin-bottom: 10px; /* Espacio entre placeholder y el botón si aparece */
+    margin-bottom: 10px;
 }
 
 .featured-thought-content {
@@ -96,7 +97,7 @@ body {
     font-style: italic;
     color: var(--text-color-primary);
     margin: 0;
-    flex-grow: 1; /* Permite que el contenido ocupe el espacio principal */
+    flex-grow: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -110,17 +111,17 @@ body {
     color: var(--text-color-secondary);
     font-size: 1.2em;
     cursor: pointer;
-    position: absolute; /* Posicionamiento absoluto */
-    bottom: 15px; /* Ajusta la posición desde abajo */
-    right: 15px; /* Ajusta la posición desde la derecha */
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
     padding: 5px;
-    border-radius: 50%; /* Para un efecto más suave si el fondo cambia */
+    border-radius: 50%;
     transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .next-thought-btn:hover {
     color: var(--text-color-primary);
-    background-color: rgba(0, 0, 0, 0.05); /* Un ligero fondo al pasar el ratón */
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 
@@ -129,12 +130,12 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 15px;
-    margin-bottom: 20px; /* Margen inferior para separar */
+    margin-bottom: 20px;
 }
 
 .card {
     background-color: var(--card-bg-color);
-    border-radius: 12px;
+    border-radius: var(--border-radius); /* Usando variable */
     box-shadow: var(--shadow-light);
     padding: 15px;
     display: flex;
@@ -158,21 +159,19 @@ body {
     margin-bottom: 8px;
 }
 
-/* Estilo para el texto principal de TODAS las tarjetas flotantes (como el contador) */
 .card-text {
-    font-size: 0.75em; /* Ajustado para que sea como el contador */
-    font-weight: 400; /* Ajustado para que sea como el contador */
+    font-size: 0.75em;
+    font-weight: 400;
     color: var(--text-color-primary);
     margin: 0;
     line-height: 1.2;
 }
 
-/* Estilo para el subtítulo de la tarjeta de estadística */
 .stat-card .card-subtitle {
-    display: block; /* Cambiado de 'none' a 'block' para que sea visible */
-    font-size: 0.75em; /* Tamaño más pequeño para el subtítulo */
+    display: block;
+    font-size: 0.75em;
     color: var(--text-color-secondary);
-    margin-top: 5px; /* Espacio entre el número y el texto */
+    margin-top: 5px;
 }
 
 
@@ -183,7 +182,7 @@ body {
 
 .write-thought-box {
     background-color: var(--card-bg-color);
-    border-radius: 12px;
+    border-radius: var(--border-radius); /* Usando variable */
     box-shadow: var(--shadow-light);
     padding: 20px;
     display: flex;
@@ -209,7 +208,7 @@ body {
     resize: none;
     min-height: 50px;
     line-height: 1.5;
-    background-color: transparent; /* Para que el fondo sea el de la caja */
+    background-color: transparent;
     color: var(--text-color-primary);
 }
 
@@ -246,20 +245,19 @@ body {
 .my-thoughts-display-section,
 .time-capsule-section,
 .view-by-country-section,
-.info-section { /* Clase para las nuevas secciones de info */
+.info-section {
     background-color: var(--card-bg-color);
-    border-radius: 12px;
+    border-radius: var(--border-radius); /* Usando variable */
     box-shadow: var(--shadow-light);
     padding: 20px;
     margin-bottom: 20px;
     box-sizing: border-box;
     position: relative;
-    /* Z-index para asegurar que estén por encima del contenido principal */
-    z-index: 100; 
+    z-index: 100;
 }
 
 .my-thoughts-header,
-.info-section-header { /* Encabezado común para todas las secciones superpuestas */
+.info-section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -292,10 +290,14 @@ body {
     color: var(--text-color-primary);
 }
 
-.my-thoughts-list {
+/* --- CAMBIOS CLAVE AQUÍ PARA REDUCIR ESPACIO EN LISTAS (APLICADO) --- */
+.my-thoughts-list, .time-capsule-list, .country-thoughts-list {
     max-height: 300px;
     overflow-y: auto;
-    padding-right: 10px;
+    padding-right: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin: 0;
 }
 
 .my-thought-item {
@@ -305,10 +307,16 @@ body {
     background-color: var(--bg-color);
     padding: 10px 15px;
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 8px; /* REDUCIDO DE 10px a 8px */
     line-height: 1.4;
     word-wrap: break-word;
     white-space: pre-wrap;
+    display: flex;
+    flex-direction: column;
+}
+
+.my-thought-item p {
+    margin: 0 0 5px 0;
 }
 
 .my-thought-item:last-child {
@@ -318,7 +326,8 @@ body {
 .my-thought-date {
     font-size: 0.75em;
     color: var(--text-color-secondary);
-    margin-top: 5px;
+    margin-top: 0;
+    text-align: right;
     display: block;
 }
 
@@ -363,26 +372,20 @@ body {
     align-self: flex-start;
 }
 
-.time-capsule-list {
-    max-height: 300px;
-    overflow-y: auto;
-    padding-right: 10px;
-}
-
 /* --- ESTILOS PARA LA SECCIÓN DE VER POR PAÍS --- */
 .view-by-country-section .map-container {
-    height: 400px; /* Altura mínima para que el mapa sea visible */
-    background-color: var(--bg-color); /* Fondo si el mapa no carga */
-    border-radius: 8px; /* Opcional, para redondear las esquinas del mapa */
-    overflow: hidden; /* Asegura que el mapa no se desborde */
-    margin-bottom: 15px; /* Espacio debajo del mapa */
+    height: 400px;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
 }
 
 /* --- ESTILOS PARA LAS NUEVAS SECCIONES DE INFORMACIÓN ("Acerca de", "FAQ") --- */
 .info-section-content {
-    max-height: 400px; /* Limita la altura y añade scroll si es necesario */
+    max-height: 400px;
     overflow-y: auto;
-    padding-right: 10px; /* Para el espacio del scrollbar */
+    padding-right: 10px;
     line-height: 1.6;
 }
 
@@ -439,7 +442,7 @@ body {
 /* --- ESTILOS PARA EL PIE DE PÁGINA --- */
 .footer {
     text-align: center;
-    padding: 20px 0 30px; /* Más padding abajo */
+    padding: 20px 0 30px;
     font-size: 0.85em;
     color: var(--text-color-secondary);
     margin-top: 20px;
@@ -478,7 +481,7 @@ body {
     }
 
     .app-description {
-        font-size: 0.8em; /* Ajustado para pantallas pequeñas */
+        font-size: 0.8em;
     }
 
     .featured-thought-box {
@@ -512,15 +515,15 @@ body {
     }
 
     .card-text {
-        font-size: 1.1em; /* Ajustado para pantallas pequeñas */
+        font-size: 1.1em;
     }
 
     .stat-card .card-text {
-        font-size: 1.1em; /* Ajustado para pantallas pequeñas */
+        font-size: 1.1em;
     }
 
     .stat-card .card-subtitle {
-        font-size: 0.7em; /* Ajustado para pantallas pequeñas */
+        font-size: 0.7em;
     }
 
     .write-thought-box {
@@ -567,7 +570,6 @@ body {
         font-size: 0.7em;
     }
 
-    /* Media Queries específicos para la cápsula del tiempo */
     .time-capsule-section {
         padding: 15px;
     }
@@ -581,13 +583,12 @@ body {
         padding: 8px;
     }
 
-    /* Info sections on smaller screens */
     .info-section {
         padding: 15px;
     }
 
     .info-section-content {
-        max-height: 350px; /* Ajuste para móviles */
+        max-height: 350px;
     }
 
     .info-section-content p,
@@ -610,12 +611,12 @@ body {
     }
 
     .footer-links {
-        flex-direction: column; /* Apila los enlaces en móviles */
+        flex-direction: column;
     }
     .footer-links a, .footer-separator {
-        margin: 5px 0; /* Más espacio vertical */
+        margin: 5px 0;
     }
     .footer-separator {
-        display: none; /* Oculta el separador al apilar */
+        display: none;
     }
 }
