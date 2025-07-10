@@ -166,15 +166,6 @@ body {
     line-height: 1.2;
 }
 
-/* Estilos específicos para la tarjeta de estadística (el número ya hereda de .card-text) */
-.stat-card .card-text {
-    /* Estas propiedades ya son las mismas que .card-text ahora, pero se mantienen por especificidad */
-    font-size: 1.2em;
-    font-weight: 700;
-    margin-bottom: 0px; /* Asegura que no haya margen extra con el subtítulo */
-    line-height: 1.2;
-}
-
 /* Estilo para el subtítulo de la tarjeta de estadística */
 .stat-card .card-subtitle {
     display: block; /* Cambiado de 'none' a 'block' para que sea visible */
