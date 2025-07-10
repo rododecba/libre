@@ -158,7 +158,7 @@ body {
 }
 
 .card-text {
-    font-size: 0.95em;
+    font-size: 0.75em;
     font-weight: 500;
     color: var(--text-color-primary);
     margin: 0;
