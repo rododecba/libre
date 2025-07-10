@@ -159,8 +159,8 @@ body {
 
 /* Estilo para el texto principal de TODAS las tarjetas flotantes (como el contador) */
 .card-text {
-    font-size: 2.2em; /* Ajustado para que sea como el contador */
-    font-weight: 700; /* Ajustado para que sea como el contador */
+    font-size: 1.2em; /* Ajustado para que sea como el contador */
+    font-weight: 400; /* Ajustado para que sea como el contador */
     color: var(--text-color-primary);
     margin: 0;
     line-height: 1.2;
