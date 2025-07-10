@@ -51,8 +51,8 @@ body {
 }
 
 .app-description {
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.64em; /* Reducido un 20% de 0.8em */
+    font-family: 'Roboto Mono', monospace; /* Fuente para la descripción */
+    font-size: 0.64em; /* Tamaño de fuente más pequeño (20% de 0.8em) */
     color: var(--text-color-secondary);
     line-height: 1.5;
     max-width: 600px;
@@ -157,26 +157,28 @@ body {
     margin-bottom: 8px;
 }
 
+/* Estilo para el texto principal de TODAS las tarjetas flotantes (como el contador) */
 .card-text {
-    font-size: 0.75em;
-    font-weight: 400;
+    font-size: 1.2em; /* Ajustado para que sea como el contador */
+    font-weight: 700; /* Ajustado para que sea como el contador */
     color: var(--text-color-primary);
     margin: 0;
     line-height: 1.2;
 }
 
-/* Estilos específicos para la tarjeta de estadística */
+/* Estilos específicos para la tarjeta de estadística (el número ya hereda de .card-text) */
 .stat-card .card-text {
-    font-size: 1.2em; /* Tamaño como el contador */
-    font-weight: 700; /* Grosor como el contador */
-    color: var(--text-color-primary);
-    margin-bottom: 0px;
+    /* Estas propiedades ya son las mismas que .card-text ahora, pero se mantienen por especificidad */
+    font-size: 1.2em;
+    font-weight: 700;
+    margin-bottom: 0px; /* Asegura que no haya margen extra con el subtítulo */
     line-height: 1.2;
 }
 
+/* Estilo para el subtítulo de la tarjeta de estadística */
 .stat-card .card-subtitle {
     display: block; /* Cambiado de 'none' a 'block' para que sea visible */
-    font-size: 0.75em; /* Ajusta el tamaño si es necesario */
+    font-size: 0.75em; /* Tamaño más pequeño para el subtítulo */
     color: var(--text-color-secondary);
     margin-top: 5px; /* Espacio entre el número y el texto */
 }
@@ -215,6 +217,8 @@ body {
     resize: none;
     min-height: 50px;
     line-height: 1.5;
+    background-color: transparent; /* Para que el fondo sea el de la caja */
+    color: var(--text-color-primary);
 }
 
 .thought-input::placeholder {
@@ -376,6 +380,25 @@ body {
     padding-right: 10px;
 }
 
+/* --- ESTILOS PARA LA SECCIÓN DE VER POR PAÍS --- */
+.view-by-country-section {
+    background-color: var(--card-bg-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-light);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.view-by-country-section .map-container {
+    height: 400px; /* Altura mínima para que el mapa sea visible */
+    background-color: var(--bg-color); /* Fondo si el mapa no carga */
+    border-radius: 8px; /* Opcional, para redondear las esquinas del mapa */
+    overflow: hidden; /* Asegura que el mapa no se desborde */
+    margin-bottom: 15px; /* Espacio debajo del mapa */
+}
+
 
 /* Media Queries para responsividad */
 @media (max-width: 768px) {
@@ -390,7 +413,7 @@ body {
     }
 
     .app-description {
-        font-size: 0.8em;
+        font-size: 0.8em; /* Ajustado para pantallas pequeñas */
     }
 
     .featured-thought-box {
@@ -424,11 +447,15 @@ body {
     }
 
     .card-text {
-        font-size: 0.9em;
+        font-size: 1.1em; /* Ajustado para pantallas pequeñas */
     }
 
     .stat-card .card-text {
-        font-size: 1.1em;
+        font-size: 1.1em; /* Ajustado para pantallas pequeñas */
+    }
+
+    .stat-card .card-subtitle {
+        font-size: 0.7em; /* Ajustado para pantallas pequeñas */
     }
 
     .write-thought-box {
