@@ -22,53 +22,50 @@
 </p>
         </header>
 
-        <section class="featured-thought-section">
-    <div class="featured-thought-box">
-        <p class="featured-thought-placeholder" id="featuredThoughtPlaceholder">
-            Un pensamiento aleatorio del mundo
-        </p>
-        <p class="featured-thought-content" id="featuredThoughtContent"></p>
-        <button class="next-thought-btn" id="nextThoughtBtn" title="Ver siguiente pensamiento">
-            <i class="fas fa-redo"></i>
-        </button>
-    </div>
-</section>
-
-<section class="stats-and-actions">
-           
-    <div class="card" id="myThoughtsCard">
-        <i class="fas fa-brain card-icon"></i>
-        <p class="card-text">Ecos de mis Pensamientos</p>
-    </div>
-
-    <div class="card" id="viewByCountryCard">
-        <i class="fas fa-globe-americas card-icon"></i>
-        <p class="card-text">Ver por País</p>
-    </div>
-
-    <div class="card" id="timeCapsuleCard">
-        <i class="fas fa-hourglass-half card-icon"></i>
-        <p class="card-text">Cápsula del Tiempo</p>
-    </div>
-
-    <div class="card stat-card" id="thoughtsWrittenCard">
-        <p class="card-text" id="globalThoughtCount">0</p>
-        <p class="card-subtitle">Pensamientos escritos</p>
-    </div>
-</section>
-
-        <section class="write-thought-section">
-            <div class="write-thought-box">
-                <div class="textarea-wrapper">
-                    <textarea id="thoughtInput" class="thought-input" placeholder="Escribe tu pensamiento..."></textarea>
+        <div id="mainSection">
+            <section class="featured-thought-section">
+                <div class="featured-thought-box">
+                    <p class="featured-thought-placeholder" id="featuredThoughtPlaceholder">
+                        Un pensamiento aleatorio del mundo
+                    </p>
+                    <p class="featured-thought-content" id="featuredThoughtContent"></p>
+                    <button class="next-thought-btn" id="nextThoughtBtn" title="Ver siguiente pensamiento">
+                        <i class="fas fa-redo"></i>
+                    </button>
                 </div>
-                <span class="char-count" id="charCount">0/200</span>
-                <button class="send-thought-btn" id="sendThoughtBtn">Lanzar Pensamiento</button>
-            </div>
-        </section>
+            </section>
 
-        <section class="my-thoughts-display-section" id="myThoughtsDisplaySection" style="display: none;">
-            <div class="my-thoughts-header">
+            <section class="stats-and-actions">
+                <div class="card" id="myThoughtsCard">
+                    <i class="fas fa-brain card-icon"></i>
+                    <p class="card-text">Ecos de mis Pensamientos</p>
+                </div>
+
+                <div class="card" id="viewByCountryCard">
+                    <i class="fas fa-globe-americas card-icon"></i>
+                    <p class="card-text">Ver por País</p>
+                </div>
+
+                <div class="card" id="timeCapsuleCard">
+                    <i class="fas fa-hourglass-half card-icon"></i>
+                    <p class="card-text">Cápsula del Tiempo</p>
+                </div>
+
+                <div class="card stat-card" id="thoughtsWrittenCard">
+                    <p class="card-text" id="globalThoughtCount">0</p>
+                    <p class="card-subtitle">Pensamientos escritos</p>
+                </div>
+            </section>
+
+            <section class="write-thought-section">
+                <div class="write-thought-box">
+                    <div class="textarea-wrapper">
+                        <textarea id="thoughtInput" class="thought-input" placeholder="Escribe tu pensamiento..."></textarea>
+                    </div>
+                    <span class="char-count" id="charCount">0/200</span> <button class="send-thought-btn" id="launchThoughtBtn">Lanzar Pensamiento</button>
+                </div>
+            </section>
+        </div> <section class="my-thoughts-display-section" id="myThoughtsSection" style="display: none;"> <div class="my-thoughts-header">
                 <h2 class="section-title">Tus Ecos Personales</h2>
                 <button class="close-btn" id="closeMyThoughtsBtn">&times;</button>
             </div>
@@ -85,19 +82,14 @@
             <div class="time-capsule-content">
                 <h3>Envía un mensaje al futuro</h3>
                 <div class="textarea-wrapper">
-                    <textarea id="timeCapsuleInput" class="thought-input" placeholder="Escribe tu mensaje para el futuro..."></textarea>
-                </div>
-                <span class="char-count" id="timeCapsuleCharCount">0/200</span>
-                <label for="timeCapsuleDate">Desplegar en la fecha:</label>
+                    <textarea id="timeCapsuleThoughtInput" class="thought-input" placeholder="Escribe tu mensaje para el futuro..."></textarea> </div>
+                <span class="char-count" id="timeCapsuleCharCount">0/200</span> <label for="timeCapsuleDate">Desplegar en la fecha:</label>
                 <input type="date" id="timeCapsuleDate" class="time-capsule-date-input">
-                <button class="send-thought-btn" id="sendTimeCapsuleBtn">Programar Mensaje</button>
-
-                <hr style="margin: 20px 0; border-color: var(--border-color);">
+                <button class="send-thought-btn" id="launchTimeCapsuleBtn">Programar Mensaje</button> <hr style="margin: 20px 0; border-color: var(--border-color);">
 
                 <h3>Mensajes del Futuro (Cápsulas Desplegadas)</h3>
                 <div class="time-capsule-list" id="timeCapsuleList">
-                    <p class="no-thoughts-message" id="noTimeCapsuleMessage">No hay cápsulas del tiempo desplegadas aún.</p>
-                </div>
+                    <p class="no-thoughts-message" id="noTimeCapsulesMessage">No hay cápsulas del tiempo desplegadas aún.</p> </div>
             </div>
         </section>
 
@@ -107,7 +99,7 @@
                 <button class="close-btn" id="closeViewByCountryBtn">&times;</button>
             </div>
             <div class="map-container" id="mapContainer">
-                </div>
+            </div>
             <div class="country-thoughts-list" id="countryThoughtsList">
                 <p class="no-thoughts-message" id="noCountryThoughtsMessage">Selecciona un país en el mapa para ver sus pensamientos.</p>
             </div>
