@@ -92,7 +92,7 @@ const faqLink = document.getElementById('faqLink');
 const aboutSection = document.getElementById('aboutSection');
 const faqSection = document.getElementById('faqSection');
 const closeAboutBtn = document.getElementById('closeAboutBtn');
-const closeFaqBtn = document.getElementById('closeFaqBtn');
+const closeFaqBtn = document = document.getElementById('closeFaqBtn');
 
 
 // --- Global State ---
@@ -130,7 +130,7 @@ function showSection(sectionToShow) {
 // Function to hide a specific section and show mainSection
 function hideSection(sectionToHide) {
     sectionToHide.style.display = 'none';
-    mainSection.style.display = 'none'; // Ocultamos temporalmente mainSection
+    // mainSection.style.display = 'none'; // <--- ESTA LÍNEA HA SIDO ELIMINADA
     // Forzar un reflow/repaint para que el navegador recalcule el layout
     mainSection.offsetHeight; // Lee la propiedad offsetHeight para forzar el reflow
 
@@ -219,8 +219,8 @@ async function displayMyThoughts() {
     const q = query(thoughtsRef,
         where("userId", "==", anonymousUserId),
         where("expiresAt", ">", new Date()), // Filtro de desigualdad
-        orderBy("expiresAt", "asc"),         // ¡Primero ordenamos por expiresAt!
-        orderBy("timestamp", "desc")         // Luego por timestamp
+        orderBy("expiresAt", "asc"),          // ¡Primero ordenamos por expiresAt!
+        orderBy("timestamp", "desc")          // Luego por timestamp
     );
 
     try {
@@ -396,8 +396,8 @@ async function displayThoughtsByCountry(country) {
     const q = query(thoughtsRef,
         where("country", "==", country),
         where("expiresAt", ">", new Date()), // Filtro de desigualdad
-        orderBy("expiresAt", "asc"),         // ¡Primero ordenamos por expiresAt!
-        orderBy("timestamp", "desc")         // Luego por timestamp
+        orderBy("expiresAt", "asc"),          // ¡Primero ordenamos por expiresAt!
+        orderBy("timestamp", "desc")          // Luego por timestamp
     );
 
     try {
