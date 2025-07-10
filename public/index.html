@@ -82,17 +82,15 @@
                 <button class="nav-button" data-section="featuredThoughtSection"><i class="fas fa-eye"></i> Destacado</button>
                 <button class="nav-button" data-section="myThoughtsSection"><i class="fas fa-brain"></i> Mis Pensamientos</button>
                 <button class="nav-button" data-section="mapDisplaySection"><i class="fas fa-globe-americas"></i> Ver por País</button>
-                <!-- La tarjeta "Ecos del Pensamiento" se ha integrado en "Mis Pensamientos" o puede ser una estadística general -->
-                <!-- <button class="nav-button" data-section="ecosThoughtsSection"><i class="fas fa-wave-square"></i> Ecos</button> -->
             </div>
         </footer>
     </div>
 
-    <!-- Enlace al archivo JavaScript principal -->
-    <script src="script.js" type="module"></script>
-
-    <!-- CAMBIO: Enlace a Leaflet JS de forma local -->
+    <!-- CAMBIO: Enlace a Leaflet JS de forma local - DEBE IR ANTES DE script.js -->
     <!-- Asegúrate de haber descargado Leaflet y colocado 'leaflet.js' en lib/leaflet/ -->
     <script src="lib/leaflet/leaflet.js"></script>
+    
+    <!-- Enlace al archivo JavaScript principal -->
+    <script src="script.js" type="module"></script>
 </body>
 </html>
