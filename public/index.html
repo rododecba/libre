@@ -13,13 +13,13 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
+        <header class="header" role="navigation">
             <h1 class="app-title">LIBRE</h1>
-           <p class="app-description">
-    Un espacio para tus pensamientos más libres. Escribe lo que quieras, sin esperar nada a cambio.<br>
-    Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo,
-    sin saber quién eres, ni quién la encontró.
-</p>
+            <p class="app-description">
+                Un espacio para tus pensamientos más libres. Escribe lo que quieras, sin esperar nada a cambio.<br>
+                Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo,
+                sin saber quién eres, ni quién la encontró.
+            </p>
         </header>
 
         <div id="mainSection">
@@ -29,24 +29,24 @@
                         Un pensamiento aleatorio del mundo
                     </p>
                     <p class="featured-thought-content" id="featuredThoughtContent"></p>
-                    <button class="next-thought-btn" id="nextThoughtBtn" title="Ver siguiente pensamiento">
+                    <button class="next-thought-btn" id="nextThoughtBtn" title="Ver siguiente pensamiento" aria-label="Ver siguiente pensamiento destacado">
                         <i class="fas fa-redo"></i>
                     </button>
                 </div>
             </section>
 
             <section class="stats-and-actions">
-                <div class="card" id="myThoughtsCard">
+                <div class="card" id="myThoughtsCard" role="button" tabindex="0" aria-label="Abrir sección Ecos de mis Pensamientos">
                     <i class="fas fa-brain card-icon"></i>
                     <p class="card-text">Ecos de mis Pensamientos</p>
                 </div>
 
-                <div class="card" id="viewByCountryCard">
+                <div class="card" id="viewByCountryCard" role="button" tabindex="0" aria-label="Abrir sección Ver por País">
                     <i class="fas fa-globe-americas card-icon"></i>
                     <p class="card-text">Ver por País</p>
                 </div>
 
-                <div class="card" id="timeCapsuleCard">
+                <div class="card" id="timeCapsuleCard" role="button" tabindex="0" aria-label="Abrir sección Cápsula del Tiempo">
                     <i class="fas fa-hourglass-half card-icon"></i>
                     <p class="card-text">Cápsula del Tiempo</p>
                 </div>
@@ -62,12 +62,15 @@
                     <div class="textarea-wrapper">
                         <textarea id="thoughtInput" class="thought-input" placeholder="Escribe tu pensamiento..."></textarea>
                     </div>
-                    <span class="char-count" id="charCount">0/500</span> <button class="send-thought-btn" id="launchThoughtBtn">Lanzar Pensamiento</button>
+                    <span class="char-count" id="charCount">0/500</span> <button class="send-thought-btn" id="launchThoughtBtn" aria-label="Lanzar pensamiento">Lanzar Pensamiento</button>
                 </div>
             </section>
-        </div> <section class="my-thoughts-display-section" id="myThoughtsSection" style="display: none;"> <div class="my-thoughts-header">
+        </div> 
+        
+        <section class="my-thoughts-display-section" id="myThoughtsSection" style="display: none;"> 
+            <div class="my-thoughts-header">
                 <h2 class="section-title">Tus Ecos Personales</h2>
-                <button class="close-btn" id="closeMyThoughtsBtn">&times;</button>
+                <button class="close-btn" id="closeMyThoughtsBtn" aria-label="Cerrar sección de mis pensamientos">&times;</button>
             </div>
             <div class="my-thoughts-list" id="myThoughtsList">
                 <p class="no-thoughts-message" id="noMyThoughtsMessage">Aún no has lanzado ningún pensamiento hoy.</p>
@@ -77,26 +80,30 @@
         <section class="time-capsule-section" id="timeCapsuleSection" style="display: none;">
             <div class="my-thoughts-header">
                 <h2 class="section-title">Cápsula del Tiempo</h2>
-                <button class="close-btn" id="closeTimeCapsuleBtn">&times;</button>
+                <button class="close-btn" id="closeTimeCapsuleBtn" aria-label="Cerrar sección de cápsulas del tiempo">&times;</button>
             </div>
             <div class="time-capsule-content">
                 <h3>Envía un mensaje al futuro</h3>
                 <div class="textarea-wrapper">
-                    <textarea id="timeCapsuleThoughtInput" class="thought-input" placeholder="Escribe tu mensaje para el futuro..."></textarea> </div>
-                <span class="char-count" id="timeCapsuleCharCount">0/500</span> <label for="timeCapsuleDate">Desplegar en la fecha:</label>
+                    <textarea id="timeCapsuleThoughtInput" class="thought-input" placeholder="Escribe tu mensaje para el futuro..."></textarea> 
+                </div>
+                <span class="char-count" id="timeCapsuleCharCount">0/500</span> 
+                <label for="timeCapsuleDate">Desplegar en la fecha y hora:</label>
                 <input type="datetime-local" id="timeCapsuleDate" class="time-capsule-date-input">
-                <button class="send-thought-btn" id="launchTimeCapsuleBtn">Programar Mensaje</button> <hr style="margin: 20px 0; border-color: var(--border-color);">
+                <button class="send-thought-btn" id="launchTimeCapsuleBtn" aria-label="Programar mensaje de cápsula del tiempo">Programar Mensaje</button> 
+                <hr style="margin: 20px 0; border-color: var(--border-color);">
 
                 <h3>Mensajes del Futuro (Cápsulas Desplegadas)</h3>
                 <div class="time-capsule-list" id="timeCapsuleList">
-                    <p class="no-thoughts-message" id="noTimeCapsulesMessage">No hay cápsulas del tiempo desplegadas aún.</p> </div>
+                    <p class="no-thoughts-message" id="noTimeCapsulesMessage">No hay cápsulas del tiempo desplegadas aún.</p> 
+                </div>
             </div>
         </section>
 
         <section class="view-by-country-section" id="viewByCountrySection" style="display: none;">
             <div class="my-thoughts-header">
                 <h2 class="section-title">Ver Pensamientos por País</h2>
-                <button class="close-btn" id="closeViewByCountryBtn">&times;</button>
+                <button class="close-btn" id="closeViewByCountryBtn" aria-label="Cerrar sección de pensamientos por país">&times;</button>
             </div>
             <div class="map-container" id="mapContainer">
             </div>
