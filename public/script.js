@@ -30,6 +30,7 @@ const messageText = document.getElementById('messageText');
 const messageIcon = document.getElementById('messageIcon');
 const userIdDisplay = document.getElementById('userIdDisplay');
 const nextThoughtBtn = document.getElementById('nextThoughtBtn'); // Asegurarse de que esta referencia exista
+const totalThoughtsCount = document.getElementById('totalThoughtsCount'); // Referencia al contador global
 
 // Referencias al modal de confirmación
 const confirmModal = document.getElementById('confirmModal');
@@ -473,6 +474,7 @@ async function loadThoughtsForMap() {
         for (const country in thoughtsByCountry) {
             if (thoughtsByCountry.hasOwnProperty(country)) {
                 // Usar Nominatim para obtener las coordenadas del país
+                console.log(`Buscando coordenadas para el país: ${country}`);
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(country)}&format=json&limit=1`);
                 const data = await response.json();
 
@@ -480,6 +482,7 @@ async function loadThoughtsForMap() {
                     const lat = parseFloat(data[0].lat);
                     const lon = parseFloat(data[0].lon);
                     thoughtsByCountry[country].latlng = [lat, lon];
+                    console.log(`Coordenadas para ${country}: [${lat}, ${lon}]`);
 
                     const popupContent = `
                         <b>${country}</b><br>
