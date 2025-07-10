@@ -1,12 +1,11 @@
 // Importa las funciones necesarias de los SDKs de Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-// CAMBIO: Importar 'increment' directamente junto con las otras funciones
-import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, getDoc, increment, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM completamente cargado. Iniciando script.js...");
 
-    // Tu configuración de Firebase (proporcionada por el usuario)
+    // Tu configuración de Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
         authDomain: "libre-c5bf7.firebaseapp.com",
@@ -30,41 +29,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Referencias a elementos del DOM
+    // --- Referencias a elementos del DOM ---
     const thoughtInput = document.getElementById('thoughtInput');
     const charCount = document.getElementById('charCount');
     const sendThoughtBtn = document.getElementById('sendThoughtBtn');
     const featuredThoughtBox = document.querySelector('.featured-thought-box');
-    const featuredThoughtPlaceholder = document.querySelector('.featured-thought-placeholder');
-    const totalThoughtsCountSpan = document.getElementById('totalThoughtsCount');
+    const featuredThoughtPlaceholder = document.getElementById('featuredThoughtPlaceholder'); // Usar ID
+    const featuredThoughtContent = document.getElementById('featuredThoughtContent'); // Usar ID
 
-    const myThoughtsCard = document.getElementById('myThoughtsCard');
+    // Cambio: Renombrado a 'myThoughtsCard' y 'totalThoughtsCountSpan' a 'globalThoughtCount'
+    const myThoughtsCard = document.getElementById('myThoughtsCard'); // Ahora "Ecos de mis Pensamientos"
     const viewByCountryCard = document.getElementById('viewByCountryCard');
-    const ecosThoughtsCard = document.getElementById('ecosThoughtsCard');
+    const globalThoughtCountSpan = document.getElementById('globalThoughtCount'); // Contador global de pensamientos
+    const thoughtsWrittenCard = document.getElementById('thoughtsWrittenCard'); // La tarjeta contenedora del contador
 
     // Elementos del DOM para la sección de pensamientos del usuario
     const myThoughtsDisplaySection = document.getElementById('myThoughtsDisplaySection');
     const myThoughtsList = document.getElementById('myThoughtsList');
-    const closeMyThoughtsBtn = document.getElementById('closeMyThoughts');
+    const closeMyThoughtsBtn = document.getElementById('closeMyThoughtsBtn'); // Usar ID
+    const noMyThoughtsMessage = document.getElementById('noMyThoughtsMessage'); // Nuevo elemento
 
     const nextThoughtBtn = document.getElementById('nextThoughtBtn');
 
+    // --- NUEVOS ELEMENTOS PARA CÁPSULA DEL TIEMPO ---
+    const timeCapsuleCard = document.getElementById('timeCapsuleCard');
+    const timeCapsuleSection = document.getElementById('timeCapsuleSection');
+    const closeTimeCapsuleBtn = document.getElementById('closeTimeCapsuleBtn');
+    const timeCapsuleInput = document.getElementById('timeCapsuleInput');
+    const timeCapsuleCharCount = document.getElementById('timeCapsuleCharCount');
+    const timeCapsuleDateInput = document.getElementById('timeCapsuleDate');
+    const sendTimeCapsuleBtn = document.getElementById('sendTimeCapsuleBtn');
+    const timeCapsuleList = document.getElementById('timeCapsuleList');
+    const noTimeCapsuleMessage = document.getElementById('noTimeCapsuleMessage');
 
-    // Verificar que los elementos DOM existen y loguear si no
+    // Elementos del DOM para la sección Ver por País (ya existentes en HTML)
+    const viewByCountrySection = document.getElementById('viewByCountrySection');
+    const closeViewByCountryBtn = document.getElementById('closeViewByCountryBtn');
+    const mapContainer = document.getElementById('mapContainer');
+    const countryThoughtsList = document.getElementById('countryThoughtsList');
+    const noCountryThoughtsMessage = document.getElementById('noCountryThoughtsMessage');
+
+
+    // Verificar que los elementos DOM existen y loguear si no (solo los nuevos o modificados)
     if (!thoughtInput) console.error("Error: Elemento 'thoughtInput' no encontrado.");
     if (!charCount) console.error("Error: Elemento 'charCount' no encontrado.");
-    if (!sendThoughtBtn) console.error("Error: Elemento 'sendThoughtBtn' no encontrado. Asegúrate de que el ID 'sendThoughtBtn' esté en tu HTML.");
+    if (!sendThoughtBtn) console.error("Error: Elemento 'sendThoughtBtn' no encontrado.");
     if (!featuredThoughtBox) console.error("Error: Elemento 'featuredThoughtBox' no encontrado.");
-    if (!totalThoughtsCountSpan) console.error("Error: Elemento 'totalThoughtsCountSpan' no encontrado.");
+    if (!globalThoughtCountSpan) console.error("Error: Elemento 'globalThoughtCountSpan' no encontrado.");
     if (!myThoughtsCard) console.error("Error: Elemento 'myThoughtsCard' no encontrado.");
     if (!myThoughtsDisplaySection) console.error("Error: Elemento 'myThoughtsDisplaySection' no encontrado.");
     if (!myThoughtsList) console.error("Error: Elemento 'myThoughtsList' no encontrado.");
     if (!closeMyThoughtsBtn) console.error("Error: Elemento 'closeMyThoughtsBtn' no encontrado.");
     if (!nextThoughtBtn) console.error("Error: Elemento 'nextThoughtBtn' no encontrado.");
-    if (!ecosThoughtsCard) console.error("Error: Elemento 'ecosThoughtsCard' no encontrado.");
+    if (!timeCapsuleCard) console.error("Error: Elemento 'timeCapsuleCard' no encontrado.");
+    if (!timeCapsuleSection) console.error("Error: Elemento 'timeCapsuleSection' no encontrado.");
+    if (!closeTimeCapsuleBtn) console.error("Error: Elemento 'closeTimeCapsuleBtn' no encontrado.");
+    if (!timeCapsuleInput) console.error("Error: Elemento 'timeCapsuleInput' no encontrado.");
+    if (!timeCapsuleCharCount) console.error("Error: Elemento 'timeCapsuleCharCount' no encontrado.");
+    if (!timeCapsuleDateInput) console.error("Error: Elemento 'timeCapsuleDateInput' no encontrado.");
+    if (!sendTimeCapsuleBtn) console.error("Error: Elemento 'sendTimeCapsuleBtn' no encontrado.");
+    if (!timeCapsuleList) console.error("Error: Elemento 'timeCapsuleList' no encontrado.");
+    if (!noTimeCapsuleMessage) console.error("Error: Elemento 'noTimeCapsuleMessage' no encontrado.");
+    if (!viewByCountrySection) console.error("Error: Elemento 'viewByCountrySection' no encontrado.");
+    if (!closeViewByCountryBtn) console.error("Error: Elemento 'closeViewByCountryBtn' no encontrado.");
+    if (!mapContainer) console.error("Error: Elemento 'mapContainer' no encontrado.");
+    if (!countryThoughtsList) console.error("Error: Elemento 'countryThoughtsList' no encontrado.");
+    if (!noCountryThoughtsMessage) console.error("Error: Elemento 'noCountryThoughtsMessage' no encontrado.");
 
 
-    const MAX_CHARS = 500; // Límite de caracteres por pensamiento
+    const MAX_CHARS_THOUGHT = 200; // Límite de caracteres por pensamiento normal
+    const MAX_CHARS_TIME_CAPSULE = 500; // Límite de caracteres para cápsula del tiempo (más largo)
     const THOUGHTS_PER_DAY_LIMIT = 3; // Límite de pensamientos por día
 
     // --- Funciones de Utilidad ---
@@ -97,8 +131,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Función para formatear la fecha y hora
-    const formatThoughtDateTime = (isoString) => {
-        const date = new Date(isoString);
+    const formatDateTime = (isoStringOrTimestamp) => {
+        let date;
+        if (isoStringOrTimestamp && typeof isoStringOrTimestamp.toDate === 'function') {
+            // Es un Firebase Timestamp
+            date = isoStringOrTimestamp.toDate();
+        } else if (typeof isoStringOrTimestamp === 'string') {
+            // Es un ISO string
+            date = new Date(isoStringOrTimestamp);
+        } else {
+            return 'Fecha inválida';
+        }
+
         const options = {
             year: 'numeric',
             month: 'long',
@@ -111,103 +155,107 @@ document.addEventListener('DOMContentLoaded', () => {
         return date.toLocaleDateString('es-ES', options);
     };
 
-    // --- Lógica de la Aplicación ---
-
-    // Función para manejar el envío de un pensamiento (reutilizable para clic de botón y tecla Enter)
-    const sendThought = async () => {
-        console.log("Intentando enviar pensamiento...");
-        const thoughtText = thoughtInput.value.trim();
-        if (!thoughtText) {
-            alert("Por favor, escribe un pensamiento antes de enviar.");
-            return;
-        }
-
-        const localThoughts = getLocalThoughts();
-        if (localThoughts.length >= THOUGHTS_PER_DAY_LIMIT) {
-            alert(`Lo siento, solo puedes escribir ${THOUGHTS_PER_DAY_LIMIT} pensamientos por día.`);
-            return;
-        }
-
-        try {
-            if (!db) { // Verificar si db está inicializado
-                console.error("Error: Firestore (db) no está inicializado.");
-                alert("Error interno: La base de datos no está disponible.");
-                return;
-            }
-
-            // Añadir el pensamiento a la colección 'thoughts' con un contador de encuentros inicial
-            const docRef = await addDoc(collection(db, "thoughts"), {
-                content: thoughtText,
-                createdAt: serverTimestamp(),
-                encounters: 0 // NUEVO: Contador de encuentros inicializado a 0
-            });
-
-            addLocalThought(thoughtText, docRef.id); // Guardar localmente con fecha/hora e ID del documento
-            thoughtInput.value = ''; // Limpiar campo
-            charCount.textContent = MAX_CHARS; // Resetear contador
-            charCount.style.color = 'var(--text-color-secondary)';
-            sendThoughtBtn.style.display = 'none'; // Ocultar botón
-
-            alert("¡Pensamiento enviado con éxito!");
-            console.log("Pensamiento enviado a Firestore con ID:", docRef.id);
-        } catch (e) {
-            console.error("Error al añadir el documento: ", e);
-            alert("Hubo un error al enviar tu pensamiento. Inténtalo de nuevo.");
-        }
+    // Función para formatear solo la fecha (para la cápsula del tiempo)
+    const formatDateOnly = (dateObj) => {
+        const options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        return dateObj.toLocaleDateString('es-ES', options);
     };
 
 
-    // 1. Contador de Caracteres, Botón de Enviar y Tecla Enter
+    // Función genérica para ocultar todas las secciones desplegables
+    const hideAllSections = () => {
+        myThoughtsDisplaySection.style.display = 'none';
+        timeCapsuleSection.style.display = 'none';
+        viewByCountrySection.style.display = 'none';
+        // Añadir aquí cualquier otra sección desplegable si la hay
+    };
+
+    // --- Lógica de la Aplicación Principal ---
+
+    // 1. Contador de Caracteres, Botón de Enviar y Tecla Enter (Pensamiento normal)
     if (charCount) {
-        charCount.textContent = MAX_CHARS; // Inicializar
+        charCount.textContent = `${MAX_CHARS_THOUGHT}/${MAX_CHARS_THOUGHT}`; // Inicializar
     }
 
     if (thoughtInput && charCount && sendThoughtBtn) {
         // Listener para el recuento de caracteres y visibilidad del botón
         thoughtInput.addEventListener('input', () => {
-            console.log("Evento 'input' detectado en thoughtInput. Valor actual:", thoughtInput.value);
-            const remaining = MAX_CHARS - thoughtInput.value.length;
-            charCount.textContent = remaining;
-            charCount.style.color = remaining < 50 ? 'orange' : (remaining < 10 ? 'red' : 'var(--text-color-secondary)');
+            const remaining = MAX_CHARS_THOUGHT - thoughtInput.value.length;
+            charCount.textContent = `${thoughtInput.value.length}/${MAX_CHARS_THOUGHT}`;
+            charCount.style.color = remaining < 20 ? 'orange' : (remaining < 10 ? 'red' : 'var(--text-color-secondary)');
 
             if (thoughtInput.value.trim().length > 0) {
                 sendThoughtBtn.style.display = 'block';
-                console.log("Botón de enviar visible.");
             } else {
                 sendThoughtBtn.style.display = 'none';
-                console.log("Botón de enviar oculto.");
             }
         });
 
         // Listener para la tecla Enter
         thoughtInput.addEventListener('keydown', (event) => {
-            // Solo si es 'Enter' y no 'Shift+Enter' (para permitir saltos de línea manuales)
             if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Prevenir el comportamiento por defecto (nueva línea)
-                sendThought(); // Llamar a la función de envío
+                event.preventDefault();
+                sendThought();
             }
         });
-
-    } else {
-        console.error("No se pudo adjuntar el listener 'input' o 'keydown' porque faltan elementos DOM. Revisa 'thoughtInput', 'charCount', 'sendThoughtBtn'.");
     }
 
 
-    // 2. Enviar Pensamiento a Firestore (ahora manejado por la función sendThought)
+    // Función para manejar el envío de un pensamiento (normal)
+    const sendThought = async () => {
+        const thoughtText = thoughtInput.value.trim();
+        if (!thoughtText) {
+            alert("Por favor, escribe un pensamiento antes de lanzar.");
+            return;
+        }
+
+        const localThoughts = getLocalThoughts();
+        if (localThoughts.length >= THOUGHTS_PER_DAY_LIMIT) {
+            alert(`Lo siento, solo puedes lanzar ${THOUGHTS_PER_DAY_LIMIT} pensamientos por día.`);
+            return;
+        }
+
+        try {
+            if (!db) {
+                console.error("Error: Firestore (db) no está inicializado.");
+                alert("Error interno: La base de datos no está disponible.");
+                return;
+            }
+
+            const docRef = await addDoc(collection(db, "thoughts"), {
+                content: thoughtText,
+                createdAt: serverTimestamp(),
+                encounters: 0
+            });
+
+            addLocalThought(thoughtText, docRef.id);
+            thoughtInput.value = '';
+            charCount.textContent = `${MAX_CHARS_THOUGHT}/${MAX_CHARS_THOUGHT}`;
+            charCount.style.color = 'var(--text-color-secondary)';
+            sendThoughtBtn.style.display = 'none';
+
+            alert("¡Pensamiento lanzado con éxito!");
+        } catch (e) {
+            console.error("Error al añadir el documento: ", e);
+            alert("Hubo un error al lanzar tu pensamiento. Inténtalo de nuevo.");
+        }
+    };
+
+    // 2. Enviar Pensamiento a Firestore (normal)
     if (sendThoughtBtn) {
-        sendThoughtBtn.addEventListener('click', sendThought); // Adjunta la función sendThought reutilizable
-    } else {
-        console.error("No se pudo adjuntar el listener 'click' al botón de enviar. Revisa 'sendThoughtBtn'.");
+        sendThoughtBtn.addEventListener('click', sendThought);
     }
 
 
     // 3. Obtener y Mostrar Pensamiento Destacado
     const fetchFeaturedThought = async () => {
-        console.log("Intentando obtener pensamiento destacado...");
         try {
-            if (!db) { // Verificar si db está inicializado
-                console.error("Error: Firestore (db) no está inicializado para fetchFeaturedThought. No se puede obtener pensamiento.");
-                featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">Error: DB no disponible.</p>`;
+            if (!db) {
+                featuredThoughtContent.textContent = "Error: DB no disponible.";
                 return;
             }
 
@@ -217,53 +265,31 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!querySnapshot.empty) {
                 const thoughtsWithIds = [];
                 querySnapshot.forEach((doc) => {
-                    thoughtsWithIds.push({ id: doc.id, ...doc.data() }); // Guardar ID y datos
+                    thoughtsWithIds.push({ id: doc.id, ...doc.data() });
                 });
                 const randomIndex = Math.floor(Math.random() * thoughtsWithIds.length);
-                const featuredThoughtData = thoughtsWithIds[randomIndex]; // Obtener el objeto completo
+                const featuredThoughtData = thoughtsWithIds[randomIndex];
 
                 // Incrementar el contador de encuentros para este pensamiento
-                // Solo si el pensamiento tiene un ID válido y db está disponible
-                if (featuredThoughtData.id && db) {
+                if (featuredThoughtData.id) {
                     const thoughtRef = doc(db, "thoughts", featuredThoughtData.id);
-                    // CAMBIO: Usar 'increment' directamente
                     await updateDoc(thoughtRef, {
-                        encounters: increment(1) // Incrementar en 1
+                        encounters: increment(1)
                     });
-                    console.log(`Contador de encuentros incrementado para el pensamiento ID: ${featuredThoughtData.id}`);
-                } else {
-                    console.warn("No se pudo incrementar el contador de encuentros: ID de pensamiento o DB no disponible.");
                 }
 
-
-                const currentThoughtContent = featuredThoughtBox.querySelector('.featured-thought-content');
-                const featuredThoughtPlaceholder = featuredThoughtBox.querySelector('.featured-thought-placeholder');
-
-
-                if (currentThoughtContent) {
-                    currentThoughtContent.textContent = `"${featuredThoughtData.content}"`;
-                    currentThoughtContent.style.display = 'flex';
-                } else {
-                    const newContent = document.createElement('p');
-                    newContent.classList.add('featured-thought-content');
-                    newContent.textContent = `"${featuredThoughtData.content}"`;
-                    if (nextThoughtBtn) {
-                        featuredThoughtBox.insertBefore(newContent, nextThoughtBtn);
-                    } else {
-                        featuredThoughtBox.appendChild(newContent);
-                    }
-                }
-
+                featuredThoughtContent.textContent = `"${featuredThoughtData.content}"`;
+                featuredThoughtContent.style.display = 'flex';
                 if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'none';
-                console.log("Pensamiento destacado cargado:", featuredThoughtData.content);
             } else {
-                featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">PENSAMIENTO DESTACADO</p>`;
+                featuredThoughtContent.style.display = 'none';
                 if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'block';
-                console.log("No hay pensamientos en Firestore para destacar.");
             }
         } catch (e) {
             console.error("Error al obtener o actualizar pensamiento destacado: ", e);
-            featuredThoughtBox.innerHTML = `<p class="featured-thought-placeholder">Error al cargar pensamiento.</p>`;
+            featuredThoughtContent.textContent = "Error al cargar pensamiento.";
+            featuredThoughtContent.style.display = 'flex';
+            if (featuredThoughtPlaceholder) featuredThoughtPlaceholder.style.display = 'none';
         }
     };
 
@@ -274,52 +300,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listener para el botón de siguiente pensamiento
     if (nextThoughtBtn) {
-        nextThoughtBtn.addEventListener('click', () => {
-            console.log("Clic en 'Ver otro pensamiento'.");
-            fetchFeaturedThought(); // Llama a la función para cargar un nuevo pensamiento
-        });
+        nextThoughtBtn.addEventListener('click', fetchFeaturedThought);
     }
 
 
     // 4. Actualizar Conteo Global de Pensamientos en Tiempo Real
-    if (totalThoughtsCountSpan) {
+    if (globalThoughtCountSpan) {
         onSnapshot(collection(db, "thoughts"), (snapshot) => {
-            totalThoughtsCountSpan.textContent = snapshot.size;
-            console.log("Conteo de pensamientos actualizado:", snapshot.size);
+            globalThoughtCountSpan.textContent = snapshot.size;
         }, (error) => {
             console.error("Error al obtener el conteo en tiempo real: ", error);
-            totalThoughtsCountSpan.textContent = "Error";
+            globalThoughtCountSpan.textContent = "Error";
         });
-    } else {
-        console.error("No se pudo adjuntar el listener 'onSnapshot' porque 'totalThoughtsCountSpan' no fue encontrado.");
     }
 
 
-    // 5. Funcionalidad de las Tarjetas Interactivas
+    // --- Funcionalidad de las Tarjetas Interactivas ---
 
-    // "Ver mis pensamientos" - Ahora despliega la sección de pensamientos con contador de encuentros
+    // 5. "Ecos de mis Pensamientos" (Unificado)
     if (myThoughtsCard && myThoughtsDisplaySection && myThoughtsList && closeMyThoughtsBtn) {
-        myThoughtsCard.addEventListener('click', async () => { // Hacemos la función async
-            console.log("Clic en 'Ver mis pensamientos'. Mostrando sección.");
+        myThoughtsCard.addEventListener('click', async () => {
+            hideAllSections(); // Ocultar otras secciones
             const localThoughts = getLocalThoughts();
             myThoughtsList.innerHTML = ''; // Limpiar lista antes de añadir
 
             if (localThoughts.length > 0) {
-                // Ordenar los pensamientos por fecha de creación (más recientes primero)
+                noMyThoughtsMessage.style.display = 'none'; // Ocultar mensaje de no hay pensamientos
                 localThoughts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-                for (const localThought of localThoughts) { // Usamos for...of para await
-                    let encountersCount = '...'; // Placeholder mientras se carga
+                for (const localThought of localThoughts) {
+                    let encountersCount = '...';
                     try {
-                        if (db && localThought.id) { // Asegurarse de que db e id existan
-                            const docSnap = await getDoc(doc(db, "thoughts", localThought.id)); // Obtener el documento por su ID
+                        if (db && localThought.id) {
+                            const docSnap = await getDoc(doc(db, "thoughts", localThought.id));
                             if (docSnap.exists()) {
                                 encountersCount = docSnap.data().encounters || 0;
                             } else {
-                                encountersCount = 'N/A (No encontrado en DB)'; // No encontrado en Firestore
+                                encountersCount = 'N/A (No encontrado)';
                             }
                         } else {
-                            encountersCount = 'N/A (Sin ID/DB)'; // Si no hay ID o DB
+                            encountersCount = 'N/A (Sin ID/DB)';
                         }
                     } catch (e) {
                         console.error("Error al obtener encuentros para el pensamiento:", localThought.id, e);
@@ -328,46 +348,170 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const thoughtItem = document.createElement('p');
                     thoughtItem.classList.add('my-thought-item');
-                    thoughtItem.innerHTML = `${localThought.content}<br><span class="my-thought-date">${formatThoughtDateTime(localThought.timestamp)}</span><span class="my-thought-encounters">Encontrado: ${encountersCount} veces</span>`;
+                    thoughtItem.innerHTML = `${localThought.content}<br><span class="my-thought-date">${formatDateTime(localThought.timestamp)}</span><span class="my-thought-encounters">Encontrado: ${encountersCount} veces</span>`;
                     myThoughtsList.appendChild(thoughtItem);
                 }
             } else {
-                const noThoughtsMessage = document.createElement('p');
-                noThoughtsMessage.classList.add('no-thoughts-message');
-                noThoughtsMessage.textContent = 'Aún no has escrito pensamientos hoy.';
-                myThoughtsList.appendChild(noThoughtsMessage);
+                noMyThoughtsMessage.style.display = 'block'; // Mostrar mensaje de no hay pensamientos
             }
             myThoughtsDisplaySection.style.display = 'block'; // Mostrar la sección
         });
 
-        // Botón de cierre para la sección de pensamientos del usuario
         closeMyThoughtsBtn.addEventListener('click', () => {
-            console.log("Clic en cerrar pensamientos. Ocultando sección.");
-            myThoughtsDisplaySection.style.display = 'none'; // Ocultar la sección
+            myThoughtsDisplaySection.style.display = 'none';
         });
-
-    } else {
-        console.error("No se pudo adjuntar el listener 'click' a 'myThoughtsCard' o faltan elementos de la sección de pensamientos.");
     }
 
 
-    // "Ver por País" - Placeholder para la integración del mapa
-    if (viewByCountryCard) {
+    // 6. "Ver por País" - Placeholder para la integración del mapa
+    if (viewByCountryCard && viewByCountrySection && closeViewByCountryBtn) {
         viewByCountryCard.addEventListener('click', () => {
+            hideAllSections(); // Ocultar otras secciones
+            viewByCountrySection.style.display = 'block';
             alert("Funcionalidad 'Ver por País' en desarrollo. Aquí se integrará un mapa mundial."); // Reemplazar con UI real
-            console.log("Clic en Ver por País");
+            // TODO: Integrar Leaflet aquí.
+        });
+
+        closeViewByCountryBtn.addEventListener('click', () => {
+            viewByCountrySection.style.display = 'none';
         });
     }
 
+    // --- NUEVA FUNCIONALIDAD: CÁPSULA DEL TIEMPO ---
+    if (timeCapsuleCard && timeCapsuleSection && closeTimeCapsuleBtn && timeCapsuleInput && timeCapsuleCharCount && timeCapsuleDateInput && sendTimeCapsuleBtn && timeCapsuleList) {
 
-    // "Ecos del Pensamiento" - Listener para la nueva tarjeta
-if (ecosThoughtsCard) {
-    ecosThoughtsCard.addEventListener('click', () => {
-        console.log("Clic en Ecos del Pensamiento. Redirigiendo a 'Ver mis pensamientos'.");
-        // Simular un clic en la tarjeta "Ver mis pensamientos" para abrir la sección
-        myThoughtsCard.click();
-        // Opcional: Podríamos añadir una clase temporal o un mensaje en myThoughtsList
-        // para indicar que se llegó desde "Ecos del Pensamiento" si fuera necesario.
-    });
-}
+        // Listener para la tarjeta "Cápsula del Tiempo"
+        timeCapsuleCard.addEventListener('click', () => {
+            hideAllSections(); // Ocultar otras secciones
+            timeCapsuleSection.style.display = 'block';
+            displayTimeCapsules(); // Cargar y mostrar las cápsulas disponibles
+        });
+
+        // Botón de cierre para la sección de la cápsula del tiempo
+        closeTimeCapsuleBtn.addEventListener('click', () => {
+            timeCapsuleSection.style.display = 'none';
+        });
+
+        // Contador de caracteres para el input de la cápsula
+        timeCapsuleCharCount.textContent = `0/${MAX_CHARS_TIME_CAPSULE}`;
+        timeCapsuleInput.addEventListener('input', () => {
+            const currentLength = timeCapsuleInput.value.length;
+            const remaining = MAX_CHARS_TIME_CAPSULE - currentLength;
+            timeCapsuleCharCount.textContent = `${currentLength}/${MAX_CHARS_TIME_CAPSULE}`;
+            timeCapsuleCharCount.style.color = remaining < 50 ? 'orange' : (remaining < 10 ? 'red' : 'var(--text-color-secondary)');
+            // Podríamos añadir lógica para mostrar/ocultar el botón "Programar Mensaje" si el campo no está vacío
+            if (currentLength > 0 && timeCapsuleDateInput.value) {
+                sendTimeCapsuleBtn.style.display = 'block';
+            } else {
+                sendTimeCapsuleBtn.style.display = 'none';
+            }
+        });
+
+        // Listener para el cambio de fecha para mostrar/ocultar botón de envío
+        timeCapsuleDateInput.addEventListener('change', () => {
+            if (timeCapsuleInput.value.trim().length > 0 && timeCapsuleDateInput.value) {
+                sendTimeCapsuleBtn.style.display = 'block';
+            } else {
+                sendTimeCapsuleBtn.style.display = 'none';
+            }
+            // Asegurarse de que la fecha seleccionada no sea anterior a hoy
+            const selectedDate = new Date(timeCapsuleDateInput.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Resetear hora para comparar solo fechas
+            if (selectedDate < today) {
+                alert("La fecha de despliegue no puede ser anterior a hoy.");
+                timeCapsuleDateInput.value = ''; // Limpiar la selección de fecha
+                sendTimeCapsuleBtn.style.display = 'none';
+            }
+        });
+
+        // Establecer la fecha mínima en el input de fecha (para evitar fechas pasadas)
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        timeCapsuleDateInput.min = `${year}-${month}-${day}`;
+
+
+        // Función para enviar una cápsula del tiempo
+        sendTimeCapsuleBtn.addEventListener('click', async () => {
+            const message = timeCapsuleInput.value.trim();
+            const deployDate = timeCapsuleDateInput.value; // Formato YYYY-MM-DD
+
+            if (!message || !deployDate) {
+                alert("Por favor, escribe tu mensaje y selecciona una fecha de despliegue.");
+                return;
+            }
+
+            // Convertir la fecha de despliegue a un objeto Date para Firestore
+            const deployDateTime = new Date(deployDate);
+            // Asegurarse de que la fecha no sea en el pasado
+            const now = new Date();
+            now.setHours(0,0,0,0); // Comparar solo el día
+            if (deployDateTime < now) {
+                alert("No puedes programar un mensaje para una fecha pasada.");
+                return;
+            }
+
+
+            try {
+                await addDoc(collection(db, "timeCapsules"), {
+                    content: message,
+                    deployDate: deployDateTime, // Guardar como Timestamp de Firebase
+                    createdAt: serverTimestamp(),
+                });
+
+                alert("¡Mensaje de la cápsula del tiempo programado con éxito!");
+                timeCapsuleInput.value = '';
+                timeCapsuleCharCount.textContent = `0/${MAX_CHARS_TIME_CAPSULE}`;
+                timeCapsuleDateInput.value = '';
+                sendTimeCapsuleBtn.style.display = 'none';
+                displayTimeCapsules(); // Recargar la lista de cápsulas desplegadas
+            } catch (e) {
+                console.error("Error al programar la cápsula del tiempo: ", e);
+                alert("Hubo un error al programar tu mensaje. Inténtalo de nuevo.");
+            }
+        });
+
+        // Función para mostrar las cápsulas del tiempo desplegadas
+        const displayTimeCapsules = async () => {
+            timeCapsuleList.innerHTML = ''; // Limpiar lista
+            const now = new Date();
+            now.setHours(0, 0, 0, 0); // Para comparar solo la fecha
+
+            try {
+                // Consultar cápsulas cuya fecha de despliegue es hoy o anterior
+                const q = query(
+                    collection(db, "timeCapsules"),
+                    where("deployDate", "<=", now), // Filtrar por fecha de despliegue
+                    orderBy("deployDate", "desc"), // Ordenar por fecha de despliegue (más recientes primero)
+                    limit(50) // Limitar para no cargar demasiados
+                );
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    noTimeCapsuleMessage.style.display = 'none';
+                    querySnapshot.forEach((doc) => {
+                        const capsule = doc.data();
+                        const capsuleItem = document.createElement('p');
+                        capsuleItem.classList.add('my-thought-item'); // Reutilizar estilo
+                        capsuleItem.innerHTML = `"${capsule.content}"<br><span class="my-thought-date">Programado para: ${formatDateOnly(capsule.deployDate.toDate())}</span>`;
+                        timeCapsuleList.appendChild(capsuleItem);
+                    });
+                } else {
+                    noTimeCapsuleMessage.style.display = 'block';
+                }
+            } catch (e) {
+                console.error("Error al obtener cápsulas del tiempo: ", e);
+                timeCapsuleList.innerHTML = `<p class="no-thoughts-message">Error al cargar las cápsulas del tiempo.</p>`;
+            }
+        };
+
+        // Llama a displayTimeCapsules cuando la sección se abre
+        // Esto se hace en el listener de timeCapsuleCard.click()
+    } else {
+        console.error("Faltan elementos DOM para la funcionalidad de la Cápsula del Tiempo.");
+    }
+    // --- FIN NUEVA FUNCIONALIDAD: CÁPSULA DEL TIEMPO ---
+
 });
