@@ -174,7 +174,10 @@ body {
 }
 
 .stat-card .card-subtitle {
-    display: none;
+    display: block; /* Cambiado de 'none' a 'block' para que sea visible */
+    font-size: 0.75em; /* Ajusta el tamaño si es necesario */
+    color: var(--text-color-secondary);
+    margin-top: 5px; /* Espacio entre el número y el texto */
 }
 
 
