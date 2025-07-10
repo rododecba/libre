@@ -17,7 +17,7 @@ const firebaseConfig = {
 // --- Inicialización de Firebase ---
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app); // Obtiene la instancia de Firestore
-const auth = getAuth(app);     // Obtiene la instancia de Auth
+const auth = getAuth(app);    // Obtiene la instancia de Auth
 
 // Initialize Firebase Auth
 let anonymousUserId = localStorage.getItem('anonymousUserId');
@@ -121,8 +121,8 @@ function showSection(sectionToShow) {
     myThoughtsSection.style.display = 'none';
     timeCapsuleSection.style.display = 'none';
     viewByCountrySection.style.display = 'none';
-    aboutSection.style.display = 'none'; 
-    faqSection.style.display = 'none';   
+    aboutSection.style.display = 'none';
+    faqSection.style.display = 'none';
 
     sectionToShow.style.display = 'block';
 }
@@ -130,7 +130,10 @@ function showSection(sectionToShow) {
 // Function to hide a specific section and show mainSection
 function hideSection(sectionToHide) {
     sectionToHide.style.display = 'none';
-    mainSection.style.display = 'flex'; 
+    mainSection.style.display = 'none'; // Ocultamos temporalmente mainSection
+    // Forzar un reflow/repaint para que el navegador recalcule el layout
+    mainSection.offsetHeight; // Lee la propiedad offsetHeight para forzar el reflow
+    mainSection.style.display = 'flex'; // Volvemos a mostrarlo con display flex
 }
 
 // --- Firebase Operations ---
@@ -141,16 +144,16 @@ async function addThought(thoughtText, userId, countryName) {
         await addDoc(collection(db, "thoughts"), {
             text: thoughtText,
             timestamp: serverTimestamp(),
-            userId: userId, 
+            userId: userId,
             country: countryName,
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) 
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         });
         console.log("Thought launched!");
-        thoughtInput.value = ''; 
-        charCount.textContent = '0/500'; 
+        thoughtInput.value = '';
+        charCount.textContent = '0/500';
         updateGlobalThoughtCount();
         displayMyThoughts();
-        showSection(myThoughtsSection);
+        showSection(myThoughtsSection); // Muestra la sección de mis pensamientos después de añadir uno
     } catch (e) {
         console.error("Error adding document: ", e);
         alert("Hubo un error al lanzar tu pensamiento. Inténtalo de nuevo.");
@@ -161,12 +164,12 @@ async function addThought(thoughtText, userId, countryName) {
 async function fetchRandomThought() {
     featuredThoughtPlaceholder.style.display = 'block';
     featuredThoughtContent.textContent = '';
-    
+
     const thoughtsRef = collection(db, "thoughts");
-    const q = query(thoughtsRef, 
-        where("expiresAt", ">", new Date()), 
-        orderBy("expiresAt", "desc"), 
-        limit(100) 
+    const q = query(thoughtsRef,
+        where("expiresAt", ">", new Date()),
+        orderBy("expiresAt", "desc"),
+        limit(100)
     );
 
     try {
@@ -177,7 +180,7 @@ async function fetchRandomThought() {
         });
 
         if (thoughts.length > 0) {
-            const randomIndex = Math.floor(Math.random() * thoughts.length); 
+            const randomIndex = Math.floor(Math.random() * thoughts.length);
             featuredThoughtPlaceholder.style.display = 'none';
             featuredThoughtContent.textContent = thoughts[randomIndex];
         } else {
@@ -194,7 +197,7 @@ async function fetchRandomThought() {
 // Update global thought count
 async function updateGlobalThoughtCount() {
     const thoughtsRef = collection(db, "thoughts");
-    const q = query(thoughtsRef, where("expiresAt", ">", new Date())); 
+    const q = query(thoughtsRef, where("expiresAt", ">", new Date()));
     try {
         const querySnapshot = await getDocs(q);
         globalThoughtCountDisplay.textContent = querySnapshot.size;
@@ -205,12 +208,12 @@ async function updateGlobalThoughtCount() {
 
 // Display user's own thoughts
 async function displayMyThoughts() {
-    myThoughtsList.innerHTML = ''; 
-    noMyThoughtsMessage.style.display = 'block'; 
+    myThoughtsList.innerHTML = '';
+    noMyThoughtsMessage.style.display = 'block';
 
     const thoughtsRef = collection(db, "thoughts");
-    const q = query(thoughtsRef, 
-        where("userId", "==", anonymousUserId), 
+    const q = query(thoughtsRef,
+        where("userId", "==", anonymousUserId),
         where("expiresAt", ">", new Date()), // Filtro de desigualdad
         orderBy("expiresAt", "asc"),         // ¡Primero ordenamos por expiresAt!
         orderBy("timestamp", "desc")         // Luego por timestamp
@@ -250,14 +253,14 @@ async function addTimeCapsule(messageText, deployDate, userId) {
             deployAt: deployDate,
             userId: userId,
             createdAt: serverTimestamp(),
-            opened: false 
+            opened: false
         });
         console.log("Time Capsule programmed!");
         timeCapsuleThoughtInput.value = '';
         timeCapsuleCharCount.textContent = '0/500';
         timeCapsuleDateInput.value = '';
         alert('Tu cápsula del tiempo ha sido programada con éxito!');
-        displayTimeCapsules(); 
+        displayTimeCapsules();
     } catch (e) {
         console.error("Error adding time capsule: ", e);
         alert("Hubo un error al programar tu cápsula. Inténtalo de nuevo.");
@@ -269,9 +272,9 @@ async function displayTimeCapsules() {
     noTimeCapsulesMessage.style.display = 'block';
 
     const capsulesRef = collection(db, "timeCapsules");
-    const q = query(capsulesRef, 
-        where("userId", "==", anonymousUserId), 
-        orderBy("deployAt", "asc") 
+    const q = query(capsulesRef,
+        where("userId", "==", anonymousUserId),
+        orderBy("deployAt", "asc")
     );
 
     try {
@@ -287,16 +290,16 @@ async function displayTimeCapsules() {
                 const isReady = deployDate <= now;
 
                 const capsuleItem = document.createElement('div');
-                capsuleItem.className = 'my-thought-item'; 
+                capsuleItem.className = 'my-thought-item';
                 if (isReady && !capsule.opened) {
-                    capsuleItem.classList.add('time-capsule-ready'); 
+                    capsuleItem.classList.add('time-capsule-ready');
                 }
-                
+
                 capsuleItem.innerHTML = `
                     <p>${isReady && !capsule.opened ? `(DESPLEGADA): ${capsule.message}` : `Programada para: ${deployDate.toLocaleString()}`}</p>
                     ${!isReady || capsule.opened ? `<span class="my-thought-date">Mensaje: ${capsule.message.substring(0, 50)}...</span>` : ''}
                 `;
-                
+
                 timeCapsuleList.appendChild(capsuleItem);
 
                 if (isReady && !capsule.opened) {
@@ -319,10 +322,11 @@ async function displayTimeCapsules() {
 let mapInitialized = false;
 
 function initializeMap() {
-    if (mapInitialized) {
-        currentMap.remove(); 
+    if (currentMap) { // Si ya existe un mapa, lo destruimos antes de crear uno nuevo
+        currentMap.remove();
+        currentMap = null; // Aseguramos que la variable esté limpia
     }
-    currentMap = L.map(mapContainer).setView([0, 0], 1); 
+    currentMap = L.map(mapContainer).setView([0, 0], 1);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(currentMap);
@@ -330,10 +334,10 @@ function initializeMap() {
 }
 
 async function updateCountryMap() {
-    initializeMap(); 
+    initializeMap();
 
     const thoughtsRef = collection(db, "thoughts");
-    const q = query(thoughtsRef, where("expiresAt", ">", new Date())); 
+    const q = query(thoughtsRef, where("expiresAt", ">", new Date()));
     const querySnapshot = await getDocs(q);
 
     const countryCounts = {};
@@ -351,8 +355,8 @@ async function updateCountryMap() {
     currentMarkers = {};
 
     for (const country in countryCounts) {
-        if (country === 'Desconocido') continue; 
-        
+        if (country === 'Desconocido') continue;
+
         if (!countryCoordinates[country]) {
             const geocodingUrl = `https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(country)}&format=json&limit=1`;
             try {
@@ -374,7 +378,7 @@ async function updateCountryMap() {
             const marker = L.marker([lat, lon])
                 .addTo(currentMap)
                 .bindPopup(`<b>${country}</b>: ${count} pensamiento(s)`)
-                .on('click', () => displayThoughtsByCountry(country)); 
+                .on('click', () => displayThoughtsByCountry(country));
             currentMarkers[country] = marker;
         }
     }
@@ -385,8 +389,8 @@ async function displayThoughtsByCountry(country) {
     noCountryThoughtsMessage.style.display = 'block';
 
     const thoughtsRef = collection(db, "thoughts");
-    const q = query(thoughtsRef, 
-        where("country", "==", country), 
+    const q = query(thoughtsRef,
+        where("country", "==", country),
         where("expiresAt", ">", new Date()), // Filtro de desigualdad
         orderBy("expiresAt", "asc"),         // ¡Primero ordenamos por expiresAt!
         orderBy("timestamp", "desc")         // Luego por timestamp
@@ -402,7 +406,7 @@ async function displayThoughtsByCountry(country) {
             querySnapshot.forEach((doc) => {
                 const thought = doc.data();
                 const thoughtItem = document.createElement('div');
-                thoughtItem.className = 'my-thought-item'; 
+                thoughtItem.className = 'my-thought-item';
                 const date = thought.timestamp ? thought.timestamp.toDate() : new Date();
                 thoughtItem.innerHTML = `
                     <p>"${thought.text}"</p>
@@ -456,7 +460,7 @@ myThoughtsCard.addEventListener('click', () => {
 
 viewByCountryCard.addEventListener('click', () => {
     showSection(viewByCountrySection);
-    updateCountryMap(); 
+    updateCountryMap();
 });
 
 timeCapsuleCard.addEventListener('click', () => {
@@ -502,12 +506,12 @@ launchTimeCapsuleBtn.addEventListener('click', async () => {
 
 // NUEVOS LISTENERS PARA ACERCA DE Y FAQ
 aboutLink.addEventListener('click', (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     showSection(aboutSection);
 });
 
 faqLink.addEventListener('click', (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     showSection(faqSection);
 });
 
