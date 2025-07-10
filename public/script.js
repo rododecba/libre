@@ -92,7 +92,6 @@ const faqLink = document.getElementById('faqLink');
 const aboutSection = document.getElementById('aboutSection');
 const faqSection = document.getElementById('faqSection');
 const closeAboutBtn = document.getElementById('closeAboutBtn');
-// LÍNEA CORREGIDA: Eliminado el " = document" extra
 const closeFaqBtn = document.getElementById('closeFaqBtn');
 
 
@@ -212,8 +211,9 @@ async function displayMyThoughts() {
     const thoughtsRef = collection(db, "thoughts");
     const q = query(thoughtsRef, 
         where("userId", "==", anonymousUserId), 
-        where("expiresAt", ">", new Date()), 
-        orderBy("timestamp", "desc")
+        where("expiresAt", ">", new Date()), // Filtro de desigualdad
+        orderBy("expiresAt", "asc"),         // ¡Primero ordenamos por expiresAt!
+        orderBy("timestamp", "desc")         // Luego por timestamp
     );
 
     try {
@@ -387,8 +387,9 @@ async function displayThoughtsByCountry(country) {
     const thoughtsRef = collection(db, "thoughts");
     const q = query(thoughtsRef, 
         where("country", "==", country), 
-        where("expiresAt", ">", new Date()), 
-        orderBy("timestamp", "desc")
+        where("expiresAt", ">", new Date()), // Filtro de desigualdad
+        orderBy("expiresAt", "asc"),         // ¡Primero ordenamos por expiresAt!
+        orderBy("timestamp", "desc")         // Luego por timestamp
     );
 
     try {
