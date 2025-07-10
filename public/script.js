@@ -133,7 +133,11 @@ function hideSection(sectionToHide) {
     mainSection.style.display = 'none'; // Ocultamos temporalmente mainSection
     // Forzar un reflow/repaint para que el navegador recalcule el layout
     mainSection.offsetHeight; // Lee la propiedad offsetHeight para forzar el reflow
-    mainSection.style.display = 'flex'; // Volvemos a mostrarlo con display flex
+
+    // --- LA ÚNICA LÍNEA QUE NECESITAS AGREGAR / CAMBIAR ---
+    setTimeout(() => {
+        mainSection.style.display = 'flex'; // Volvemos a mostrarlo con display flex
+    }, 100); // 100 milisegundos de retraso (0.1 segundos)
 }
 
 // --- Firebase Operations ---
