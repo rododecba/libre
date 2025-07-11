@@ -1,55 +1,49 @@
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LIBRE</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html {
-      transition: background-color 0.3s, color 0.3s;
-    }
+    html { transition: background-color 0.3s, color 0.3s; }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex flex-col items-center p-4">
-  <!-- Header -->
+  <!-- Header / Logo -->
   <header class="mb-6 text-center w-full max-w-xl">
+    
     <h1 class="mt-6 text-3xl font-semibold">LIBRE</h1>
-    <!-- Unified slogan styling -->
-    <p class="mt-1 text-[0.77rem] font-medium whitespace-normal">
-      Un espacio para tus pensamientos más libres. Escribe lo que quieras, sin esperar nada a cambio.<br />
-      Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo, sin saber quién eres, ni quién la encontró.
-    </p>
+    <!-- Unified slogan styling (reduced by 20%) -->
+    <p class="mt-1 text-[0.77rem] font-medium whitespace-normal">Un espacio para tus pensamientos más libres. Escribe lo que quieras, sin esperar nada a cambio.<br>Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo, sin saber quién eres, ni quién la encontró.</p>
     <!-- Global thoughts counter -->
     <div class="mt-4 text-lg font-medium">
       <span id="globalCount">🌐 12,345 pensamientos lanzados</span>
     </div>
   </header>
 
+  <!-- Navigation -->
+  <nav class="w-full max-w-xl flex justify-around mb-6 text-sm">
+  <button onclick="showTab('write')" class="hover:underline">Escribir</button>
+  <button onclick="showTab('feed')" class="hover:underline">Pensamientos globales</button>
+  <button onclick="showTab('mine')" class="hover:underline">Mis pensamientos</button>
+  <button onclick="showTab('capsule')" class="hover:underline">Cápsula del tiempo</button>
+  <button onclick="showTab('about')" class="hover:underline">Acerca de</button>
+</nav>
+
   <!-- Thought Input -->
   <section id="write" class="w-full max-w-xl mb-6">
-    <textarea
-      id="textarea"
-      class="w-full p-4 rounded-xl shadow-inner bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-600"
-      rows="4"
-      maxlength="500"
-      placeholder="Lo que no se dice, también necesita salir..."
-    ></textarea>
-    <button
-      id="sendBtn"
-      class="mt-2 w-full text-center py-3 rounded-xl font-medium shadow-md hover:shadow-xl transition"
-    >
-      Enviar pensamiento
-    </button>
+    <textarea id="textarea" class="w-full p-4 rounded-xl shadow-inner bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-600" rows="4" maxlength="500" placeholder="Lo que no se dice, también necesita salir..."></textarea>
+    <button id="sendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium shadow-md hover:shadow-xl transition">Enviar pensamiento</button>
   </section>
 
   <!-- Global Thoughts Feed -->
-  <section id="feed" class="w-full max-w-xl space-y-4 mb-8">
+  <section id="feed" class="w-full max-w-xl space-y-4 mb-8 hidden">
     <h2 class="text-2xl font-semibold mb-4">Pensamientos de todo el mundo</h2>
     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
       <div class="flex items-center space-x-2 mb-2">
-        <img src="https://flagcdn.com/es.svg" alt="España" class="w-5 h-5 rounded-sm" />
+        <img src="https://flagcdn.com/es.svg" alt="España" class="w-5 h-5 rounded-sm">
         <span class="text-xs font-medium">España</span>
       </div>
       <p class="font-medium">La vida es un suspiro breve que merece ser vivido.</p>
@@ -57,122 +51,92 @@
   </section>
 
   <!-- User's Own Thoughts -->
-  <section id="mine" class="w-full max-w-xl mb-8">
-    <h2 class="text-2xl font-semibold mb-4">Mis pensamientos</h2>
+  <section id="mine" class="w-full max-w-xl mb-8 hidden">
+    <h2 class="text-2xl font-semibold mb-4">Historial de mensajes</h2>
     <div id="myThoughts" class="space-y-4">
       <p class="text-sm font-medium opacity-75">No has escrito aún...</p>
     </div>
   </section>
 
   <!-- Time Capsule -->
-  <section id="capsule" class="w-full max-w-xl mb-8">
-    <h2 class="text-2xl font-semibold mb-4">
-      🚀 <span class="text-indigo-500">Cápsula del tiempo</span>
-    </h2>
-    <p class="mt-1 text-sm font-light text-justify">
-      Un eco de tus pensamientos, viajando silenciosamente hacia un rincón lejano del mañana.
-    </p>
-    <div class="flex space-x-2 mt-2">
-      <input
-        type="date"
-        id="capsuleDate"
-        class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none"
-      />
-      <input
-        type="time"
-        id="capsuleTime"
-        class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none"
-      />
-      <button
-        id="capsuleBtn"
-        class="px-4 py-2 rounded-lg bg-indigo-500 dark:bg-indigo-600 text-white shadow-md hover:shadow-lg transition"
-      >
-        Programar
-      </button>
+  <section id="capsule" class="w-full max-w-xl mb-8 hidden">
+<h2 class="text-2xl font-semibold mb-4">🚀 <span class="text-indigo-500">Cápsula del tiempo</span></h2>
+<p class="mt-1 text-sm font-medium text-justify">Un eco de tus pensamientos, viajando silenciosamente hacia un rincón lejano del mañana.</p>
+<textarea id="capsuleMessage" class="w-full mt-3 p-4 rounded-xl shadow-inner bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-600" rows="4" maxlength="500" placeholder="Tu mensaje secreto para el futuro..."></textarea>
+<div class="flex space-x-2 mt-2">
+      <input type="date" id="capsuleDate" class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none">
+      <input type="time" id="capsuleTime" class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none">
+      <button id="capsuleBtn" class="px-4 py-2 rounded-lg bg-indigo-500 dark:bg-indigo-600 text-white shadow-md hover:shadow-lg transition">Programar</button>
     </div>
   </section>
 
   <!-- About & FAQ -->
-  <section id="about" class="w-full max-w-xl mb-8">
+  <section id="about" class="w-full max-w-xl mb-8 hidden">
     <h2 class="text-2xl font-semibold mb-4">Acerca de & Preguntas Frecuentes</h2>
     <details class="mb-2">
       <summary class="font-medium cursor-pointer">¿Por qué Libre?</summary>
       <p class="mt-1 text-sm font-medium text-justify">
-        Nuestra Filosofía: La Botella lanzada al Mar.<br />
-        Cada pensamiento que lanzas es como una botella con un mensaje que arrojas al mar. No sabes quién la encontrará, ni dónde, y ellos no sabrán quién eres. Esta es la esencia de LIBRE: una conexión humana pura a través de las ideas, despojada de cualquier rastro de identidad o expectativa de respuesta.<br /><br />
+        Nuestra Filosofía: La Botella lanzada al Mar.<br>
+        Cada pensamiento que lanzas es como una botella con un mensaje que arrojas al mar. No sabes quién la encontrará, ni dónde, y ellos no sabrán quién eres. Esta es la esencia de LIBRE: una conexión humana pura a través de las ideas, despojada de cualquier rastro de identidad o expectativa de respuesta.<br><br>
         No hay perfiles, no hay seguidores, no hay "me gusta". Solo palabras que viajan libremente.
       </p>
     </details>
     <details class="mb-2">
       <summary class="font-medium cursor-pointer">¿Por qué no hay login ni perfiles?</summary>
-      <p class="mt-1 text-sm font-medium text-justify">
-        La ausencia de login y perfiles es el pilar central de la filosofía de LIBRE. Queremos que te expreses sin la presión social, sin la necesidad de construir una imagen o de buscar validación. Tus palabras son libres, tú eres libre.
-      </p>
+      <p class="mt-1 text-sm font-medium text-justify">La ausencia de login y perfiles es el pilar central de la filosofía de LIBRE. Queremos que te expreses sin la presión social, sin la necesidad de construir una imagen o de buscar validación. Tus palabras son libres, tú eres libre.</p>
     </details>
     <details>
       <summary class="font-medium cursor-pointer">¿Es LIBRE realmente anónimo?</summary>
-      <p class="mt-1 text-sm font-medium text-justify">
-        Sí, absolutamente. No te pedimos nombre, email, ni ningún dato personal. Tu pensamiento se lanza con un ID anónimo generado en tu propio navegador, que no te identifica. El país se determina por tu IP, pero no se vincula a tu persona y solo se usa para fines estadísticos globales.
-      </p>
+      <p class="mt-1 text-sm font-medium text-justify">Sí, absolutamente. No te pedimos nombre, email, ni ningún dato personal. Tu pensamiento se lanza con un ID anónimo generado en tu propio navegador, que no te identifica. El país se determina por tu IP, pero no se vincula a tu persona y solo se usa para fines estadísticos globales.</p>
     </details>
   </section>
 
   <!-- Support -->
   <footer class="w-full max-w-xl text-center py-6">
     <p class="mb-2 text-sm font-medium">Si te gusta Libre, apóyanos en Ko-fi:</p>
-    <a
-      href="https://ko-fi.com/libreantisocial"
-      target="_blank"
-      class="inline-block px-6 py-2 bg-yellow-400 rounded-full font-medium shadow hover:shadow-lg transition"
-      >☕ Apóyanos</a
-    >
+    <a href="https://ko-fi.com/libreantisocial" target="_blank" class="inline-block px-6 py-2 bg-yellow-400 rounded-full font-medium shadow hover:shadow-lg transition">☕ Apóyanos</a>
     <div class="mt-4 text-sm opacity-50">© 2025 Libre. Todos los derechos reservados.</div>
   </footer>
 
   <!-- Overlay -->
-  <div
-    id="overlay"
-    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity"
-  >
-    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl text-center max-w-xs">
-      <p class="font-medium">Tu frase vuela con el viento.</p>
-    </div>
+  
   </div>
 
   <script>
     const html = document.documentElement;
-    document.getElementById("toggleDark")?.addEventListener("click", () =>
-      html.classList.toggle("dark")
-    );
+    document.getElementById('toggleDark')?.addEventListener('click', () => html.classList.toggle('dark'));
 
-    const overlay = document.getElementById("overlay");
-    document.getElementById("sendBtn").addEventListener("click", () => {
-      overlay.classList.remove("opacity-0", "pointer-events-none");
-      setTimeout(() => overlay.classList.add("opacity-0"), 1400);
-    });
+    
 
-    const globalCountEl = document.getElementById("globalCount");
+    const globalCountEl = document.getElementById('globalCount');
     let count = 12345;
-    document.getElementById("sendBtn").addEventListener("click", () => {
-      globalCountEl.textContent = `🌐 ${++count} pensamientos lanzados`;
-    });
+    document.getElementById('sendBtn').addEventListener('click', () => globalCountEl.textContent = `🌐 ${++count} pensamientos lanzados`);
 
-    const myThoughts = document.getElementById("myThoughts");
-    document.getElementById("sendBtn").addEventListener("click", () => {
-      const txt = document.getElementById("textarea").value.trim();
+    const myThoughts = document.getElementById('myThoughts');
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      const txt = document.getElementById('textarea').value.trim();
       if (txt) {
-        const card = document.createElement("div");
-        card.className = "p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm";
+        const card = document.createElement('div');
+        card.className = 'p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm';
         card.innerHTML = `<p>${txt}</p>`;
         myThoughts.prepend(card);
       }
     });
 
-    document.getElementById("capsuleBtn").addEventListener("click", () => {
-      const date = document.getElementById("capsuleDate").value;
-      const time = document.getElementById("capsuleTime").value;
+    document.getElementById('capsuleBtn').addEventListener('click', () => {
+      const date = document.getElementById('capsuleDate').value;
+      const time = document.getElementById('capsuleTime').value;
       if (date && time) alert(`Cápsula programada para ${date} a las ${time}`);
     });
+    function showTab(tabId) {
+    const sections = ['write', 'feed', 'mine', 'capsule', 'about'];
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    });
+    const active = document.getElementById(tabId);
+    if (active) active.classList.remove('hidden');
+  }
   </script>
 </body>
 </html>
