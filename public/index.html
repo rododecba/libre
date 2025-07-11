@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LIBRE</title>
+  <!-- Favicon personalizado -->
+  <link rel="icon" type="image/png" href="logolibre-favicon.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Firebase App (the core Firebase SDK) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -80,6 +82,12 @@
         <span class="text-3xl mr-2">📜</span>
         <h2 class="text-2xl font-semibold text-green-800">Historial de mensajes</h2>
       </div>
+      <!-- Exportar/Importar ID: privacidad total -->
+      <div class="flex mb-3">
+        <button onclick="exportAnonId()" class="px-3 py-1 rounded bg-gray-300 mr-2 text-sm">Exportar ID</button>
+        <button onclick="importAnonId()" class="px-3 py-1 rounded bg-gray-300 text-sm">Importar ID</button>
+      </div>
+      <div class="mb-4 text-xs text-green-900 opacity-60">Para mantener tu historial aunque borres caché o cambies de dispositivo, exporta tu ID y guárdalo en un lugar seguro. Sólo tú lo conoces.</div>
       <div id="myThoughts" class="space-y-4">
         <p class="text-sm font-medium text-green-900 opacity-75">No has escrito aún...</p>
       </div>
@@ -171,6 +179,22 @@
       return id;
     }
 
+    // ---- EXPORTAR/IMPORTAR IDENTIFICADOR ANÓNIMO ----
+    function exportAnonId() {
+      const id = getAnonUserId();
+      // Muestra el ID y permite copiarlo fácilmente
+      window.prompt("Este es tu identificador anónimo. Cópialo y guárdalo en un lugar seguro para restaurar tu historial cuando quieras:", id);
+    }
+
+    function importAnonId() {
+      const newId = window.prompt("Pega aquí tu identificador anónimo guardado anteriormente:");
+      if(newId) {
+        localStorage.setItem("libre_anon_id", newId);
+        loadMyThoughts();
+        alert("Identificador restaurado. Si escribiste pensamientos con ese ID, ahora deberías verlos en tu historial.");
+      }
+    }
+
     // ---- DETECTAR PAÍS ----
     let userCountry = "Desconocido";
     async function detectCountry() {
@@ -229,7 +253,7 @@
       loadGlobalThoughts();
       loadCountryRanking();
       loadMap();
-      loadMyThoughts(); // <-- AGREGADO para refrescar el historial
+      loadMyThoughts(); // <-- Refresca el historial después de enviar
     };
 
     // ---- MI HISTORIAL ----
