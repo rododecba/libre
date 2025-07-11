@@ -5,7 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LIBRE</title>
   <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com">  setTimeout(() => {
+    const textLogo = document.getElementById('textLogo');
+    const imgLogo = document.getElementById('logolibre');
+    if (textLogo && imgLogo) {
+      textLogo.classList.add('opacity-0');
+      imgLogo.classList.remove('opacity-0');
+    }
+  }, 2000);
+</script>
   <style>
     html { transition: background-color 0.3s, color 0.3s; }
   </style>
@@ -14,7 +22,10 @@
   <!-- Header / Logo -->
   <header class="mb-6 text-center w-full max-w-xl">
     
-    <h1 class="mt-6 text-3xl font-semibold">LIBRE</h1>
+    <div id="logoContainer" class="mt-6 text-3xl font-semibold transition-opacity duration-1000">
+  <h1 id="textLogo">LIBRE</h1>
+  <img id="logolibre" src="beach_13127879.png" alt="LIBRE logo" class="w-8 h-8 mx-auto mt-2 opacity-0 transition-opacity duration-1000" />
+</div>
     <!-- Unified slogan styling (reduced by 20%) -->
     <p class="mt-1 text-[0.77rem] font-medium whitespace-normal">Un espacio para tus pensamientos más libres. Escribe lo que quieras, sin esperar nada a cambio.<br>Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo, sin saber quién eres, ni quién la encontró.</p>
     <!-- Global thoughts counter -->
