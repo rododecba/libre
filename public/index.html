@@ -1,191 +1,107 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LIBRE</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="stylesheet" href="lib/fontawesome/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LIBRE</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html {
+      transition: background-color 0.3s, color 0.3s;
+    }
+  </style>
 </head>
-<body>
-    <div class="container">
-        <header class="header" role="navigation">
-            <h1 class="app-title">LIBRE</h1>
-            <p class="app-description">
-                Un espacio para tus pensamientos más libres. Escribe lo que quieras, sin esperar nada a cambio.<br>
-                Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo,
-                sin saber quién eres, ni quién la encontró.
-            </p>
-        </header>
-
-        <div id="mainSection" style="display: flex; flex-direction: column; width: 100%; gap: 20px;">
-            <section class="featured-thought-section">
-                <div class="featured-thought-box">
-                    <p class="featured-thought-placeholder" id="featuredThoughtPlaceholder" style="display: none;">
-                        Cargando un pensamiento del mundo...
-                    </p>
-                    <p class="featured-thought-content" id="featuredThoughtContent"></p>
-                    <button class="next-thought-btn" id="nextThoughtBtn" title="Ver siguiente pensamiento" aria-label="Ver siguiente pensamiento destacado">
-                        <i class="fas fa-redo"></i>
-                    </button>
-                </div>
-            </section>
-
-            <section class="stats-and-actions">
-                <div class="card" id="myThoughtsCard" role="button" tabindex="0" aria-label="Abrir sección Ecos de mis Pensamientos">
-                    <i class="fas fa-brain card-icon"></i>
-                    <p class="card-text">Ecos de mis Pensamientos</p>
-                </div>
-
-                <div class="card" id="viewByCountryCard" role="button" tabindex="0" aria-label="Abrir sección Ver por País">
-                    <i class="fas fa-globe-americas card-icon"></i>
-                    <p class="card-text">Ver por País</p>
-                </div>
-
-                <div class="card" id="timeCapsuleCard" role="button" tabindex="0" aria-label="Abrir sección Cápsula del Tiempo">
-                    <i class="fas fa-hourglass-half card-icon"></i>
-                    <p class="card-text">Cápsula del Tiempo</p>
-                </div>
-
-                <div class="card stat-card" id="thoughtsWrittenCard">
-                    <p class="card-text" id="globalThoughtCount">0</p> 
-                    <p class="card-subtitle">Pensamientos escritos</p>
-                </div>
-            </section>
-
-            <section class="write-thought-section">
-                <div class="write-thought-box">
-                    <div class="textarea-wrapper">
-                        <textarea id="thoughtInput" class="thought-input" placeholder="Escribe tu pensamiento..."></textarea>
-                    </div>
-                    <div class="write-thought-footer">
-                        <span class="char-count" id="charCount">0/500</span> 
-                        <button class="send-thought-btn" id="launchThoughtBtn" aria-label="Lanzar pensamiento">Lanzar Pensamiento</button>
-                    </div>
-                </div>
-            </section>
-        </div> 
-        
-        <section class="my-thoughts-display-section" id="myThoughtsSection" style="display: none;"> 
-            <div class="my-thoughts-header">
-                <h2 class="section-title">Ecos de mis Pensamientos</h2>
-                <button class="close-btn" id="closeMyThoughtsBtn" aria-label="Cerrar sección de mis pensamientos">&times;</button>
-            </div>
-            <div class="my-thoughts-list" id="myThoughtsList">
-                <p class="no-thoughts-message" id="noMyThoughtsMessage">Aún no has lanzado ningún pensamiento.</p>
-            </div>
-        </section>
-
-        <section class="time-capsule-section" id="timeCapsuleSection" style="display: none;">
-            <div class="my-thoughts-header">
-                <h2 class="section-title">Cápsula del Tiempo</h2>
-                <button class="close-btn" id="closeTimeCapsuleBtn" aria-label="Cerrar sección de cápsulas del tiempo">&times;</button>
-            </div>
-            <div class="time-capsule-content">
-                <h3>Envía un mensaje al futuro</h3>
-                <div class="textarea-wrapper">
-                    <textarea id="timeCapsuleThoughtInput" class="thought-input" placeholder="Escribe tu mensaje para el futuro..."></textarea> 
-                </div>
-                <div class="time-capsule-controls">
-                    <span class="char-count" id="timeCapsuleCharCount">0/500</span> 
-                    <label for="timeCapsuleDate">Desplegar en:</label>
-                    <input type="datetime-local" id="timeCapsuleDate" class="time-capsule-date-input">
-                </div>
-                <button class="send-thought-btn" id="launchTimeCapsuleBtn" aria-label="Programar mensaje de cápsula del tiempo">Programar Mensaje</button> 
-                <hr style="margin: 20px 0; border-color: var(--border-color);">
-
-                <h3>Mis Cápsulas Programadas y Desplegadas</h3>
-                <div class="time-capsule-list" id="timeCapsuleList">
-                    <p class="no-thoughts-message" id="noTimeCapsulesMessage">Aún no has programado ninguna cápsula del tiempo.</p> 
-                </div>
-            </div>
-        </section>
-
-        <section class="view-by-country-section" id="viewByCountrySection" style="display: none;">
-            <div class="my-thoughts-header">
-                <h2 class="section-title">Ver por País</h2>
-                <button class="close-btn" id="closeViewByCountryBtn" aria-label="Cerrar sección de pensamientos por país">&times;</button>
-            </div>
-            <div class="map-container" id="mapContainer">
-            </div>
-            <div class="country-thoughts-list" id="countryThoughtsList">
-                <p class="no-thoughts-message" id="noCountryThoughtsMessage">Selecciona un país en el mapa para ver sus pensamientos.</p>
-            </div>
-        </section>
-
-        <section class="info-section" id="aboutSection" style="display: none;">
-            <div class="info-section-header">
-                <h2 class="section-title">Acerca de LIBRE</h2>
-                <button class="close-btn" id="closeAboutBtn" aria-label="Cerrar sección Acerca de">&times;</button>
-            </div>
-            <div class="info-section-content">
-                <p><strong>LIBRE</strong> es un espacio digital donde tus pensamientos se convierten en mensajes anónimos, lanzados al vasto océano de la web. Aquí, la idea central es la **liberación del pensamiento** sin ataduras, sin juicios y sin la necesidad de una identidad.</p>
-                
-                <h3>Nuestra Filosofía: La Botella al Mar</h3>
-                <p>Cada pensamiento que lanzas es como una botella con un mensaje que arrojas al mar. No sabes quién la encontrará, ni dónde, y ellos no sabrán quién eres. Esta es la esencia de LIBRE: una conexión humana pura a través de las ideas, despojada de cualquier rastro de identidad o expectativa de respuesta.</p>
-                <p>Creemos en la belleza de la comunicación en su forma más pura y desinteresada. No hay perfiles, no hay seguidores, no hay "me gusta". Solo palabras que viajan libremente.</p>
-
-                <h3>Privacidad y Anonymato Total</h3>
-                <ul>
-                    <li>No pedimos ni almacenamos ninguna información personal identificable.</li>
-                    <li>No usamos cookies para seguimiento ni análisis de usuarios.</li>
-                    <li>Tu ubicación aproximada (país) se usa únicamente para mostrar la diversidad global de pensamientos, nunca para identificarte.</li>
-                    <li>Tus pensamientos se disuelven como la tinta en el agua después de 30 días, preservando el espíritu efímero de la "botella al mar".</li>
-                </ul>
-                <p>LIBRE es un refugio para tus ideas, donde lo único que importa es el mensaje.</p>
-            </div>
-        </section>
-
-        <section class="info-section" id="faqSection" style="display: none;">
-            <div class="info-section-header">
-                <h2 class="section-title">Preguntas Frecuentes</h2>
-                <button class="close-btn" id="closeFaqBtn" aria-label="Cerrar sección de Preguntas Frecuentes">&times;</button>
-            </div>
-            <div class="info-section-content">
-                <div class="faq-item">
-                    <h3>¿Es LIBRE realmente anónimo?</h3>
-                    <p>Sí, absolutamente. No te pedimos nombre, email, ni ningún dato personal. Tu pensamiento se lanza con un ID anónimo generado en tu propio navegador, que no te identifica. El país se determina por tu IP, pero no se vincula a tu persona y solo se usa para fines estadísticos globales.</p>
-                </div>
-                <div class="faq-item">
-                    <h3>¿Qué pasa con mis pensamientos después de lanzarlos?</h3>
-                    <p>Tus pensamientos son como "botellas al mar". Son visibles para cualquiera durante 30 días. Después de ese período, se eliminan permanentemente de nuestros sistemas. Esto refuerza la idea de soltar y desapegarse.</p>
-                </div>
-                <div class="faq-item">
-                    <h3>¿Puedo ver mis pensamientos anteriores?</h3>
-                    <p>Sí, puedes ver los pensamientos que has lanzado desde el mismo navegador y dispositivo, en la sección "Ecos de mis Pensamientos", durante los 30 días que están activos. Si limpias el almacenamiento local de tu navegador, perderás el acceso a este historial, ya que no se asocia a una cuenta personal.</p>
-                </div>
-                <div class="faq-item">
-                    <h3>¿Cómo funciona la "Cápsula del Tiempo"?</h3>
-                    <p>La Cápsula del Tiempo te permite escribir un mensaje y programar una fecha futura para que sea "desplegado" y visible para ti. Es tu propio mensaje personal para el futuro.</p>
-                </div>
-                <div class="faq-item">
-                    <h3>¿Cómo se determina mi país?</h3>
-                    <p>Determinamos el país de origen de un pensamiento utilizando tu dirección IP, la cual nos da una ubicación geográfica muy aproximada (solo el país). Esta información se usa únicamente para mostrar el pensamiento como proveniente de un país en particular en la sección "Ver por País", y nunca se almacena de forma que pueda identificarte.</p>
-                </div>
-                <div class="faq-item">
-                    <h3>¿Por qué no hay login ni perfiles?</h3>
-                    <p>La ausencia de login y perfiles es el pilar central de la filosofía de LIBRE. Queremos que te expreses sin la presión social, sin la necesidad de construir una imagen o de buscar validación. Tus palabras son libres, tú eres libre.</p>
-                </div>
-            </div>
-        </section>
-
-        <footer class="footer">
-            <p>LIBRE &copy; 2025</p>
-            <div class="footer-links">
-                <a href="#" id="aboutLink" aria-label="Abrir sección Acerca de LIBRE">Acerca de</a>
-                <span class="footer-separator">|</span>
-                <a href="#" id="faqLink" aria-label="Abrir sección de Preguntas Frecuentes">Preguntas Frecuentes</a>
-                <span class="footer-separator">|</span>
-                <a href="https://ko-fi.com/libreantisocial" target="_blank" rel="noopener noreferrer" aria-label="Apoya a LIBRE donando una pequeña cantidad">Apoya a LIBRE</a>
-            </div>
-        </footer>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex flex-col items-center p-4">
+  <!-- Header -->
+  <header class="mb-6 text-center w-full max-w-xl">
+    <h1 class="mt-6 text-3xl font-semibold">LIBRE</h1>
+    <!-- Unified slogan styling -->
+    <p class="mt-1 text-[0.77rem] font-medium whitespace-normal">
+      Un espacio para tus pensamientos más libres. Escribe lo que quieras, sin esperar nada a cambio.<br />
+      Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo, sin saber quién eres, ni quién la encontró.
+    </p>
+    <!-- Global thoughts counter -->
+    <div class="mt-4 text-lg font-medium">
+      <span id="globalCount">🌐 12,345 pensamientos lanzados</span>
     </div>
+  </header>
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="script.js" type="module"></script>
-</body>
-</html>
+  <!-- Thought Input -->
+  <section id="write" class="w-full max-w-xl mb-6">
+    <textarea
+      id="textarea"
+      class="w-full p-4 rounded-xl shadow-inner bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-600"
+      rows="4"
+      maxlength="500"
+      placeholder="Lo que no se dice, también necesita salir..."
+    ></textarea>
+    <button
+      id="sendBtn"
+      class="mt-2 w-full text-center py-3 rounded-xl font-medium shadow-md hover:shadow-xl transition"
+    >
+      Enviar pensamiento
+    </button>
+  </section>
+
+  <!-- Global Thoughts Feed -->
+  <section id="feed" class="w-full max-w-xl space-y-4 mb-8">
+    <h2 class="text-2xl font-semibold mb-4">Pensamientos de todo el mundo</h2>
+    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+      <div class="flex items-center space-x-2 mb-2">
+        <img src="https://flagcdn.com/es.svg" alt="España" class="w-5 h-5 rounded-sm" />
+        <span class="text-xs font-medium">España</span>
+      </div>
+      <p class="font-medium">La vida es un suspiro breve que merece ser vivido.</p>
+    </div>
+  </section>
+
+  <!-- User's Own Thoughts -->
+  <section id="mine" class="w-full max-w-xl mb-8">
+    <h2 class="text-2xl font-semibold mb-4">Mis pensamientos</h2>
+    <div id="myThoughts" class="space-y-4">
+      <p class="text-sm font-medium opacity-75">No has escrito aún...</p>
+    </div>
+  </section>
+
+  <!-- Time Capsule -->
+  <section id="capsule" class="w-full max-w-xl mb-8">
+    <h2 class="text-2xl font-semibold mb-4">
+      🚀 <span class="text-indigo-500">Cápsula del tiempo</span>
+    </h2>
+    <p class="mt-1 text-sm font-light text-justify">
+      Un eco de tus pensamientos, viajando silenciosamente hacia un rincón lejano del mañana.
+    </p>
+    <div class="flex space-x-2 mt-2">
+      <input
+        type="date"
+        id="capsuleDate"
+        class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none"
+      />
+      <input
+        type="time"
+        id="capsuleTime"
+        class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none"
+      />
+      <button
+        id="capsuleBtn"
+        class="px-4 py-2 rounded-lg bg-indigo-500 dark:bg-indigo-600 text-white shadow-md hover:shadow-lg transition"
+      >
+        Programar
+      </button>
+    </div>
+  </section>
+
+  <!-- About & FAQ -->
+  <section id="about" class="w-full max-w-xl mb-8">
+    <h2 class="text-2xl font-semibold mb-4">Acerca de & Preguntas Frecuentes</h2>
+    <details class="mb-2">
+      <summary class="font-medium cursor-pointer">¿Por qué Libre?</summary>
+      <p class="mt-1 text-sm font-medium text-justify">
+        Nuestra Filosofía: La Botella lanzada al Mar.<br />
+        Cada pensamiento que lanzas es como una botella con un mensaje que arrojas al mar. No sabes quién la encontrará, ni dónde, y ellos no sabrán quién eres. Esta es la esencia de LIBRE: una conexión humana pura a través de las ideas, despojada de cualquier rastro de identidad o expectativa de respuesta.<br /><br />
+        No hay perfiles, no hay seguidores, no hay "me gusta". Solo palabras que viajan libremente.
+      </p>
+    </details>
+    <details class="mb-2">
+      <summary class="font-medium cursor-pointer">¿Por qué no hay login ni perf
