@@ -9,6 +9,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     html { transition: background-color 0.3s, color 0.3s; }
     .logo-hidden { opacity: 0; transition: opacity 1.5s; }
@@ -19,7 +20,6 @@
     .reply-thread { margin-left: 1.5rem; border-left: 2px solid #ddd; padding-left: 1rem; }
     .stat-label { color: #059669; font-weight: 600; font-size: .93rem;}
   </style>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col items-center p-4">
   <header class="mb-6 text-center w-full max-w-xl">
@@ -34,11 +34,11 @@
   </header>
 
   <nav class="w-full max-w-xl flex justify-around mb-6 text-sm">
-    <button onclick="showTab('write')" class="hover:underline">Escribir</button>
-    <button onclick="showTab('feed')" class="hover:underline">Pensamientos globales</button>
-    <button onclick="showTab('mine')" class="hover:underline">Mis pensamientos</button>
-    <button onclick="showTab('capsule')" class="hover:underline">Cápsula del tiempo</button>
-    <button onclick="showTab('about')" class="hover:underline">Acerca de</button>
+    <button id="btnWrite" class="hover:underline">Escribir</button>
+    <button id="btnFeed" class="hover:underline">Pensamientos globales</button>
+    <button id="btnMine" class="hover:underline">Mis pensamientos</button>
+    <button id="btnCapsule" class="hover:underline">Cápsula del tiempo</button>
+    <button id="btnAbout" class="hover:underline">Acerca de</button>
   </nav>
 
   <!-- Pensamientos globales -->
@@ -70,8 +70,8 @@
         <h2 class="text-2xl font-semibold text-green-800">Historial de mensajes</h2>
       </div>
       <div class="flex mb-3">
-        <button onclick="exportAnonId()" class="px-3 py-1 rounded bg-gray-300 mr-2 text-sm">Exportar ID</button>
-        <button onclick="importAnonId()" class="px-3 py-1 rounded bg-gray-300 text-sm">Importar ID</button>
+        <button id="btnExportId" class="px-3 py-1 rounded bg-gray-300 mr-2 text-sm">Exportar ID</button>
+        <button id="btnImportId" class="px-3 py-1 rounded bg-gray-300 text-sm">Importar ID</button>
       </div>
       <div class="mb-4 text-xs text-green-900 opacity-60">Para mantener tu historial aunque borres caché o cambies de dispositivo, exporta tu ID y guárdalo en un lugar seguro. Sólo tú lo conoces.</div>
       <div id="userStats" class="mb-4"></div>
@@ -139,13 +139,74 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // --- AQUÍ va TODO tu JS completo y funcional ---
-    // Solo reemplazo la función loadThoughtOfDay() por una robusta y aseguro que window.onload inicialice todo
-    // El resto de tu lógica (write, feed, historial, estadísticas, ranking, mapa, etc) permanece igual.
+    // ==== CONFIGURACIÓN FIREBASE ====
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
+      authDomain: "libre-c5bf7.firebaseapp.com",
+      projectId: "libre-c5bf7",
+      storageBucket: "libre-c5bf7.firebasestorage.app",
+      messagingSenderId: "339942652190",
+      appId: "1:339942652190:web:595ce692456b9df806f10f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    // ... (aquí pega todo el JS funcional anterior, no el que rompió) ...
+    // ==== UTILIDADES ====
+    function getAnonUserId() {
+      let id = localStorage.getItem("libre_anon_id");
+      if (!id) {
+        id = "anon-" + Math.random().toString(36).substr(2, 15);
+        localStorage.setItem("libre_anon_id", id);
+      }
+      return id;
+    }
 
-    // FRASES DE INSPIRACIÓN
+    // ==== FILTRO DE PALABRAS PROHIBIDAS ====
+    const PALABRAS_PROHIBIDAS = [
+      "puto", "puta", "mierda", "gilipollas", "idiota", "imbecil", "tonto",
+      "fuck", "shit", "asshole", "bitch", "fag", "cunt", "dick", "porn", "sexo",
+      "maricon", "polla", "verga", "coño", "cabron", "culiao", "jodete", "zorra", "perra", "sorete",
+      "mongolo", "mongola", "mongolico", "mongolica", "mogolico", "mogolica", "retrasado", "retrasada",
+      "subnormal", "soplapollas", "comechapas", "comepollas", "concha", "conchetumadre", "hijoputa",
+      "hijo de puta", "hijueputa", "marica", "maricon", "mariconazo", "mariconaza", "puton", "a tomar por culo",
+      "chinga tu madre", "la concha de la lora", "me cago en dios", "me cago en tus muertos", "me cago en la puta",
+      "coño de tu madre", "mamagüevo", "mamaguevo", "moro de mierda", "mora de mierda", "negro de mierda", "negra de mierda",
+      "panchito", "panchita", "sudaca", "mariposa", "mariposas", "mariposon", "mariposona", "mariquita", "bollera",
+      "tortillera", "travelo", "pija", "culiadaso", "culiado", "culiar", "chupa pija", "poronga", "pito"
+    ];
+    function normalizaTexto(texto) {
+      return texto
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s]/gi, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    }
+    function palabraProhibidaDetectada(texto) {
+      const textoNormal = normalizaTexto(texto);
+      for (let palabra of PALABRAS_PROHIBIDAS) {
+        const palabraSeparada = palabra.split('').join('\\s*');
+        const regex = new RegExp(`\\b(${palabra}|${palabraSeparada})\\b`, "i");
+        if (regex.test(textoNormal)) return palabra;
+      }
+      return null;
+    }
+
+    // ==== PALABRAS POSITIVAS ====
+    const PALABRAS_POSITIVAS = [
+      "gracias","feliz","amor","esperanza","paz","sonrisa","amigo","amistad","aprecio","vida","confianza","alegría","bien","abrazo","logro","éxito","luz","brillante","positivo","apoyo","solidaridad","entusiasmo","creer","buen","bonito","hermoso","belleza","orgullo","inspirar","motivar","soñar","encanto","resiliencia"
+    ];
+    function cuentaPalabrasPositivas(texto) {
+      let count = 0;
+      const textoNorm = normalizaTexto(texto);
+      for(const pos of PALABRAS_POSITIVAS) {
+        const r = new RegExp(`\\b${pos}\\b`, "gi");
+        count += (textoNorm.match(r)||[]).length;
+      }
+      return count;
+    }
+
+    // ==== FRASES INSPIRACIÓN ====
     const FRASES_INSPIRACION = [
       "¿Qué harías si no tuvieras miedo?",
       "Escribe algo que te gustaría que el mundo supiera.",
@@ -171,7 +232,19 @@
       document.getElementById('textarea').placeholder = FRASES_INSPIRACION[idx];
     }
 
-    // ---- Pensamiento del Día ROBUSTO ----
+    // ==== DETECTAR PAÍS ====
+    let userCountry = "Desconocido";
+    async function detectCountry() {
+      try {
+        const res = await axios.get("https://ipinfo.io/json?token=ec664cefb36ece");
+        userCountry = res.data.country || "Desconocido";
+      } catch {
+        userCountry = "Desconocido";
+      }
+    }
+    detectCountry();
+
+    // ==== PENSAMIENTO DEL DÍA ROBUSTO ====
     async function loadThoughtOfDay() {
       try {
         const today = new Date();
@@ -205,8 +278,35 @@
       }
     }
 
-    // --- Inicialización segura ---
-    window.onload = function() {
+    // ==== BOTONES Y TABS ====
+    function showTab(tabId) {
+      const sections = ['write', 'feed', 'mine', 'capsule', 'about'];
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      const active = document.getElementById(tabId);
+      if (active) active.classList.remove('hidden');
+      if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(); loadCountryRanking(); loadMap(); loadPositiveWordsRanking(); }
+      if(tabId=='mine') { loadMyThoughts(); loadUserStats(); }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      // NAV
+      document.getElementById('btnWrite').onclick = () => showTab('write');
+      document.getElementById('btnFeed').onclick = () => showTab('feed');
+      document.getElementById('btnMine').onclick = () => showTab('mine');
+      document.getElementById('btnCapsule').onclick = () => showTab('capsule');
+      document.getElementById('btnAbout').onclick = () => showTab('about');
+      // EXPORTAR / IMPORTAR ID
+      document.getElementById('btnExportId').onclick = exportAnonId;
+      document.getElementById('btnImportId').onclick = importAnonId;
+      // INICIALIZACIÓN
+      inicializarApp();
+    });
+
+    // ==== INICIALIZACIÓN ====
+    async function inicializarApp() {
+      // Logo animación
       try {
         const textLogo = document.getElementById('textLogo');
         const imgLogo = document.getElementById('logolibre');
@@ -220,18 +320,302 @@
         setTimeout(() => {
           imgLogo.classList.add('visible');
         }, 3500);
-        // Inicializa TODO después
-        loadGlobalCount();
-        loadGlobalThoughts();
-        loadCountryRanking();
-        loadMap();
-        loadPositiveWordsRanking();
-        muestraFraseInspiracionTextarea();
-        loadUserStats();
-        loadMyThoughts();
-        loadThoughtOfDay();
       } catch(e){}
-    };
+      muestraFraseInspiracionTextarea();
+      await loadGlobalCount();
+      await loadGlobalThoughts();
+      await loadCountryRanking();
+      await loadMap();
+      await loadPositiveWordsRanking();
+      await loadUserStats();
+      await loadMyThoughts();
+      await loadThoughtOfDay();
+      // BOTONES DE FUNCIONALIDADES
+      // Escribir pensamiento
+      document.getElementById('sendBtn').onclick = enviarPensamiento;
+      // Random/chain
+      document.getElementById('randomBottleBtn').onclick = modoBotellaMar;
+      document.getElementById('chainModeBtn').onclick = modoCadenaPensamientos;
+      // Cápsula del tiempo
+      document.getElementById('capsuleBtn').onclick = enviarCapsula;
+    }
+
+    // ==== FUNCIONES DE LA APP ====
+    async function enviarPensamiento() {
+      const txt = document.getElementById('textarea').value.trim();
+      if (!txt) return;
+      const palabraDetectada = palabraProhibidaDetectada(txt);
+      if (palabraDetectada) {
+        alert(`Tu pensamiento contiene una palabra o frase inapropiada: "${palabraDetectada}". Por favor modifícalo.`);
+        return;
+      }
+      // Guarda en colección global y personal
+      await db.collection("thoughts").add({
+        text: txt,
+        ts: Date.now(),
+        country: userCountry,
+        user: getAnonUserId(),
+        replyTo: null
+      });
+      const userId = getAnonUserId();
+      await db.collection("users").doc(userId).collection("dailyThoughts").add({
+        text: txt,
+        ts: Date.now(),
+        country: userCountry
+      });
+      document.getElementById('textarea').value = '';
+      muestraFraseInspiracionTextarea();
+      await loadGlobalCount();
+      await loadGlobalThoughts();
+      await loadCountryRanking();
+      await loadMap();
+      await loadMyThoughts();
+      await loadUserStats();
+      await loadThoughtOfDay();
+      await loadPositiveWordsRanking();
+    }
+
+    async function modoBotellaMar() {
+      document.getElementById('randomThought').classList.add('hidden');
+      document.getElementById('chainSection').classList.add('hidden');
+      const snapshot = await db.collection("thoughts").get();
+      const docs = snapshot.docs;
+      if (docs.length === 0) {
+        document.getElementById('randomThought').textContent = "No hay pensamientos aún.";
+        document.getElementById('randomThought').classList.remove('hidden');
+        return;
+      }
+      const idx = Math.floor(Math.random() * docs.length);
+      const data = docs[idx].data();
+      document.getElementById('randomThought').innerHTML =
+        `<div class="flex items-center space-x-2 mb-2">
+          <span class="text-xs font-medium">${data.country || "🌐"}</span>
+        </div>
+        <p class="font-medium">${data.text}</p>`;
+      document.getElementById('randomThought').classList.remove('hidden');
+    }
+
+    async function modoCadenaPensamientos() {
+      document.getElementById('chainSection').classList.add('hidden');
+      document.getElementById('randomThought').classList.add('hidden');
+      const snapshot = await db.collection("thoughts").where("replyTo", "==", null).get();
+      const docs = snapshot.docs;
+      if (docs.length === 0) {
+        document.getElementById('chainSection').textContent = "No hay pensamientos aún para iniciar una cadena.";
+        document.getElementById('chainSection').classList.remove('hidden');
+        return;
+      }
+      const idx = Math.floor(Math.random() * docs.length);
+      const rootDoc = docs[idx];
+      renderChain(rootDoc.id, rootDoc.data(), document.getElementById('chainSection'), 0);
+      document.getElementById('chainSection').classList.remove('hidden');
+    }
+
+    async function renderChain(id, data, container, depth) {
+      container.innerHTML = "";
+      let html = `<div class="p-4 bg-white rounded-lg shadow-sm${depth>0?' reply-thread':''}">
+        <div class="flex items-center space-x-2 mb-2">
+          <span class="text-xs font-medium">${data.country || "🌐"}</span>
+        </div>
+        <p class="font-medium">${data.text}</p>
+      </div>`;
+      const replies = await db.collection("thoughts").where("replyTo", "==", id).orderBy("ts").get();
+      if(!replies.empty) {
+        replies.forEach(doc=>{
+          html += `<div class="reply-thread">${doc.data().text}</div>`;
+        });
+      }
+      html += `<div class="mt-4">
+        <textarea id="chainReply" class="w-full p-2 rounded border border-gray-300 bg-gray-50" rows="2" maxlength="400" placeholder="Responder anónimamente..."></textarea>
+        <button id="sendChainReply" class="mt-2 px-3 py-1 rounded bg-indigo-500 text-white hover:bg-indigo-700">Responder</button>
+      </div>`;
+      container.innerHTML = html;
+      document.getElementById('sendChainReply').onclick = async function() {
+        const txt = document.getElementById('chainReply').value.trim();
+        const palabraDetectada = palabraProhibidaDetectada(txt);
+        if (!txt) return;
+        if (palabraDetectada) {
+          alert(`Tu respuesta contiene una palabra o frase inapropiada: "${palabraDetectada}". Por favor modifícalo.`);
+          return;
+        }
+        await db.collection("thoughts").add({
+          text: txt,
+          ts: Date.now(),
+          country: userCountry,
+          user: getAnonUserId(),
+          replyTo: id
+        });
+        renderChain(id, data, container, depth);
+      };
+    }
+
+    async function enviarCapsula() {
+      const date = document.getElementById('capsuleDate').value;
+      const time = document.getElementById('capsuleTime').value;
+      const msg = document.getElementById('capsuleMessage').value.trim();
+      if (!date || !time || !msg) {
+        alert('Debes escribir un mensaje y elegir fecha/hora');
+        return;
+      }
+      const palabraDetectada = palabraProhibidaDetectada(msg);
+      if (palabraDetectada) {
+        alert(`Tu mensaje contiene una palabra o frase inapropiada: "${palabraDetectada}". Por favor modifícalo.`);
+        return;
+      }
+      const openAt = new Date(date + "T" + time + ":00").getTime();
+      await db.collection("capsules").add({
+        text: msg,
+        openAt,
+        ts: Date.now(),
+        country: userCountry,
+        user: getAnonUserId()
+      });
+      alert(`Cápsula programada para ${date} a las ${time}`);
+      document.getElementById('capsuleMessage').value = '';
+      document.getElementById('capsuleDate').value = '';
+      document.getElementById('capsuleTime').value = '';
+    }
+
+    // ... (aquí siguen las funciones: exportAnonId, importAnonId, loadMyThoughts, loadUserStats, loadGlobalCount, loadGlobalThoughts, loadPositiveWordsRanking, loadCountryRanking, loadMap) ...
+    function exportAnonId() {
+      const id = getAnonUserId();
+      window.prompt("Este es tu identificador anónimo. Cópialo y guárdalo en un lugar seguro para restaurar tu historial cuando quieras:", id);
+    }
+    function importAnonId() {
+      const newId = window.prompt("Pega aquí tu identificador anónimo guardado anteriormente:");
+      if(newId) {
+        localStorage.setItem("libre_anon_id", newId);
+        loadMyThoughts();
+        loadUserStats();
+        alert("Identificador restaurado. Si escribiste pensamientos con ese ID, ahora deberías verlos en tu historial.");
+      }
+    }
+    async function loadMyThoughts() {
+      const myThoughts = document.getElementById('myThoughts');
+      myThoughts.innerHTML = '';
+      const userId = getAnonUserId();
+      const snapshot = await db.collection("users").doc(userId).collection("dailyThoughts").orderBy("ts", "desc").get();
+      if (snapshot.docs.length === 0) {
+        myThoughts.innerHTML = '<p class="text-sm font-medium text-green-900 opacity-75">No has escrito aún...</p>';
+      } else {
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = 'p-4 bg-white rounded-lg shadow-sm';
+          card.innerHTML = `<p>${data.text}</p>`;
+          myThoughts.appendChild(card);
+        });
+      }
+    }
+    async function loadUserStats() {
+      const statsDiv = document.getElementById('userStats');
+      statsDiv.innerHTML = '';
+      const userId = getAnonUserId();
+      const snapshot = await db.collection("users").doc(userId).collection("dailyThoughts").get();
+      const total = snapshot.size;
+      const countries = {};
+      let positivos = 0;
+      snapshot.docs.forEach(doc=>{
+        const d = doc.data();
+        if(d.country) countries[d.country] = (countries[d.country]||0)+1;
+        positivos += cuentaPalabrasPositivas(d.text);
+      });
+      if(total === 0) return;
+      statsDiv.innerHTML = `
+        <div class="mb-2 stat-label">Tus estadísticas:</div>
+        <div class="mb-1">Total de pensamientos: <span class="font-bold">${total}</span></div>
+        <div class="mb-1">Total de palabras positivas usadas: <span class="font-bold">${positivos}</span></div>
+        <div class="mb-1">Países de envío: <span class="font-bold">${Object.keys(countries).join(', ')}</span></div>
+      `;
+    }
+    async function loadGlobalCount() {
+      const snapshot = await db.collection("thoughts").get();
+      document.getElementById('globalCountNum').textContent = snapshot.size;
+    }
+    async function loadGlobalThoughts() {
+      const globalThoughts = document.getElementById('globalThoughts');
+      globalThoughts.innerHTML = '';
+      const snapshot = await db.collection("thoughts").where("replyTo", "==", null).orderBy("ts", "desc").limit(10).get();
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const card = document.createElement('div');
+        card.className = 'p-4 bg-white rounded-lg shadow-sm';
+        card.innerHTML = `<div class="flex items-center space-x-2 mb-2">
+            <span class="text-xs font-medium">${data.country || "🌐"}</span>
+          </div>
+          <p class="font-medium">${data.text}</p>`;
+        globalThoughts.appendChild(card);
+      });
+    }
+    async function loadPositiveWordsRanking() {
+      let counts = {};
+      const snapshot = await db.collection("thoughts").get();
+      snapshot.docs.forEach(doc => {
+        const txt = doc.data().text;
+        for(const pos of PALABRAS_POSITIVAS) {
+          const r = new RegExp(`\\b${pos}\\b`, "gi");
+          counts[pos] = (counts[pos]||0) + (txt.match(r)||[]).length;
+        }
+      });
+      const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+      let html = "<ol class='pl-4'>";
+      sorted.forEach(([word, count],i)=>{
+        if(count>0) html += `<li>${i+1}. <span class="font-bold text-green-800">${word}</span>: <span class="font-semibold text-green-700">${count}</span></li>`;
+      });
+      html += "</ol>";
+      document.getElementById('positiveWordsRanking').innerHTML = html;
+    }
+    async function loadCountryRanking() {
+      const snapshot = await db.collection("thoughts").get();
+      const countryCounts = {};
+      snapshot.docs.forEach(doc => {
+        const c = doc.data().country || "Desconocido";
+        countryCounts[c] = (countryCounts[c] || 0) + 1;
+      });
+      const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
+      let html = '<div class="mb-2 font-semibold text-purple-800">Ranking de países más activos:</div>';
+      html += '<ul class="list-disc pl-4">';
+      sorted.slice(0, 5).forEach(([country, count]) => {
+        html += `<li><span class="font-bold">${country}</span>: ${count}</li>`;
+      });
+      html += '</ul>';
+      document.getElementById('countryRanking').innerHTML = html;
+    }
+    let map;
+    let countryMarkers = {};
+    async function loadMap() {
+      const countryCoords = {
+        AR: {lat: -34, lng: -64},
+        ES: {lat: 40, lng: -3},
+        MX: {lat: 23, lng: -102},
+        US: {lat: 37, lng: -95},
+        BR: {lat: -10, lng: -55},
+        CL: {lat: -33, lng: -71},
+        CO: {lat: 4, lng: -72},
+      };
+      if (map) { map.remove(); map = null; }
+      map = L.map('map').setView([20,0], 2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+      const snapshot = await db.collection("thoughts").get();
+      const countryCounts = {};
+      snapshot.docs.forEach(doc => {
+        const c = doc.data().country || "Desconocido";
+        countryCounts[c] = (countryCounts[c] || 0) + 1;
+      });
+      for (let [country, count] of Object.entries(countryCounts)) {
+        if (!countryCoords[country]) continue;
+        const marker = L.circleMarker([countryCoords[country].lat, countryCoords[country].lng], {
+          radius: Math.max(8, Math.min(20, count)),
+          color: "#6D28D9",
+          fillColor: "#C4B5FD",
+          fillOpacity: 0.6
+        }).addTo(map);
+        marker.bindPopup(`<b>${country}</b>: ${count} pensamientos`);
+        countryMarkers[country] = marker;
+      }
+    }
   </script>
 </body>
 </html>
