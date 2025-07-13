@@ -4,41 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LIBRE</title>
-  <!-- Favicon personalizado -->
   <link rel="icon" type="image/png" href="logolibre-favicon.png">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase App (the core Firebase SDK) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <!-- Firebase Firestore -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <!-- Axios for IPInfo -->
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     html { transition: background-color 0.3s, color 0.3s; }
-    .logo-hidden {
-      opacity: 0;
-      transition: opacity 1.5s;
-    }
-    .logo-shown {
-      opacity: 1;
-      transition: opacity 1.5s;
-    }
-    #logolibre {
-      opacity: 0;
-      transition: opacity 1.5s;
-    }
-    #logolibre.visible {
-      opacity: 1;
-      transition: opacity 1.5s;
-    }
-    #map {
-      width: 100%;
-      height: 250px;
-      border-radius: 1rem;
-      margin-bottom: 1rem;
-    }
+    .logo-hidden { opacity: 0; transition: opacity 1.5s; }
+    .logo-shown { opacity: 1; transition: opacity 1.5s; }
+    #logolibre { opacity: 0; transition: opacity 1.5s; }
+    #logolibre.visible { opacity: 1; transition: opacity 1.5s; }
+    #map { width: 100%; height: 250px; border-radius: 1rem; margin-bottom: 1rem; }
+    .pagination { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
+    .pagination button { background: #e5e7eb; border-radius: 6px; padding: 4px 10px; font-size: 0.9rem; }
+    .pagination button[disabled] { opacity: 0.5; cursor: not-allowed; }
   </style>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col items-center p-4">
   <header class="mb-6 text-center w-full max-w-xl">
@@ -60,7 +42,6 @@
     <button onclick="showTab('about')" class="hover:underline">Acerca de</button>
   </nav>
 
-  <!-- Pensamientos globales con fondo violeta e icono globo terráqueo -->
   <section id="feed" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-purple-100 border border-purple-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
@@ -72,17 +53,16 @@
       <button id="randomBottleBtn" class="mb-4 px-4 py-2 rounded-lg bg-purple-500 text-white shadow-md hover:bg-purple-600 transition">Modo Botella al Mar (Random)</button>
       <div id="randomThought" class="p-4 bg-white rounded-lg shadow-sm mb-4 hidden"></div>
       <div id="globalThoughts" class="space-y-4"></div>
+      <div id="globalPagination" class="pagination"></div>
     </div>
   </section>
 
-  <!-- Historial de mensajes con fondo verde e icono de historial -->
   <section id="mine" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-green-100 border border-green-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
         <span class="text-3xl mr-2">📜</span>
         <h2 class="text-2xl font-semibold text-green-800">Historial de mensajes</h2>
       </div>
-      <!-- Exportar/Importar ID: privacidad total -->
       <div class="flex mb-3">
         <button onclick="exportAnonId()" class="px-3 py-1 rounded bg-gray-300 mr-2 text-sm">Exportar ID</button>
         <button onclick="importAnonId()" class="px-3 py-1 rounded bg-gray-300 text-sm">Importar ID</button>
@@ -91,10 +71,10 @@
       <div id="myThoughts" class="space-y-4">
         <p class="text-sm font-medium text-green-900 opacity-75">No has escrito aún...</p>
       </div>
+      <div id="myPagination" class="pagination"></div>
     </div>
   </section>
 
-  <!-- Cápsula del tiempo con fondo azul e icono de cohete -->
   <section id="capsule" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-blue-100 border border-blue-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
@@ -111,7 +91,6 @@
     </div>
   </section>
 
-  <!-- Acerca de & Preguntas Frecuentes con fondo amarillo e icono ℹ️ -->
   <section id="about" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-yellow-100 border border-yellow-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
@@ -149,14 +128,13 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
   <script>
     // ---- CONFIGURACIÓN DE FIREBASE ----
     const firebaseConfig = {
       apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
       authDomain: "libre-c5bf7.firebaseapp.com",
       projectId: "libre-c5bf7",
-      storageBucket: "libre-c5bf7.firebasestorage.app",
+      storageBucket: "libre-c5bf7.appspot.com",
       messagingSenderId: "339942652190",
       appId: "1:339942652190:web:595ce692456b9df806f10f"
     };
@@ -167,13 +145,16 @@
     const PALABRAS_PROHIBIDAS = [
       "puto", "puta", "mierda", "gilipollas", "idiota", "imbecil", "tonto",
       "fuck", "shit", "asshole", "bitch", "fag", "cunt", "dick", "porn", "sexo"
-    ];
+    ].map(w => w.toLowerCase());
+
+    // Expresión regular para detectar palabras prohibidas (mejor moderación)
+    const BAD_WORDS_REGEX = new RegExp(`\\b(${PALABRAS_PROHIBIDAS.join("|")})\\b`, "i");
 
     // ---- GENERADOR ANÓNIMO LOCAL ----
     function getAnonUserId() {
       let id = localStorage.getItem("libre_anon_id");
       if (!id) {
-        id = "anon-" + Math.random().toString(36).substr(2, 15);
+        id = "anon-" + Math.random().toString(36).slice(2, 17);
         localStorage.setItem("libre_anon_id", id);
       }
       return id;
@@ -182,137 +163,209 @@
     // ---- EXPORTAR/IMPORTAR IDENTIFICADOR ANÓNIMO ----
     function exportAnonId() {
       const id = getAnonUserId();
-      // Muestra el ID y permite copiarlo fácilmente
       window.prompt("Este es tu identificador anónimo. Cópialo y guárdalo en un lugar seguro para restaurar tu historial cuando quieras:", id);
     }
 
     function importAnonId() {
       const newId = window.prompt("Pega aquí tu identificador anónimo guardado anteriormente:");
-      if(newId) {
+      if (newId && /^anon-[a-z0-9]{15}$/.test(newId)) {
         localStorage.setItem("libre_anon_id", newId);
         loadMyThoughts();
         alert("Identificador restaurado. Si escribiste pensamientos con ese ID, ahora deberías verlos en tu historial.");
+      } else if (newId) {
+        alert("El identificador no es válido.");
       }
     }
 
     // ---- DETECTAR PAÍS ----
     let userCountry = "Desconocido";
+    let countryReady = false;
     async function detectCountry() {
       try {
         const res = await axios.get("https://ipinfo.io/json?token=ec664cefb36ece");
         userCountry = res.data.country || "Desconocido";
-      } catch {
+      } catch (e) {
         userCountry = "Desconocido";
+      } finally {
+        countryReady = true;
       }
     }
     detectCountry();
 
     // ---- MODO "BOTELLA AL MAR" ALEATORIO ----
     document.getElementById('randomBottleBtn').onclick = async function() {
-      document.getElementById('randomThought').classList.add('hidden');
-      const snapshot = await db.collection("thoughts").get();
-      const docs = snapshot.docs;
-      if (docs.length === 0) {
-        document.getElementById('randomThought').textContent = "No hay pensamientos aún.";
-        document.getElementById('randomThought').classList.remove('hidden');
-        return;
+      const randomThoughtEl = document.getElementById('randomThought');
+      if (!randomThoughtEl) return;
+      randomThoughtEl.classList.add('hidden');
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const docs = snapshot.docs;
+        if (docs.length === 0) {
+          randomThoughtEl.textContent = "No hay pensamientos aún.";
+          randomThoughtEl.classList.remove('hidden');
+          return;
+        }
+        const idx = Math.floor(Math.random() * docs.length);
+        const data = docs[idx].data();
+        randomThoughtEl.innerHTML =
+          `<div class="flex items-center space-x-2 mb-2">
+            <span class="text-xs font-medium">${data.country || "🌐"}</span>
+          </div>
+          <p class="font-medium">${data.text}</p>`;
+        randomThoughtEl.classList.remove('hidden');
+      } catch (e) {
+        randomThoughtEl.textContent = "Error al cargar pensamiento aleatorio.";
+        randomThoughtEl.classList.remove('hidden');
       }
-      const idx = Math.floor(Math.random() * docs.length);
-      const data = docs[idx].data();
-      document.getElementById('randomThought').innerHTML =
-        `<div class="flex items-center space-x-2 mb-2">
-          <span class="text-xs font-medium">${data.country || "🌐"}</span>
-        </div>
-        <p class="font-medium">${data.text}</p>`;
-      document.getElementById('randomThought').classList.remove('hidden');
     };
+
+    // ---- PAGINACIÓN ----
+    const PAGE_SIZE = 10;
+    let globalPage = 1, globalMaxPages = 1;
+    let myPage = 1, myMaxPages = 1;
 
     // ---- ESCRIBIR PENSAMIENTO ----
     document.getElementById('sendBtn').onclick = async function() {
-      const txt = document.getElementById('textarea').value.trim();
+      // Esperar país
+      if (!countryReady) {
+        alert("Cargando país, por favor espera un momento e intenta de nuevo.");
+        return;
+      }
+      const textarea = document.getElementById('textarea');
+      if (!textarea) return;
+      const txt = textarea.value.trim();
       if (!txt) return;
 
-      // Moderación automática
-      for (let bad of PALABRAS_PROHIBIDAS) {
-        if (txt.toLowerCase().includes(bad)) {
-          alert("Tu pensamiento contiene palabras prohibidas. Por favor modifícalo.");
-          return;
-        }
+      // Moderación automática mejorada
+      if (BAD_WORDS_REGEX.test(txt)) {
+        alert("Tu pensamiento contiene palabras prohibidas. Por favor modifícalo.");
+        return;
       }
-
-      // Guardar en Firebase
-      await db.collection("thoughts").add({
-        text: txt,
-        ts: Date.now(),
-        country: userCountry,
-        user: getAnonUserId()
-      });
-
-      document.getElementById('textarea').value = '';
-      loadGlobalCount();
-      loadGlobalThoughts();
-      loadCountryRanking();
-      loadMap();
-      loadMyThoughts(); // <-- Refresca el historial después de enviar
+      try {
+        await db.collection("thoughts").add({
+          text: txt,
+          ts: Date.now(),
+          country: userCountry,
+          user: getAnonUserId()
+        });
+        textarea.value = '';
+        loadGlobalCount();
+        loadGlobalThoughts(globalPage);
+        loadCountryRanking();
+        loadMap();
+        loadMyThoughts(myPage);
+      } catch (e) {
+        alert("Error al guardar el pensamiento. Intenta de nuevo.");
+      }
     };
 
     // ---- MI HISTORIAL ----
-    async function loadMyThoughts() {
+    async function loadMyThoughts(page = 1) {
       const myThoughts = document.getElementById('myThoughts');
+      const myPagination = document.getElementById('myPagination');
+      if (!myThoughts) return;
       myThoughts.innerHTML = '';
-      const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).orderBy("ts", "desc").get();
-      if (snapshot.docs.length === 0) {
-        myThoughts.innerHTML = '<p class="text-sm font-medium text-green-900 opacity-75">No has escrito aún...</p>';
-      } else {
-        snapshot.docs.forEach(doc => {
-          const data = doc.data();
-          const card = document.createElement('div');
-          card.className = 'p-4 bg-white rounded-lg shadow-sm';
-          card.innerHTML = `<p>${data.text}</p>`;
-          myThoughts.appendChild(card);
-        });
+      try {
+        const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).orderBy("ts", "desc").get();
+        const docs = snapshot.docs;
+        myMaxPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
+        page = Math.max(1, Math.min(page, myMaxPages));
+        myPage = page;
+
+        if (docs.length === 0) {
+          myThoughts.innerHTML = '<p class="text-sm font-medium text-green-900 opacity-75">No has escrito aún...</p>';
+        } else {
+          const start = (page - 1) * PAGE_SIZE;
+          const items = docs.slice(start, start + PAGE_SIZE);
+          items.forEach(doc => {
+            const data = doc.data();
+            const card = document.createElement('div');
+            card.className = 'p-4 bg-white rounded-lg shadow-sm';
+            card.innerHTML = `<p>${data.text}</p>`;
+            myThoughts.appendChild(card);
+          });
+        }
+        // Paginación
+        if (myPagination) {
+          myPagination.innerHTML = `
+            <button onclick="loadMyThoughts(${myPage-1})" ${myPage<=1?'disabled':''}>Anterior</button>
+            <span>Página ${myPage} de ${myMaxPages}</span>
+            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=myMaxPages?'disabled':''}>Siguiente</button>
+          `;
+        }
+      } catch (e) {
+        myThoughts.innerHTML = '<p class="text-sm font-medium text-red-900 opacity-75">Error al cargar tus pensamientos.</p>';
       }
     }
 
     // ---- GLOBAL COUNT ----
     async function loadGlobalCount() {
-      const snapshot = await db.collection("thoughts").get();
-      document.getElementById('globalCountNum').textContent = snapshot.size;
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        document.getElementById('globalCountNum').textContent = snapshot.size;
+      } catch (e) {
+        document.getElementById('globalCountNum').textContent = "?";
+      }
     }
 
     // ---- GLOBAL THOUGHTS ----
-    async function loadGlobalThoughts() {
+    async function loadGlobalThoughts(page = 1) {
       const globalThoughts = document.getElementById('globalThoughts');
+      const globalPagination = document.getElementById('globalPagination');
+      if (!globalThoughts) return;
       globalThoughts.innerHTML = '';
-      const snapshot = await db.collection("thoughts").orderBy("ts", "desc").limit(10).get();
-      snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        const card = document.createElement('div');
-        card.className = 'p-4 bg-white rounded-lg shadow-sm';
-        card.innerHTML = `<div class="flex items-center space-x-2 mb-2">
-            <span class="text-xs font-medium">${data.country || "🌐"}</span>
-          </div>
-          <p class="font-medium">${data.text}</p>`;
-        globalThoughts.appendChild(card);
-      });
+      try {
+        const snapshot = await db.collection("thoughts").orderBy("ts", "desc").get();
+        const docs = snapshot.docs;
+        globalMaxPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
+        page = Math.max(1, Math.min(page, globalMaxPages));
+        globalPage = page;
+
+        const start = (page - 1) * PAGE_SIZE;
+        const items = docs.slice(start, start + PAGE_SIZE);
+        items.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = 'p-4 bg-white rounded-lg shadow-sm';
+          card.innerHTML = `<div class="flex items-center space-x-2 mb-2">
+              <span class="text-xs font-medium">${data.country || "🌐"}</span>
+            </div>
+            <p class="font-medium">${data.text}</p>`;
+          globalThoughts.appendChild(card);
+        });
+        // Paginación
+        if (globalPagination) {
+          globalPagination.innerHTML = `
+            <button onclick="loadGlobalThoughts(${globalPage-1})" ${globalPage<=1?'disabled':''}>Anterior</button>
+            <span>Página ${globalPage} de ${globalMaxPages}</span>
+            <button onclick="loadGlobalThoughts(${globalPage+1})" ${globalPage>=globalMaxPages?'disabled':''}>Siguiente</button>
+          `;
+        }
+      } catch (e) {
+        globalThoughts.innerHTML = '<p class="text-sm font-medium text-red-900 opacity-75">Error al cargar pensamientos globales.</p>';
+      }
     }
 
     // ---- RANKING DE PAÍSES ----
     async function loadCountryRanking() {
-      const snapshot = await db.collection("thoughts").get();
-      const countryCounts = {};
-      snapshot.docs.forEach(doc => {
-        const c = doc.data().country || "Desconocido";
-        countryCounts[c] = (countryCounts[c] || 0) + 1;
-      });
-      const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
-      let html = '<div class="mb-2 font-semibold text-purple-800">Ranking de países más activos:</div>';
-      html += '<ul class="list-disc pl-4">';
-      sorted.slice(0, 5).forEach(([country, count]) => {
-        html += `<li><span class="font-bold">${country}</span>: ${count}</li>`;
-      });
-      html += '</ul>';
-      document.getElementById('countryRanking').innerHTML = html;
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const countryCounts = {};
+        snapshot.docs.forEach(doc => {
+          const c = doc.data().country || "Desconocido";
+          countryCounts[c] = (countryCounts[c] || 0) + 1;
+        });
+        const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
+        let html = '<div class="mb-2 font-semibold text-purple-800">Ranking de países más activos:</div>';
+        html += '<ul class="list-disc pl-4">';
+        sorted.slice(0, 5).forEach(([country, count]) => {
+          html += `<li><span class="font-bold">${country}</span>: ${count}</li>`;
+        });
+        html += '</ul>';
+        document.getElementById('countryRanking').innerHTML = html;
+      } catch (e) {
+        document.getElementById('countryRanking').innerHTML = '<span class="text-red-900">Error al cargar ranking.</span>';
+      }
     }
 
     // ---- MAPA DE PENSAMIENTOS ----
@@ -328,35 +381,40 @@
         BR: {lat: -10, lng: -55},
         CL: {lat: -33, lng: -71},
         CO: {lat: 4, lng: -72},
-        // Agrega más países según necesidad
+        // Otros países pueden agregarse aquí
+        Desconocido: {lat: 20, lng: 0}
       };
-
-      // Reset
       if (map) { map.remove(); map = null; }
+      const mapEl = document.getElementById('map');
+      if (!mapEl) return;
       map = L.map('map').setView([20,0], 2);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
       }).addTo(map);
 
-      // Cargar conteo por país
-      const snapshot = await db.collection("thoughts").get();
-      const countryCounts = {};
-      snapshot.docs.forEach(doc => {
-        const c = doc.data().country || "Desconocido";
-        countryCounts[c] = (countryCounts[c] || 0) + 1;
-      });
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const countryCounts = {};
+        snapshot.docs.forEach(doc => {
+          const c = doc.data().country || "Desconocido";
+          countryCounts[c] = (countryCounts[c] || 0) + 1;
+        });
 
-      for (let [country, count] of Object.entries(countryCounts)) {
-        if (!countryCoords[country]) continue;
-        const marker = L.circleMarker([countryCoords[country].lat, countryCoords[country].lng], {
-          radius: Math.max(8, Math.min(20, count)),
-          color: "#6D28D9",
-          fillColor: "#C4B5FD",
-          fillOpacity: 0.6
-        }).addTo(map);
-        marker.bindPopup(`<b>${country}</b>: ${count} pensamientos`);
-        countryMarkers[country] = marker;
+        for (let [country, count] of Object.entries(countryCounts)) {
+          let coords = countryCoords[country];
+          if (!coords) coords = countryCoords["Desconocido"];
+          const marker = L.circleMarker([coords.lat, coords.lng], {
+            radius: Math.max(8, Math.min(20, count)),
+            color: "#6D28D9",
+            fillColor: "#C4B5FD",
+            fillOpacity: 0.6
+          }).addTo(map);
+          marker.bindPopup(`<b>${country}</b>: ${count} pensamientos`);
+          countryMarkers[country] = marker;
+        }
+      } catch (e) {
+        // Mostrar error en el mapa
       }
     }
 
@@ -369,25 +427,30 @@
         alert('Debes escribir un mensaje y elegir fecha/hora');
         return;
       }
-      // Moderación automática
-      for (let bad of PALABRAS_PROHIBIDAS) {
-        if (msg.toLowerCase().includes(bad)) {
-          alert("Tu pensamiento contiene palabras prohibidas. Por favor modifícalo.");
-          return;
-        }
+      if (BAD_WORDS_REGEX.test(msg)) {
+        alert("Tu pensamiento contiene palabras prohibidas. Por favor modifícalo.");
+        return;
+      }
+      if (!countryReady) {
+        alert("Cargando país, por favor espera un momento e intenta de nuevo.");
+        return;
       }
       const openAt = new Date(date + "T" + time + ":00").getTime();
-      await db.collection("capsules").add({
-        text: msg,
-        openAt,
-        ts: Date.now(),
-        country: userCountry,
-        user: getAnonUserId()
-      });
-      alert(`Cápsula programada para ${date} a las ${time}`);
-      document.getElementById('capsuleMessage').value = '';
-      document.getElementById('capsuleDate').value = '';
-      document.getElementById('capsuleTime').value = '';
+      try {
+        await db.collection("capsules").add({
+          text: msg,
+          openAt,
+          ts: Date.now(),
+          country: userCountry,
+          user: getAnonUserId()
+        });
+        alert(`Cápsula programada para ${date} a las ${time}`);
+        document.getElementById('capsuleMessage').value = '';
+        document.getElementById('capsuleDate').value = '';
+        document.getElementById('capsuleTime').value = '';
+      } catch (e) {
+        alert("Error al guardar la cápsula. Intenta de nuevo.");
+      }
     };
 
     // ---- TABS ----
@@ -400,27 +463,29 @@
       const active = document.getElementById(tabId);
       if (active) active.classList.remove('hidden');
       // Carga los datos en cada sección
-      if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(); loadCountryRanking(); loadMap(); }
-      if(tabId=='mine') { loadMyThoughts(); }
+      if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(globalPage); loadCountryRanking(); loadMap(); }
+      if(tabId=='mine') { loadMyThoughts(myPage); }
     }
 
     // ---- LOGO ANIMACIÓN ----
     window.onload = function() {
       const textLogo = document.getElementById('textLogo');
       const imgLogo = document.getElementById('logolibre');
-      textLogo.classList.remove('logo-hidden');
-      textLogo.classList.add('logo-shown');
-      imgLogo.classList.remove('visible');
-      setTimeout(() => {
-        textLogo.classList.remove('logo-shown');
-        textLogo.classList.add('logo-hidden');
-      }, 2000);
-      setTimeout(() => {
-        imgLogo.classList.add('visible');
-      }, 3500);
+      if (textLogo && imgLogo) {
+        textLogo.classList.remove('logo-hidden');
+        textLogo.classList.add('logo-shown');
+        imgLogo.classList.remove('visible');
+        setTimeout(() => {
+          textLogo.classList.remove('logo-shown');
+          textLogo.classList.add('logo-hidden');
+        }, 2000);
+        setTimeout(() => {
+          imgLogo.classList.add('visible');
+        }, 3500);
+      }
       // Carga inicial
       loadGlobalCount();
-      loadGlobalThoughts();
+      loadGlobalThoughts(globalPage);
       loadCountryRanking();
       loadMap();
     };
