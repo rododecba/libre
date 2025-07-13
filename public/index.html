@@ -232,7 +232,6 @@
 
     // ---- ESCRIBIR PENSAMIENTO ----
     document.getElementById('sendBtn').onclick = async function() {
-      // Esperar país
       if (!countryReady) {
         alert("Cargando país, por favor espera un momento e intenta de nuevo.");
         return;
@@ -242,9 +241,7 @@
       const txt = textarea.value.trim();
       if (!txt) return;
 
-      // USAR TU FILTRO AVANZADO
       if (window.contienePalabraOfensiva(txt)) {
-        // La función muestra el alert, así que solo retorna
         return;
       }
       try {
@@ -370,11 +367,10 @@
         caja.innerHTML = '';
         return;
       }
-      // Oculta todas las otras cajas de respuesta
       document.querySelectorAll('.caja-respuesta').forEach(el => { el.classList.add('hidden'); el.innerHTML = ''; });
       caja.classList.remove('hidden');
       caja.innerHTML = `
-        <textarea class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm" 
+        <textarea class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm"
           rows="2" maxlength="300" placeholder="Escribe tu respuesta..."></textarea>
         <button class="mt-2 px-4 py-1 rounded-lg bg-purple-500 text-white text-sm font-medium shadow hover:bg-purple-600 transition enviarRespuestaBtn">
           Enviar respuesta
@@ -419,7 +415,6 @@
             myThoughts.appendChild(card);
           });
         }
-        // Paginación
         if (myPagination) {
           myPagination.innerHTML = `
             <button onclick="loadMyThoughts(${myPage-1})" ${myPage<=1?'disabled':''}>Anterior</button>
@@ -442,11 +437,123 @@
       }
     }
 
-    // ---- Resto igual (no modificado) ----
-    // ... (el resto de tu código para ranking, mapa, cápsula, tabs, logo, etc.)
+    // ---- RANKING DE PAÍSES ----
+    async function loadCountryRanking() {
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const countryCounts = {};
+        snapshot.docs.forEach(doc => {
+          const c = doc.data().country || "Desconocido";
+          countryCounts[c] = (countryCounts[c] || 0) + 1;
+        });
+        const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
+        let html = '<div class="mb-2 font-semibold text-purple-800">Ranking de países más activos:</div>';
+        html += '<ul class="list-disc pl-4">';
+        sorted.slice(0, 5).forEach(([country, count]) => {
+          html += `<li><span class="font-bold">${country}</span>: ${count}</li>`;
+        });
+        html += '</ul>';
+        document.getElementById('countryRanking').innerHTML = html;
+      } catch (e) {
+        document.getElementById('countryRanking').innerHTML = '<span class="text-red-900">Error al cargar ranking.</span>';
+      }
+    }
 
-    // ---- GLOBAL COUNT, RANKING, MAP, CAPSULE, TABS, LOGO ANIMATION ... ----
-    // (Este código permanece igual que tu versión anterior, por brevedad no se repite aquí.)
+    // ---- MAPA DE PENSAMIENTOS ----
+    let map;
+    let countryMarkers = {};
+    async function loadMap() {
+      const countryCoords = {
+        AR: {lat: -34, lng: -64},
+        ES: {lat: 40, lng: -3},
+        MX: {lat: 23, lng: -102},
+        US: {lat: 37, lng: -95},
+        BR: {lat: -10, lng: -55},
+        CL: {lat: -33, lng: -71},
+        CO: {lat: 4, lng: -72},
+        Desconocido: {lat: 20, lng: 0}
+      };
+      if (map) { map.remove(); map = null; }
+      const mapEl = document.getElementById('map');
+      if (!mapEl) return;
+      mapEl.innerHTML = ""; // Limpia el contenedor
+      map = L.map('map', { attributionControl: false }).setView([20,0], 2);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const countryCounts = {};
+        snapshot.docs.forEach(doc => {
+          const c = doc.data().country || "Desconocido";
+          countryCounts[c] = (countryCounts[c] || 0) + 1;
+        });
+
+        for (let [country, count] of Object.entries(countryCounts)) {
+          let coords = countryCoords[country];
+          if (!coords) coords = countryCoords["Desconocido"];
+          const marker = L.circleMarker([coords.lat, coords.lng], {
+            radius: Math.max(8, Math.min(20, count)),
+            color: "#6D28D9",
+            fillColor: "#C4B5FD",
+            fillOpacity: 0.6
+          }).addTo(map);
+          marker.bindPopup(`<b>${country}</b>: ${count} pensamientos`);
+          countryMarkers[country] = marker;
+        }
+      } catch (e) {
+        // Mostrar error en el mapa
+      }
+    }
+
+    // ---- CAPSULA DEL TIEMPO ----
+    document.getElementById('capsuleBtn').onclick = async function() {
+      const date = document.getElementById('capsuleDate').value;
+      const time = document.getElementById('capsuleTime').value;
+      const msg = document.getElementById('capsuleMessage').value.trim();
+      if (!date || !time || !msg) {
+        alert('Debes escribir un mensaje y elegir fecha/hora');
+        return;
+      }
+      if (window.contienePalabraOfensiva(msg)) {
+        return;
+      }
+      if (!countryReady) {
+        alert("Cargando país, por favor espera un momento e intenta de nuevo.");
+        return;
+      }
+      const openAt = new Date(date + "T" + time + ":00").getTime();
+      try {
+        await db.collection("capsules").add({
+          text: msg,
+          openAt,
+          ts: Date.now(),
+          country: userCountry,
+          user: getAnonUserId()
+        });
+        alert(`Cápsula programada para ${date} a las ${time}`);
+        document.getElementById('capsuleMessage').value = '';
+        document.getElementById('capsuleDate').value = '';
+        document.getElementById('capsuleTime').value = '';
+      } catch (e) {
+        alert("Error al guardar la cápsula. Intenta de nuevo.");
+      }
+    };
+
+    // ---- TABS ----
+    function showTab(tabId) {
+      const sections = ['write', 'feed', 'mine', 'capsule', 'about'];
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      const active = document.getElementById(tabId);
+      if (active) active.classList.remove('hidden');
+      if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(globalPage); loadCountryRanking(); loadMap(); }
+      if(tabId=='mine') { loadMyThoughts(myPage); }
+    }
 
     // ---- LOGO ANIMACIÓN Y CARGA INICIAL ----
     window.onload = function() {
@@ -467,23 +574,9 @@
       // Carga inicial
       loadGlobalCount();
       loadGlobalThoughts(globalPage);
-      // ... (llamadas a loadCountryRanking, loadMap, etc.)
+      loadCountryRanking();
+      loadMap();
     };
-
-    // ---- TABS ----
-    function showTab(tabId) {
-      const sections = ['write', 'feed', 'mine', 'capsule', 'about'];
-      sections.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-      });
-      const active = document.getElementById(tabId);
-      if (active) active.classList.remove('hidden');
-      // Carga los datos en cada sección
-      if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(globalPage); /* ... */ }
-      if(tabId=='mine') { loadMyThoughts(myPage); }
-    }
-
   </script>
 </body>
 </html>
