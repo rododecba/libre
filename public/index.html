@@ -1,316 +1,180 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth" data-theme="light">
+<html lang="es" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LIBRE</title>
-  <link rel="icon" type="image/png" href="logolibre-favicon.png" />
-  <!-- Tailwind JIT (para producción, se compila con PurgeCSS) -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @media (prefers-color-scheme: dark) {
-      :root { --bg: #1f2937; --fg: #f9fafb; }
+    html { transition: background-color 0.3s, color 0.3s; }
+    .logo-hidden {
+      opacity: 0;
+      transition: opacity 1.5s;
     }
-    html { background-color: var(--bg); color: var(--fg); transition: background-color .3s, color .3s; }
-    [data-loading] { opacity: .5; pointer-events: none; }
+    .logo-shown {
+      opacity: 1;
+      transition: opacity 1.5s;
+    }
+    #logolibre {
+      opacity: 0;
+      transition: opacity 1.5s;
+    }
+    #logolibre.visible {
+      opacity: 1;
+      transition: opacity 1.5s;
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-4">
-
-  <header role="banner" class="mb-6 w-full max-w-xl text-center">
-    <div id="logoContainer" class="relative h-16 mt-6 flex items-center justify-center">
-      <h1 id="textLogo" class="absolute text-3xl font-semibold transition-opacity duration-1500">LIBRE</h1>
-      <img id="imgLogo" src="logolibre.png" alt="Logo Libre" class="absolute w-8 h-8 opacity-0 transition-opacity duration-1500" />
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex flex-col items-center p-4">
+  <!-- Header / Logo -->
+  <header class="mb-6 text-center w-full max-w-xl">
+    <div id="logoContainer" class="relative h-16 mt-6 text-3xl font-semibold flex items-center justify-center">
+      <h1 id="textLogo" class="absolute logo-shown">LIBRE</h1>
+      <img id="logolibre" src="logolibre.png" alt="LIBRE logo" class="absolute w-8 h-8" />
     </div>
-    <p class="mt-1 text-center text-sm font-medium">
-      Un espacio para tus pensamientos más libres…<br/>
-      Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo.
-    </p>
-    <p id="globalCount" class="mt-4 text-lg font-medium">🌐 <span id="globalCountNum">0</span> pensamientos lanzados</p>
+    <p class="mt-1 text-[0.77rem] font-medium whitespace-normal">Un espacio para tus pensamientos más libres. Escribe lo que quieras, sin esperar nada a cambio.<br>Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo, sin saber quién eres, ni quién la encontró.</p>
+    <div class="mt-4 text-lg font-medium">
+      <span id="globalCount">🌐 12,345 pensamientos lanzados</span>
+    </div>
   </header>
 
-  <nav role="navigation" aria-label="Menú principal" class="w-full max-w-xl flex justify-around mb-6 text-sm">
-    <button data-tab="write" class="tab-btn hover:underline">Escribir</button>
-    <button data-tab="feed" class="tab-btn hover:underline">Pensamientos globales</button>
-    <button data-tab="mine" class="tab-btn hover:underline">Mis pensamientos</button>
-    <button data-tab="capsule" class="tab-btn hover:underline">Cápsula del tiempo</button>
-    <button data-tab="about" class="tab-btn hover:underline">Acerca de</button>
+  <!-- Navigation -->
+  <nav class="w-full max-w-xl flex justify-around mb-6 text-sm">
+    <button onclick="showTab('write')" class="hover:underline">Escribir</button>
+    <button onclick="showTab('feed')" class="hover:underline">Pensamientos globales</button>
+    <button onclick="showTab('mine')" class="hover:underline">Mis pensamientos</button>
+    <button onclick="showTab('capsule')" class="hover:underline">Cápsula del tiempo</button>
+    <button onclick="showTab('about')" class="hover:underline">Acerca de</button>
+    <button id="toggleDark" class="hover:underline" title="Modo oscuro/claro">🌗</button>
   </nav>
 
-  <main role="main" class="w-full max-w-xl flex-1">
-    <!-- Escribir -->
-    <section id="write" class="tab-section">
-      <textarea id="textarea" rows="4" maxlength="500"
-        class="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-400 bg-white text-gray-800"
-        placeholder="¿Qué quieres compartir hoy?"></textarea>
-      <button id="sendBtn" class="mt-2 w-full py-3 rounded-xl bg-indigo-500 text-white font-medium shadow transition hover:bg-indigo-600">
-        Enviar pensamiento
-      </button>
-      <div id="thoughtOfDaySection" class="mt-3"></div>
-    </section>
+  <!-- Thought Input -->
+  <section id="write" class="w-full max-w-xl mb-6">
+    <textarea id="textarea" class="w-full p-4 rounded-xl shadow-inner bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-600" rows="4" maxlength="500" placeholder="Lo que no se dice, también necesita salir..."></textarea>
+    <button id="sendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium shadow-md hover:shadow-xl transition">Enviar pensamiento</button>
+  </section>
 
-    <!-- Pensamientos globales -->
-    <section id="feed" class="tab-section hidden">
-      <article class="rounded-2xl bg-purple-100 border border-purple-300 p-6 shadow">
-        <header class="flex items-center mb-4">
-          <span class="text-3xl mr-2">🌍</span>
-          <h2 class="text-2xl font-semibold text-purple-800">Pensamientos de todo el mundo</h2>
-        </header>
-        <div id="map" class="w-full h-64 rounded-xl mb-4"></div>
-        <div id="countryRanking" class="mb-4"></div>
-        <div class="flex space-x-2 mb-4">
-          <button id="randomBottleBtn" class="flex-1 px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600">Botella al Mar</button>
-          <button id="chainModeBtn" class="flex-1 px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600">Cadena</button>
-        </div>
-        <div id="randomThought" class="p-4 bg-white rounded-lg shadow hidden" aria-live="polite"></div>
-        <div id="chainSection" class="mb-4 hidden"></div>
-        <div id="globalThoughts" class="space-y-4"></div>
-        <div class="mt-6 pt-4 border-t">
-          <h3 class="font-semibold text-purple-800 mb-2">Ranking de palabras positivas</h3>
-          <div id="positiveWordsRanking"></div>
-        </div>
-      </article>
-    </section>
+  <!-- Global Thoughts Feed -->
+  <section id="feed" class="w-full max-w-xl space-y-4 mb-8 hidden">
+    <h2 class="text-2xl font-semibold mb-4">Pensamientos de todo el mundo</h2>
+    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+      <div class="flex items-center space-x-2 mb-2">
+        <img src="https://flagcdn.com/es.svg" alt="España" class="w-5 h-5 rounded-sm">
+        <span class="text-xs font-medium">España</span>
+      </div>
+      <p class="font-medium">La vida es un suspiro breve que merece ser vivido.</p>
+    </div>
+  </section>
 
-    <!-- Mis pensamientos -->
-    <section id="mine" class="tab-section hidden">
-      <article class="rounded-2xl bg-green-100 border border-green-300 p-6 shadow">
-        <header class="flex items-center mb-4">
-          <span class="text-3xl mr-2">📜</span>
-          <h2 class="text-2xl font-semibold text-green-800">Historial de mensajes</h2>
-        </header>
-        <div class="flex mb-3 space-x-2">
-          <button id="btnExportId" class="px-3 py-1 bg-gray-300 rounded text-sm">Exportar ID</button>
-          <button id="btnImportId" class="px-3 py-1 bg-gray-300 rounded text-sm">Importar ID</button>
-        </div>
-        <p class="text-xs text-green-900 opacity-60 mb-4">
-          Guarda tu ID para restaurar tu historial si cambias de dispositivo.
-        </p>
-        <div id="userStats" class="mb-4"></div>
-        <div id="myThoughts" class="space-y-4">
-          <p class="text-sm text-green-900 opacity-75">No has escrito aún...</p>
-        </div>
-      </article>
-    </section>
+  <!-- User's Own Thoughts -->
+  <section id="mine" class="w-full max-w-xl mb-8 hidden">
+    <h2 class="text-2xl font-semibold mb-4">Historial de mensajes</h2>
+    <div id="myThoughts" class="space-y-4">
+      <p class="text-sm font-medium opacity-75">No has escrito aún...</p>
+    </div>
+  </section>
 
-    <!-- Cápsula del tiempo -->
-    <section id="capsule" class="tab-section hidden">
-      <article class="rounded-2xl bg-blue-100 border border-blue-300 p-6 shadow">
-        <header class="flex items-center mb-4">
-          <span class="text-3xl mr-2">🚀</span>
-          <h2 class="text-2xl font-semibold text-blue-800">Cápsula del tiempo</h2>
-        </header>
-        <textarea id="capsuleMessage" rows="4" maxlength="500"
-          class="w-full p-4 rounded-xl border border-blue-300 focus:ring-2 focus:ring-blue-300 bg-white text-gray-800"
-          placeholder="Tu mensaje secreto..."></textarea>
-        <div class="flex space-x-2 mt-3">
-          <input type="date" id="capsuleDate" class="p-2 rounded-lg border border-blue-300 bg-white focus:ring-2 focus:ring-blue-300"/>
-          <input type="time" id="capsuleTime" class="p-2 rounded-lg border border-blue-300 bg-white focus:ring-2 focus:ring-blue-300"/>
-          <button id="capsuleBtn" class="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600">Programar</button>
-        </div>
-      </article>
-    </section>
+  <!-- Time Capsule -->
+  <section id="capsule" class="w-full max-w-xl mb-8 hidden">
+    <h2 class="text-2xl font-semibold mb-4">🚀 <span class="text-indigo-500">Cápsula del tiempo</span></h2>
+    <p class="mt-1 text-sm font-medium text-justify">Un eco de tus pensamientos, viajando silenciosamente hacia un rincón lejano del mañana.</p>
+    <textarea id="capsuleMessage" class="w-full mt-3 p-4 rounded-xl shadow-inner bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-600" rows="4" maxlength="500" placeholder="Tu mensaje secreto para el futuro..."></textarea>
+    <div class="flex space-x-2 mt-2">
+      <input type="date" id="capsuleDate" class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none">
+      <input type="time" id="capsuleTime" class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none">
+      <button id="capsuleBtn" class="px-4 py-2 rounded-lg bg-indigo-500 dark:bg-indigo-600 text-white shadow-md hover:shadow-lg transition">Programar</button>
+    </div>
+  </section>
 
-    <!-- Acerca de -->
-    <section id="about" class="tab-section hidden">
-      <article class="rounded-2xl bg-yellow-100 border border-yellow-300 p-6 shadow">
-        <header class="flex items-center mb-4">
-          <span class="text-3xl mr-2">ℹ️</span>
-          <h2 class="text-2xl font-semibold text-yellow-800">Acerca de & Preguntas Frecuentes</h2>
-        </header>
-        <details class="mb-2">
-          <summary class="font-medium cursor-pointer">¿Por qué Libre?</summary>
-          <p class="mt-1 text-sm text-yellow-900">  
-            Nuestra filosofía de la botella al mar…  
-          </p>
-        </details>
-        <details class="mb-2">
-          <summary class="font-medium cursor-pointer">¿Por qué no hay login?</summary>
-          <p class="mt-1 text-sm text-yellow-900">  
-            Expresión sin presión social…  
-          </p>
-        </details>
-        <details>
-          <summary class="font-medium cursor-pointer">¿Es realmente anónimo?</summary>
-          <p class="mt-1 text-sm text-yellow-900">  
-            Sí. Solo usamos un ID local y país por IP, sin vincular datos personales.  
-          </p>
-        </details>
-      </article>
-    </section>
-  </main>
+  <!-- About & FAQ -->
+  <section id="about" class="w-full max-w-xl mb-8 hidden">
+    <h2 class="text-2xl font-semibold mb-4">Acerca de & Preguntas Frecuentes</h2>
+    <details class="mb-2">
+      <summary class="font-medium cursor-pointer">¿Por qué Libre?</summary>
+      <p class="mt-1 text-sm font-medium text-justify">
+        Nuestra Filosofía: La Botella lanzada al Mar.<br>
+        Cada pensamiento que lanzas es como una botella con un mensaje que arrojas al mar. No sabes quién la encontrará, ni dónde, y ellos no sabrán quién eres. Esta es la esencia de LIBRE: una conexión humana pura a través de las ideas, despojada de cualquier rastro de identidad o expectativa de respuesta.<br><br>
+        No hay perfiles, no hay seguidores, no hay "me gusta". Solo palabras que viajan libremente.
+      </p>
+    </details>
+    <details class="mb-2">
+      <summary class="font-medium cursor-pointer">¿Por qué no hay login ni perfiles?</summary>
+      <p class="mt-1 text-sm font-medium text-justify">La ausencia de login y perfiles es el pilar central de la filosofía de LIBRE. Queremos que te expreses sin la presión social, sin la necesidad de construir una imagen o de buscar validación. Tus palabras son libres, tú eres libre.</p>
+    </details>
+    <details>
+      <summary class="font-medium cursor-pointer">¿Es LIBRE realmente anónimo?</summary>
+      <p class="mt-1 text-sm font-medium text-justify">Sí, absolutamente. No te pedimos nombre, email, ni ningún dato personal. Tu pensamiento se lanza con un ID anónimo generado en tu propio navegador, que no te identifica. El país se determina por tu IP, pero no se vincula a tu persona y solo se usa para fines estadísticos globales.</p>
+    </details>
+  </section>
 
-  <footer role="contentinfo" class="w-full max-w-xl text-center py-6">
-    <p class="text-sm mb-2">Si te gusta Libre, apóyanos en Ko-fi:</p>
-    <a href="https://ko-fi.com/libreantisocial" target="_blank" class="inline-block px-6 py-2 bg-yellow-400 rounded-full shadow hover:shadow-lg transition">
-      ☕ Apóyanos
-    </a>
-    <p class="mt-4 text-sm opacity-50">© 2025 Libre. Todos los derechos reservados.</p>
+  <!-- Support -->
+  <footer class="w-full max-w-xl text-center py-6">
+    <p class="mb-2 text-sm font-medium">Si te gusta Libre, apóyanos en Ko-fi:</p>
+    <a href="https://ko-fi.com/libreantisocial" target="_blank" class="inline-block px-6 py-2 bg-yellow-400 rounded-full font-medium shadow hover:shadow-lg transition">☕ Apóyanos</a>
+    <div class="mt-4 text-sm opacity-50">© 2025 Libre. Todos los derechos reservados.</div>
   </footer>
 
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-  <!-- Firebase SDK modular + Axios -->
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-    import {
-      getFirestore, collection, addDoc, query, where,
-      getDocs, orderBy, limit, doc, getCountFromServer
-    } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-    import axios from 'https://cdn.jsdelivr.net/npm/axios@1.4.0/+esm';
-
-    // ==== CONFIG FIREBASE ====
-    const firebaseConfig = {
-      apiKey: "AIzaSyC7MKy2T8CFvpay4FBf8TrVp8tpU0Niwc",
-      authDomain: "libre-c5bf7.firebaseapp.com",
-      projectId: "libre-c5bf7",
-      storageBucket: "libre-c5bf7.appspot.com",
-      messagingSenderId: "339942652190",
-      appId: "1:339942652190:web:595ce692456b9df806f10f"
+  <script>
+    window.onload = function() {
+      const textLogo = document.getElementById('textLogo');
+      const imgLogo = document.getElementById('logolibre');
+      // Asegúrate de que el texto está visible y el logo oculto al inicio
+      textLogo.classList.remove('logo-hidden');
+      textLogo.classList.add('logo-shown');
+      imgLogo.classList.remove('visible');
+      // Animación en dos pasos: primero desvanece el texto, luego aparece el logo
+      setTimeout(() => {
+        textLogo.classList.remove('logo-shown');
+        textLogo.classList.add('logo-hidden');
+      }, 2000);
+      setTimeout(() => {
+        imgLogo.classList.add('visible');
+      }, 3500);
     };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
 
-    // ==== UTILIDADES ====
-    function sanitize(html) {
-      const template = document.createElement('template');
-      template.innerHTML = html;
-      return template.content.textContent || '';
-    }
-    function uuidv4() {
-      return ([1e7]+-1e3+-4e3+-8e3+-1e11)
-        .replace(/[018]/g, c =>
-          (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-        );
-    }
-    function showLoading(btn) {
-      btn.dataset.loading = 'true';
-    }
-    function hideLoading(btn) {
-      delete btn.dataset.loading;
-    }
+    const html = document.documentElement;
+    document.getElementById('toggleDark')?.addEventListener('click', () => html.classList.toggle('dark'));
 
-    // ==== State ====
-    let userId = localStorage.getItem('libre_anon_id') || (() => {
-      const id = 'anon-' + uuidv4();
-      localStorage.setItem('libre_anon_id', id);
-      return id;
-    })();
-    let userCountry = 'Desconocido';
+    const globalCountEl = document.getElementById('globalCount');
+    let count = 12345;
+    document.getElementById('sendBtn').addEventListener('click', () => globalCountEl.textContent = `🌐 ${++count} pensamientos lanzados`);
 
-    // ==== DOM & Tabs ====
-    const tabs = document.querySelectorAll('.tab-btn');
-    const sections = document.querySelectorAll('.tab-section');
-    tabs.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const target = btn.dataset.tab;
-        sections.forEach(sec => sec.id === target
-          ? sec.classList.remove('hidden')
-          : sec.classList.add('hidden')
-        );
-        if (target === 'feed') loadFeed();
-        if (target === 'mine') loadMine();
-      });
-    });
-
-    // ==== Detección País ====
-    (async () => {
-      try {
-        const res = await axios.get('https://ipinfo.io/json?token=ec664cefb36ece');
-        userCountry = res.data.country || 'Desconocido';
-      } catch { /* silenciar errores */ }
-    })();
-
-    // ==== Pensamiento del Día ====
-    async function loadThoughtOfDay() {
-      const section = document.getElementById('thoughtOfDaySection');
-      const { count } = await getCountFromServer(collection(db, 'thoughts'));
-      if (count === 0) return section.textContent = '';
-      const today = new Date().toISOString().slice(0,10);
-      const hash = Array.from(today).reduce((h,c) => ((h<<5)-h)+c.charCodeAt(0), 0) >>> 0;
-      const idx = hash % count;
-      const q = query(collection(db, 'thoughts'), limit(1), offset(idx));
-      const snap = await getDocs(q);
-      const docData = snap.docs[0].data();
-      section.innerHTML = `
-        <div class="p-3 rounded border bg-indigo-50 text-indigo-900">
-          <span class="text-xs font-semibold text-indigo-700">Pensamiento del día</span>
-          <p>${sanitize(docData.text)}</p>
-          <span class="text-xs text-indigo-600">${docData.country||'🌐'}</span>
-        </div>`;
-    }
-
-    // ==== Envío de Pensamiento ====
-    document.getElementById('sendBtn').addEventListener('click', async e => {
-      const btn = e.currentTarget;
-      const txtEl = document.getElementById('textarea');
-      const text = txtEl.value.trim();
-      if (!text) return;
-      showLoading(btn);
-      try {
-        // Validación básica (prohibidos omitido para brevedad)
-        await addDoc(collection(db,'thoughts'), {
-          text, ts: Date.now(), country: userCountry, user: userId, replyTo: null
-        });
-        await addDoc(doc(db,'users',userId,'dailyThoughts'), {
-          text, ts: Date.now(), country: userCountry
-        });
-        txtEl.value = '';
-        await Promise.all([
-          loadGlobalCount(),
-          loadFeed(),
-          loadThoughtOfDay()
-        ]);
-      } finally {
-        hideLoading(btn);
+    const myThoughts = document.getElementById('myThoughts');
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      const txt = document.getElementById('textarea').value.trim();
+      if (txt) {
+        // Elimina el mensaje inicial si existe
+        const firstMsg = myThoughts.querySelector('p.text-sm');
+        if (firstMsg) firstMsg.remove();
+        const card = document.createElement('div');
+        card.className = 'p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm';
+        card.innerHTML = `<p>${txt}</p>`;
+        myThoughts.prepend(card);
+        document.getElementById('textarea').value = ''; // Limpia el textarea
       }
     });
 
-    // ==== Conteo Global con count() ====
-    async function loadGlobalCount() {
-      const { count } = await getCountFromServer(collection(db,'thoughts'));
-      document.getElementById('globalCountNum').textContent = count;
-    }
-
-    // ==== Feed Global (paginado, últimas 10 entradas) ====
-    let lastFetched = null;
-    const PAGE_SIZE = 10;
-    async function loadFeed() {
-      const container = document.getElementById('globalThoughts');
-      container.innerHTML = '';
-      let q = query(collection(db,'thoughts'), where('replyTo','==',null), orderBy('ts','desc'), limit(PAGE_SIZE));
-      if (lastFetched) q = query(q, startAfter(lastFetched));
-      const snap = await getDocs(q);
-      if (snap.docs.length === 0) return;
-      snap.docs.forEach(docSnap => {
-        const { text, country } = docSnap.data();
-        const card = document.createElement('div');
-        card.className = 'p-4 bg-white rounded-lg shadow';
-        card.innerHTML = `
-          <div class="text-xs text-gray-500 mb-1">${country||'🌐'}</div>
-          <p>${sanitize(text)}</p>`;
-        container.appendChild(card);
-      });
-      lastFetched = snap.docs[snap.docs.length-1];
-    }
-
-    // ==== Resto de funciones: modoBotellaMar, modoCadenaPensamientos, loadCountryRanking, loadPositiveWordsRanking, mapa, mine (export/import/graf stats) ====
-    // (Implementaciones análogas: lecturas limitadas, sanitización, validación fecha futura…)
-
-    // Al cargar la página:
-    document.addEventListener('DOMContentLoaded', () => {
-      // Animación logo
-      const textLogo = document.getElementById('textLogo');
-      const imgLogo = document.getElementById('imgLogo');
-      setTimeout(() => textLogo.classList.add('opacity-0'), 2000);
-      setTimeout(() => imgLogo.classList.add('opacity-100'), 3500);
-
-      loadGlobalCount();
-      loadThoughtOfDay();
+    document.getElementById('capsuleBtn').addEventListener('click', () => {
+      const date = document.getElementById('capsuleDate').value;
+      const time = document.getElementById('capsuleTime').value;
+      const msg = document.getElementById('capsuleMessage').value.trim();
+      if (date && time && msg) {
+        alert(`Cápsula programada para ${date} a las ${time}`);
+      } else {
+        alert('Debes escribir un mensaje y elegir fecha/hora');
+      }
     });
-  </script>
 
-  <!-- Leaflet -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js" defer></script>
+    function showTab(tabId) {
+      const sections = ['write', 'feed', 'mine', 'capsule', 'about'];
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      const active = document.getElementById(tabId);
+      if (active) active.classList.remove('hidden');
+    }
+  </script>
 </body>
 </html>
