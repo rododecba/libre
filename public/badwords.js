@@ -87,16 +87,15 @@ const BAD_WORDS = [
 // Normaliza manteniendo espacios para usar \b (palabras completas)
 function normalize(text) {
   return text
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // tildes
-    .replace(/[^\w\s@]/g, "") // quitar símbolos pero dejar letras/números/espacios/@
-    .replace(/\s+/g, " ") // un solo espacio
-    .toLowerCase().trim();
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quitar tildes
+    .replace(/[^\w\s@]/g, "") // quitar símbolos pero dejar espacios
+    .replace(/\s+/g, " ") // reducir espacios múltiples a uno solo
+    .toLowerCase()
+    .trim();
 }
 
-// Preprocesar la lista de palabras ofensivas normalizadas
 const BAD_WORDS_NORM = BAD_WORDS.map(w => normalize(w));
 
-// Devuelve todas las palabras ofensivas encontradas en el texto
 function palabrasOfensivasEncontradas(texto) {
   const textoNorm = normalize(texto);
   const encontradas = [];
@@ -107,12 +106,6 @@ function palabrasOfensivasEncontradas(texto) {
   return encontradas;
 }
 
-// Ejemplo de uso en frontend:
-function alertarSiHayOfensiva(texto) {
-  const palabras = palabrasOfensivasEncontradas(texto);
-  if (palabras.length > 0) {
-    alert(`Tu mensaje contiene palabra prohibida: "${palabras[0]}"`); // o muestra todas: palabras.join(", ")
-    return true;
-  }
-  return false;
-}
+// Ejemplo de uso:
+const test = "eres un maricón y pija";
+console.log(palabrasOfensivasEncontradas(test)); // ["maricon", "pija"]
