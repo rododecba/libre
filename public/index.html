@@ -142,15 +142,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ---- PALABRAS PROHIBIDAS ----
-    const PALABRAS_PROHIBIDAS = [
-      "puto", "puta", "mierda", "gilipollas", "idiota", "imbecil", "tonto",
-      "fuck", "shit", "asshole", "bitch", "fag", "cunt", "dick", "porn", "sexo"
-    ].map(w => w.toLowerCase());
-
-    // Expresión regular para detectar palabras prohibidas (mejor moderación)
-    const BAD_WORDS_REGEX = new RegExp(`\\b(${PALABRAS_PROHIBIDAS.join("|")})\\b`, "i");
-
     // ---- GENERADOR ANÓNIMO LOCAL ----
     function getAnonUserId() {
       let id = localStorage.getItem("libre_anon_id");
@@ -237,9 +228,9 @@
       const txt = textarea.value.trim();
       if (!txt) return;
 
-      // Moderación automática mejorada
-      if (BAD_WORDS_REGEX.test(txt)) {
-        alert("Tu pensamiento contiene palabras prohibidas. Por favor modifícalo.");
+      // USAR TU FILTRO AVANZADO
+      if (window.contienePalabraOfensiva(txt)) {
+        // La función muestra el alert, así que solo retorna
         return;
       }
       try {
@@ -428,8 +419,7 @@
         alert('Debes escribir un mensaje y elegir fecha/hora');
         return;
       }
-      if (BAD_WORDS_REGEX.test(msg)) {
-        alert("Tu pensamiento contiene palabras prohibidas. Por favor modifícalo.");
+      if (window.contienePalabraOfensiva(msg)) {
         return;
       }
       if (!countryReady) {
