@@ -1,6 +1,6 @@
 // Lista ampliada de palabras ofensivas (puedes seguir agregando)
 const BAD_WORDS = [
-  "puta", "puto", "put@", "pvt@", "pvt0", "pvto", "p-u-t-a", "p-u-t-o", "putita", "putito", "putear", "puteada", "puteado",
+  "puta", "puto", "put@", "pvt@", "pvt0", "pvto", "p-u-t-a", "p-u-t-o", "putita", "putito", "putear", "puteada", "putaso", "putazo", "puteado",
   "zorra", "zorr@", "z0rra", "zorrazo", "zorrón", "zorrita", "putazo", "putazos", "puterio",
   "mierda", "m1erda", "mierd@", "mi3rda", "mierdero", "mierdita", "mierdoso", "mierdosa",
   "gilipollas", "gilipolla", "gil1pollas", "g1lipollas", "gilipoyas", "gili", "gilipuertas", "gil",
@@ -17,7 +17,6 @@ const BAD_WORDS = [
   "coño", "coñazo", "c0ño", "c0ñazo", "coñuda", "coñudo",
   "chinga", "chingar", "chingada", "chingado", "chingón", "chingona", "chingatumadre", "chingadera", "chingadazo", "chingones", "chingadaso", "chingadita",
   "joder", "jodido", "jodida", "jodete", "jódete", "jodedor", "jodedora", "jodiendo",
-  "perra", "perro", "perr@", "p3rra", "perrito", "perrote", "perrucho", "perruno",
   "mamada", "mamón", "mamona", "mam0n", "mam0na", "mamoncete", "mamoncita", "mamoncito", "mamadas", "mamadita", "mamadote",
   "pedo", "pedorra", "pedorro", "p3do", "pedote", "pedorrazo",
   "tetas", "teta", "tetona", "tetón", "t3tas", "tetazas", "tetitas", "tetotas",
