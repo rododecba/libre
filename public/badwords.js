@@ -1,30 +1,30 @@
-// Ultra lista de palabras ofensivas y variantes. Puedes seguir ampliando.
+// Lista ampliada de palabras ofensivas (puedes seguir agregando)
 const BAD_WORDS = [
   "puta", "puto", "put@", "pvt@", "pvt0", "pvto", "p-u-t-a", "p-u-t-o", "putita", "putito", "putear", "puteada", "puteado",
-  "zorra", "zorr@", "z0rra", "zorrazo", "zorrón", "zorrita", "putita", "putazo", "putazos", "putear", "puterio",
+  "zorra", "zorr@", "z0rra", "zorrazo", "zorrón", "zorrita", "putazo", "putazos", "puterio",
   "mierda", "m1erda", "mierd@", "mi3rda", "mierdero", "mierdita", "mierdoso", "mierdosa",
   "gilipollas", "gilipolla", "gil1pollas", "g1lipollas", "gilipoyas", "gili", "gilipuertas", "gil",
   "idiota", "idi0ta", "idiot@", "1diota", "idiotez", "idiotismo",
   "imbecil", "imbécil", "1mbecil", "imbecil@", "imbecilada",
   "tonto", "tonta", "ton-to", "t0nto", "t0nta", "tont@", "tontito", "tontita", "tontolaba", "tontuelo",
-  "maricon", "maricón", "mar1con", "maric0n", "marik0n", "marika", "mariquita", "marica", "mariconazo", "marik@", "marikón", "maricón@", "maricon@",
+  "maricon", "maricón", "mar1con", "maric0n", "marik0n", "marika", "mariquita", "marica", "mariconazo", "marik@", "marikón",
   "pendejo", "pendeja", "p3ndejo", "p3ndeja", "pendej@", "pendejito", "pendejita", "pendejada", "pendejazo",
   "cabron", "cabrón", "cabrona", "cabron@", "c4bron", "c4brona", "cabrones", "cabronazo", "cabroncete", "cabronada",
-  "culiao", "culiáo", "culiador", "culero", "culera", "c0lero", "c0lera", "culiaron", "culiada", "culiando", "culiador", "culiadores",
-  "verga", "verg4", "v3rga", "v3rg4", "vergon", "vergon@", "vergudo", "verguita", "vergota", "vergudo", "vergona",
-  "pija", "pijudo", "pijita", "pijota", "p1ja", "p1j4", "pijudo", "pijuda", "pijote", "pijas",
-  "concha", "conchuda", "conchudo", "conchetumadre", "conch4", "conchudo", "conchuda", "conchudo@", "conchuda@", "conchud@", "conchadetumadre",
+  "culiao", "culiáo", "culiador", "culero", "culiado", "culera", "c0lero", "c0lera", "culiaron", "culiada", "culiando", "culiador", "culiadores",
+  "verga", "verg4", "v3rga", "v3rg4", "vergon", "vergon@", "vergudo", "verguita", "vergota", "vergona",
+  "pija", "pijudo", "pijita", "pijota", "p1ja", "p1j4", "pijuda", "pijote", "pijas",
+  "concha", "conchuda", "conchudo", "conchetumadre", "conch4", "conchadetumadre",
   "coño", "coñazo", "c0ño", "c0ñazo", "coñuda", "coñudo",
   "chinga", "chingar", "chingada", "chingado", "chingón", "chingona", "chingatumadre", "chingadera", "chingadazo", "chingones", "chingadaso", "chingadita",
-  "joder", "jodido", "jodida", "jodete", "jódete", "jodete", "jodedor", "jodedora", "jodiendo",
-  "perra", "perro", "perr@", "p3rra", "perrito", "perrote", "perrucho", "perrote", "perruno",
+  "joder", "jodido", "jodida", "jodete", "jódete", "jodedor", "jodedora", "jodiendo",
+  "perra", "perro", "perr@", "p3rra", "perrito", "perrote", "perrucho", "perruno",
   "mamada", "mamón", "mamona", "mam0n", "mam0na", "mamoncete", "mamoncita", "mamoncito", "mamadas", "mamadita", "mamadote",
-  "pedo", "pedorra", "pedorro", "p3do", "pedorro", "pedorra", "pedote", "pedorrazo",
+  "pedo", "pedorra", "pedorro", "p3do", "pedote", "pedorrazo",
   "tetas", "teta", "tetona", "tetón", "t3tas", "tetazas", "tetitas", "tetotas",
   "choto", "chotar", "chotazo", "ch0to", "chotada", "choteada", "chotito",
   "garcha", "garcho", "garchuda", "garchudo", "garchar", "garchando", "garchad@", "garchadito",
   "pito", "pitito", "p1to", "pitón", "pitudo", "pituda",
-  "penes", "pene", "penecillo", "penecito", "penecillo",
+  "penes", "pene", "penecillo", "penecito",
   "ano", "an0", "anito", "anote", "anillo", "anoso",
   "nalga", "nalgas", "nalgona", "nalgón", "nalgotas", "nalguero", "nalgueta",
   "sexo", "sexual", "sexy", "sex0", "sexuado", "sexista", "sexualmente",
@@ -55,7 +55,7 @@ const BAD_WORDS = [
   // Insultos ingleses (y variantes)
   "fuck", "fucking", "fucker", "fuk", "fuker", "fuckoff", "fuckyou", "motherfucker", "motherfuck", "motherfuker", "sonofabitch", "son of a bitch",
   "shit", "shitty", "sh1t", "shithead", "shitface", "shitbag", "shitass", "shitfuck", "shitfaced",
-  "asshole", "arsehole", "as-hole", "ass", "azz", "asshat", "asslick", "asslicker", "assfucker", "assfucker", "dumbass", "jackass",
+  "asshole", "arsehole", "as-hole", "ass", "azz", "asshat", "asslick", "asslicker", "assfucker", "dumbass", "jackass",
   "bitch", "b1tch", "biatch", "biches", "beetch", "bitchy", "bitchass", "bitchface", "sumbitch",
   "bastard", "bastards", "bastardly",
   "cunt", "kunt", "cnt", "cunting", "cunty",
@@ -79,23 +79,23 @@ const BAD_WORDS = [
   "rape", "rapist", "raping", "molest", "molester", "molestation", "incest", "bestiality", "zoofilia",
   "nutjob", "nutcase", "screwball", "psycho", "maniac", "lunatic", "insane", "retard", "retarded", "mongoloid", "idiot", "moron",
   // Variantes adicionales
-  "mierdoso", "pichula", "vergas", "tragaleche", "tragaleches", "malnacido", "malnacida", "maldito", "maldita", "malparido", "malparida",
-  "cagada", "cagado", "cagón", "cagona", "cagones", "culón", "culona", "culote", "culillo", "culin", "culera", "culeras"
-  // ... puedes seguir ampliando
+  "mierdoso", "pichula", "vergas", "tragaleche", "tragaleches", "malnacido", "malnacida", "maldito", "maldita", "cagada", "cagado", "cagón", "cagona", "cagones", "culón", "culona", "culote", "culillo", "culin", "culera", "culeras"
 ];
 
-// Normaliza manteniendo espacios para usar \b (palabras completas)
+// Normaliza las palabras para comparación y no elimina los espacios
 function normalize(text) {
   return text
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quitar tildes
-    .replace(/[^\w\s@]/g, "") // quitar símbolos pero dejar espacios
-    .replace(/\s+/g, " ") // reducir espacios múltiples a uno solo
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // tildes
+    .replace(/[^\w\s@]/g, "") // quita símbolos pero deja espacios
+    .replace(/\s+/g, " ")     // espacios múltiples, uno solo
     .toLowerCase()
     .trim();
 }
 
-const BAD_WORDS_NORM = BAD_WORDS.map(w => normalize(w));
+// Lista normalizada de palabras prohibidas
+const BAD_WORDS_NORM = BAD_WORDS.map(normalize);
 
+// Devuelve todas las palabras ofensivas encontradas en el texto (palabras completas)
 function palabrasOfensivasEncontradas(texto) {
   const textoNorm = normalize(texto);
   const encontradas = [];
@@ -106,6 +106,12 @@ function palabrasOfensivasEncontradas(texto) {
   return encontradas;
 }
 
-// Ejemplo de uso:
-const test = "eres un maricón y pija";
-console.log(palabrasOfensivasEncontradas(test)); // ["maricon", "pija"]
+// Ejemplo de uso (ajusta al evento que prefieras, por ejemplo en tu formulario)
+window.contienePalabraOfensiva = function(texto) {
+  const palabras = palabrasOfensivasEncontradas(texto);
+  if (palabras.length > 0) {
+    alert(`Tu mensaje contiene la palabra prohibida: "${palabras[0]}"`);
+    return true;
+  }
+  return false;
+};
