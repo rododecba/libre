@@ -1,4 +1,4 @@
-// Lista ultra extensa de palabras ofensivas y variantes
+// Ultra lista de palabras ofensivas y variantes. Puedes seguir ampliando.
 const BAD_WORDS = [
   "puta", "puto", "put@", "pvt@", "pvt0", "pvto", "p-u-t-a", "p-u-t-o", "putita", "putito", "putear", "puteada", "puteado",
   "zorra", "zorr@", "z0rra", "zorrazo", "zorrón", "zorrita", "putita", "putazo", "putazos", "putear", "puterio",
@@ -52,7 +52,6 @@ const BAD_WORDS = [
   "gitano", "gitana", "gitanos", "gitanas", "gitanada", "gitanillo", "gitanona",
   "sudaca", "sudaca de mierda",
   "chino", "china", "chinito", "chinita", "chinos", "chinas", "chinada", "chinada de mierda",
-  "putin", // por contexto puede ser ofensivo
   // Insultos ingleses (y variantes)
   "fuck", "fucking", "fucker", "fuk", "fuker", "fuckoff", "fuckyou", "motherfucker", "motherfuck", "motherfuker", "sonofabitch", "son of a bitch",
   "shit", "shitty", "sh1t", "shithead", "shitface", "shitbag", "shitass", "shitfuck", "shitfaced",
@@ -82,10 +81,10 @@ const BAD_WORDS = [
   // Variantes adicionales
   "mierdoso", "pichula", "vergas", "tragaleche", "tragaleches", "malnacido", "malnacida", "maldito", "maldita", "malparido", "malparida",
   "cagada", "cagado", "cagón", "cagona", "cagones", "culón", "culona", "culote", "culillo", "culin", "culera", "culeras"
-  // ... sigue ampliando aquí ...
+  // ... puedes seguir ampliando
 ];
 
-// Normaliza manteniendo espacios para usar regex \b (palabras completas)
+// Normaliza manteniendo espacios para usar \b (palabras completas)
 function normalize(text) {
   return text
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // tildes
@@ -97,13 +96,23 @@ function normalize(text) {
 // Preprocesar la lista de palabras ofensivas normalizadas
 const BAD_WORDS_NORM = BAD_WORDS.map(w => normalize(w));
 
-// Filtro usando regex para buscar palabras completas (mejor precisión)
-function contienePalabrasOfensivas(texto) {
+// Devuelve todas las palabras ofensivas encontradas en el texto
+function palabrasOfensivasEncontradas(texto) {
   const textoNorm = normalize(texto);
-  // Usamos \b para coincidir solo palabras completas o separadas por símbolos/espacios
+  const encontradas = [];
   for (let bad of BAD_WORDS_NORM) {
     const regex = new RegExp(`\\b${bad}\\b`, "i");
-    if (regex.test(textoNorm)) return true;
+    if (regex.test(textoNorm)) encontradas.push(bad);
+  }
+  return encontradas;
+}
+
+// Ejemplo de uso en frontend:
+function alertarSiHayOfensiva(texto) {
+  const palabras = palabrasOfensivasEncontradas(texto);
+  if (palabras.length > 0) {
+    alert(`Tu mensaje contiene palabra prohibida: "${palabras[0]}"`); // o muestra todas: palabras.join(", ")
+    return true;
   }
   return false;
 }
