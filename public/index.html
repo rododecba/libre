@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <title>LibreAntisocial - Pensamientos Anónimos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="estilos.css"><!-- Si tienes tu CSS aparte -->
   <style>
+    /* Si no tienes un CSS externo, deja este bloque */
     body { font-family:sans-serif; margin:0; background:#f6f6f6; }
     header { background:#222; color:#fff; padding:1rem; text-align:center; }
     main { max-width:600px; margin:2rem auto; background:#fff; padding:2rem; border-radius:10px; box-shadow:0 2px 8px #0001; }
@@ -31,10 +33,23 @@
   </main>
   <!-- Importa el filtro de palabras -->
   <script src="badwords.js"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
   <script>
-    // Pensamientos simulados en memoria (para demo)
-    let pensamientos = [];
-
+    // Configura tu Firebase
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_AUTH_DOMAIN",
+      projectId: "TU_PROJECT_ID",
+      storageBucket: "TU_STORAGE_BUCKET",
+      messagingSenderId: "TU_MESSAGING_SENDER_ID",
+      appId: "TU_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+  <script>
     // Referencias DOM
     const form = document.getElementById('formPensamiento');
     const input = document.getElementById('inputPensamiento');
@@ -42,18 +57,32 @@
     const lista = document.getElementById('pensamientos');
 
     // Renderizar pensamientos
-    function renderPensamientos() {
+    function renderPensamientos(datos) {
       lista.innerHTML = '';
-      pensamientos.slice().reverse().forEach(p => {
+      datos.forEach(p => {
         const div = document.createElement('div');
         div.className = 'pensamiento';
-        div.textContent = p;
+        div.textContent = p.texto;
         lista.appendChild(div);
       });
     }
 
+    // Cargar pensamientos de Firestore
+    async function cargarPensamientos() {
+      try {
+        const snapshot = await db.collection('pensamientos')
+          .orderBy('fecha', 'desc')
+          .limit(50)
+          .get();
+        const datos = snapshot.docs.map(doc => doc.data());
+        renderPensamientos(datos);
+      } catch (err) {
+        error.textContent = "Error cargando pensamientos.";
+      }
+    }
+
     // Evento submit
-    form.onsubmit = function(e){
+    form.onsubmit = async function(e){
       e.preventDefault();
       error.textContent = '';
       const txt = input.value.trim();
@@ -61,17 +90,26 @@
         error.textContent = "Escribe algo.";
         return;
       }
+      // Filtro de palabras ofensivas (desde badwords.js)
       if (contienePalabrasOfensivas(txt)) {
         error.textContent = "Tu pensamiento contiene palabras no permitidas.";
         return;
       }
-      pensamientos.push(txt);
-      input.value = '';
-      renderPensamientos();
+      // Guarda en Firestore
+      try {
+        await db.collection('pensamientos').add({
+          texto: txt,
+          fecha: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        input.value = '';
+        cargarPensamientos();
+      } catch (err) {
+        error.textContent = "Error al publicar. Intenta de nuevo.";
+      }
     };
 
     // Inicial
-    renderPensamientos();
+    cargarPensamientos();
   </script>
 </body>
 </html>
