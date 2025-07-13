@@ -24,6 +24,8 @@
     .reply-btn { font-size: 0.8rem; color: #6d28d9; background: none; border: none; cursor: pointer; transition: color 0.2s; }
     .reply-btn:hover { color: #4b2995; text-decoration: underline; }
     .reply-separator { border-bottom: 1px dashed #e5e7eb; margin: 0.5rem 0; }
+    .eco-block { margin-bottom: 0.35rem; }
+    .eco-block span { font-weight: 600; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col items-center p-4">
@@ -142,6 +144,45 @@
       const horaStr = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
       return `${fechaStr}, ${horaStr}`;
     }
+
+    // ---- DICCIONARIO PAÍSES ----
+    const countryNames = {
+      AR: "Argentina",
+      ES: "España",
+      MX: "México",
+      US: "Estados Unidos",
+      BR: "Brasil",
+      CL: "Chile",
+      CO: "Colombia",
+      PE: "Perú",
+      VE: "Venezuela",
+      UY: "Uruguay",
+      PY: "Paraguay",
+      BO: "Bolivia",
+      EC: "Ecuador",
+      CR: "Costa Rica",
+      PA: "Panamá",
+      GT: "Guatemala",
+      HN: "Honduras",
+      NI: "Nicaragua",
+      SV: "El Salvador",
+      DO: "República Dominicana",
+      CU: "Cuba",
+      PR: "Puerto Rico",
+      CA: "Canadá",
+      FR: "Francia",
+      IT: "Italia",
+      DE: "Alemania",
+      GB: "Reino Unido",
+      PT: "Portugal",
+      JP: "Japón",
+      KR: "Corea del Sur",
+      IN: "India",
+      CN: "China",
+      RU: "Rusia",
+      AU: "Australia",
+      "Desconocido": "Desconocido"
+    };
 
     // ---- CONFIGURACIÓN DE FIREBASE ----
     const firebaseConfig = {
@@ -386,7 +427,26 @@
       };
     };
 
-    // ---- MI HISTORIAL ----
+    // ---- FUNCION GUARDAR ECO LECTURA ----
+    // Llama a esta función cada vez que se muestre un pensamiento AJENO (no de mi user) en el feed:
+    async function registrarEco(thoughtId) {
+      if (!countryReady) return;
+      try {
+        const ecoRef = db.collection("thoughts").doc(thoughtId).collection("eco").doc(userCountry);
+        await db.runTransaction(async (tx) => {
+          const doc = await tx.get(ecoRef);
+          if (!doc.exists) {
+            tx.set(ecoRef, { count: 1 });
+          } else {
+            tx.update(ecoRef, { count: doc.data().count + 1 });
+          }
+        });
+      } catch (e) {
+        // No mostrar error al usuario, es opcional
+      }
+    }
+
+    // ---- MI HISTORIAL, CON ECO GLOBAL ----
     async function loadMyThoughts(page = 1) {
       const myThoughts = document.getElementById('myThoughts');
       const myPagination = document.getElementById('myPagination');
@@ -404,16 +464,40 @@
         } else {
           const start = (page - 1) * PAGE_SIZE;
           const items = docs.slice(start, start + PAGE_SIZE);
-          items.forEach(doc => {
+          // Para cada pensamiento, mostrar ecos
+          for (const doc of items) {
             const data = doc.data();
+            const thoughtId = doc.id;
             const card = document.createElement('div');
             card.className = 'p-4 bg-white rounded-lg shadow-sm';
+
+            // Buscar ecos en subcolección eco
+            let ecosHtml = '';
+            try {
+              const ecosSnap = await db.collection("thoughts").doc(thoughtId).collection("eco").get();
+              if (ecosSnap.empty) {
+                ecosHtml = `<div class="text-xs text-gray-400">Sin ecos aún</div>`;
+              } else {
+                ecosHtml = '';
+                ecosSnap.forEach(ecodoc => {
+                  const country = ecodoc.id;
+                  const count = ecodoc.data().count;
+                  ecosHtml += `<div class="eco-block text-xs font-medium text-indigo-700">
+                    ${countryNames[country] || country} <span>(${count})</span>
+                  </div>`;
+                });
+              }
+            } catch (e) {
+              ecosHtml = `<div class="text-xs text-red-500">Error al cargar ecos</div>`;
+            }
+
             card.innerHTML = `
+              ${ecosHtml}
               <p class="font-medium">${data.text}</p>
               <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
             `;
             myThoughts.appendChild(card);
-          });
+          }
         }
         if (myPagination) {
           myPagination.innerHTML = `
@@ -577,6 +661,26 @@
       loadCountryRanking();
       loadMap();
     };
+
+    // ---- REGISTRA ECO AL LEER UN PENSAMIENTO EN EL FEED ----
+    // Ejemplo: si quieres registrar eco sólo si el pensamiento no es del usuario actual
+    async function registrarEcosEnFeed() {
+      try {
+        const snapshot = await db.collection("thoughts").orderBy("ts", "desc").get();
+        const docs = snapshot.docs;
+        const start = (globalPage - 1) * PAGE_SIZE;
+        const items = docs.slice(start, start + PAGE_SIZE);
+        for (let doc of items) {
+          const data = doc.data();
+          const thoughtId = doc.id;
+          if (data.user !== getAnonUserId()) {
+            registrarEco(thoughtId);
+          }
+        }
+      } catch (e) { }
+    }
+    // Puedes llamar registrarEcosEnFeed() tras cargar pensamientos globales si deseas que la visualización cuente como eco.
+
   </script>
 </body>
 </html>
