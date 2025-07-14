@@ -17,15 +17,6 @@
     #logolibre { opacity: 0; transition: opacity 1.5s; }
     #logolibre.visible { opacity: 1; transition: opacity 1.5s; }
     #map { width: 100%; height: 250px; border-radius: 1rem; margin-bottom: 1rem; }
-    .pagination { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
-    .pagination button { background: #e5e7eb; border-radius: 6px; padding: 4px 10px; font-size: 0.9rem; }
-    .pagination button[disabled] { opacity: 0.5; cursor: not-allowed; }
-    .reply-box { background: #fafafa; border-radius: 1rem; padding: 0.75rem; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
-    .reply-btn { font-size: 0.8rem; color: #6d28d9; background: none; border: none; cursor: pointer; transition: color 0.2s; }
-    .reply-btn:hover { color: #4b2995; text-decoration: underline; }
-    .reply-separator { border-bottom: 1px dashed #e5e7eb; margin: 0.5rem 0; }
-    .eco-block { margin-bottom: 0.35rem; }
-    .eco-block span { font-weight: 600; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col items-center p-4">
@@ -34,7 +25,7 @@
       <h1 id="textLogo" class="absolute logo-shown">LIBRE</h1>
       <img id="logolibre" src="logolibre.png" alt="LIBRE logo" class="absolute w-8 h-8" />
     </div>
-    <p class="mt-1 text-[0.77rem] font-medium whitespace-normal">Escribe lo que quieras, sin esperar nada a cambio.<br>Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo, sin saber quién eres, ni quién la encontró.</p>
+    <p class="mt-1 text-[0.77rem] font-medium whitespace-normal">Un espacio para tus pensamientos más libres. Escribe lo que quieras, sin esperar nada a cambio.<br>Tus palabras serán una botella lanzada al mar, encontrada por alguien en algún lugar del mundo, sin saber quién eres, ni quién la encontró.</p>
     <div class="mt-4 text-lg font-medium">
       <span id="globalCount">🌐 <span id="globalCountNum">0</span> pensamientos lanzados</span>
     </div>
@@ -48,6 +39,7 @@
     <button onclick="showTab('about')" class="hover:underline">Acerca de</button>
   </nav>
 
+  <!-- Pensamientos globales con fondo violeta e icono globo terráqueo -->
   <section id="feed" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-purple-100 border border-purple-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
@@ -59,10 +51,10 @@
       <button id="randomBottleBtn" class="mb-4 px-4 py-2 rounded-lg bg-purple-500 text-white shadow-md hover:bg-purple-600 transition">Modo Botella al Mar (Random)</button>
       <div id="randomThought" class="p-4 bg-white rounded-lg shadow-sm mb-4 hidden"></div>
       <div id="globalThoughts" class="space-y-4"></div>
-      <div id="globalPagination" class="pagination"></div>
     </div>
   </section>
 
+  <!-- Historial de mensajes con fondo verde e icono de historial -->
   <section id="mine" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-green-100 border border-green-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
@@ -77,10 +69,10 @@
       <div id="myThoughts" class="space-y-4">
         <p class="text-sm font-medium text-green-900 opacity-75">No has escrito aún...</p>
       </div>
-      <div id="myPagination" class="pagination"></div>
     </div>
   </section>
 
+  <!-- Cápsula del tiempo con fondo azul e icono de cohete -->
   <section id="capsule" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-blue-100 border border-blue-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
@@ -94,42 +86,40 @@
         <input type="time" id="capsuleTime" class="p-2 rounded-lg bg-white border border-blue-300 focus:outline-none">
         <button id="capsuleBtn" class="px-4 py-2 rounded-lg bg-blue-500 text-white shadow-md hover:bg-blue-600 transition">Programar</button>
       </div>
+      <!-- Aquí se mostrarán las cápsulas desbloqueadas -->
+      <div id="capsulesList" class="mt-6 space-y-4"></div>
     </div>
   </section>
 
+  <!-- Acerca de & Preguntas Frecuentes con fondo amarillo e icono ℹ️ -->
   <section id="about" class="w-full max-w-xl mb-8 hidden">
-    <div class="rounded-2xl bg-yellow-50 border border-yellow-0 p-6 shadow-md relative">
+    <div class="rounded-2xl bg-yellow-100 border border-yellow-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
         <span class="text-3xl mr-2">ℹ️</span>
-        <h2 class="text-2xl font-semibold text-yellow-0">Acerca de & Preguntas Frecuentes</h2>
+        <h2 class="text-2xl font-semibold text-yellow-800">Acerca de & Preguntas Frecuentes</h2>
       </div>
- <details class="mb-2">
-  <summary class="font-medium cursor-pointer">¿Por qué Libre?</summary>
-  <ul class="pl-0 text-sm font-medium text-yellow-0 text-justify">
-    <li>🔒 <b>Anonimato radical:</b> Nadie te sigue, nadie sabe quién eres. Tu identidad no importa, solo tu pensamiento.</li>
-    <li>🚫 <b>Sin validación social:</b> No hay “me gusta”, ni seguidores, ni comentarios públicos que te condicionen. La única interacción es lanzar tu botella (pensamiento) y, si alguien la encuentra, puede responderte de forma igual de anónima.</li>
-    <li>🕊️ <b>Libertad de expresión pura:</b> Puedes escribir lo que quieras, sin miedo a juicios, sin presión social. Es tu espacio para soltar lo que llevas dentro, sin esperar nada a cambio.</li>
-    <li>🌎 <b>Conexión humana inesperada:</b> Tu mensaje puede llegar a cualquier persona, en cualquier país, en cualquier momento. Es un acto de fe en la humanidad y en el azar.</li>
-    <li>💭 <b>Sin historial, sin reputación:</b> Olvida el pasado. Aquí nadie construye un perfil, ni una imagen. Cada mensaje es un instante aislado, sin contexto previo ni futuro.</li>
-    <li>🛡️ <b>Antídoto a la sobreexposición:</b> Un refugio frente a la hiperconectividad, la presión social y la búsqueda constante de aprobación.</li>
-    <li>🤝 <b>Espacio seguro y respetuoso:</b> Aunque anónimo, el respeto sigue siendo la base. No toleramos mensajes de odio, violencia o discriminación.</li>
-    <li>🎲 <b>Cero algoritmos, cero manipulación:</b> No hay feeds personalizados, ni trending topics. Todo es azar, todo es igual de importante.</li>
-  </ul>
-</details>
+      <details class="mb-2">
+        <summary class="font-medium cursor-pointer">¿Por qué Libre?</summary>
+        <p class="mt-1 text-sm font-medium text-yellow-900 text-justify">
+          Nuestra Filosofía: La Botella lanzada al Mar.<br>
+          Cada pensamiento que lanzas es como una botella con un mensaje que arrojas al mar. No sabes quién la encontrará, ni dónde, y ellos no sabrán quién eres. Esta es la esencia de LIBRE: una conexión humana pura a través de las ideas, despojada de cualquier rastro de identidad o expectativa de respuesta.<br><br>
+          No hay perfiles, no hay seguidores, no hay "me gusta". Solo palabras que viajan libremente.
+        </p>
+      </details>
       <details class="mb-2">
         <summary class="font-medium cursor-pointer">¿Por qué no hay login ni perfiles?</summary>
-        <p class="mt-1 text-sm font-medium text-yellow-0 text-justify">La ausencia de login y perfiles es el pilar central de la filosofía de LIBRE. Queremos que te expreses sin la presión social, sin la necesidad de construir una imagen o de buscar validación. Tus palabras son libres, tú eres libre.</p>
+        <p class="mt-1 text-sm font-medium text-yellow-900 text-justify">La ausencia de login y perfiles es el pilar central de la filosofía de LIBRE. Queremos que te expreses sin la presión social, sin la necesidad de construir una imagen o de buscar validación. Tus palabras son libres, tú eres libre.</p>
       </details>
       <details>
         <summary class="font-medium cursor-pointer">¿Es LIBRE realmente anónimo?</summary>
-        <p class="mt-1 text-sm font-medium text-yellow-0 text-justify">Sí, absolutamente. No te pedimos nombre, email, ni ningún dato personal. Tu pensamiento se lanza con un ID anónimo generado en tu propio navegador, que no te identifica. El país se determina por tu IP, pero no se vincula a tu persona y solo se usa para fines estadísticos globales.</p>
+        <p class="mt-1 text-sm font-medium text-yellow-900 text-justify">Sí, absolutamente. No te pedimos nombre, email, ni ningún dato personal. Tu pensamiento se lanza con un ID anónimo generado en tu propio navegador, que no te identifica. El país se determina por tu IP, pero no se vincula a tu persona y solo se usa para fines estadísticos globales.</p>
       </details>
     </div>
   </section>
 
   <section id="write" class="w-full max-w-xl mb-6">
     <textarea id="textarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400" rows="4" maxlength="500" placeholder="Lo que no se dice, también necesita salir..."></textarea>
-    <button id="sendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-blue-500 text-white hover:bg-blue-400 shadow-md hover:shadow-xl transition">Enviar pensamiento</button>
+    <button id="sendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-blue-400 text-white hover:bg-blue-600 shadow-md hover:shadow-xl transition">Enviar pensamiento</button>
   </section>
 
   <footer class="w-full max-w-xl text-center py-6">
@@ -139,56 +129,7 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="badwords.js"></script>
   <script>
-    // ---- FORMATO FECHA ----
-    function formatearFecha(ts) {
-      const fecha = new Date(ts);
-      const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
-      const fechaStr = fecha.toLocaleDateString('es-ES', opciones);
-      const horaStr = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-      return `${fechaStr}, ${horaStr}`;
-    }
-
-    // ---- DICCIONARIO PAÍSES ----
-    const countryNames = {
-      AR: "Argentina",
-      ES: "España",
-      MX: "México",
-      US: "Estados Unidos",
-      BR: "Brasil",
-      CL: "Chile",
-      CO: "Colombia",
-      PE: "Perú",
-      VE: "Venezuela",
-      UY: "Uruguay",
-      PY: "Paraguay",
-      BO: "Bolivia",
-      EC: "Ecuador",
-      CR: "Costa Rica",
-      PA: "Panamá",
-      GT: "Guatemala",
-      HN: "Honduras",
-      NI: "Nicaragua",
-      SV: "El Salvador",
-      DO: "República Dominicana",
-      CU: "Cuba",
-      PR: "Puerto Rico",
-      CA: "Canadá",
-      FR: "Francia",
-      IT: "Italia",
-      DE: "Alemania",
-      GB: "Reino Unido",
-      PT: "Portugal",
-      JP: "Japón",
-      KR: "Corea del Sur",
-      IN: "India",
-      CN: "China",
-      RU: "Rusia",
-      AU: "Australia",
-      "Desconocido": "Desconocido"
-    };
-
     // ---- CONFIGURACIÓN DE FIREBASE ----
     const firebaseConfig = {
       apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
@@ -201,11 +142,26 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // ---- PALABRAS PROHIBIDAS ----
+    const PALABRAS_PROHIBIDAS = [
+      "puto", "puta", "mierda", "gilipollas", "idiota", "imbecil", "tonto",
+      "fuck", "shit", "asshole", "bitch", "fag", "cunt", "dick", "porn", "sexo"
+    ];
+    function contienePalabraOfensiva(txt) {
+      for (let bad of PALABRAS_PROHIBIDAS) {
+        if (txt.toLowerCase().includes(bad)) {
+          alert("Tu pensamiento contiene palabras prohibidas. Por favor modifícalo.");
+          return true;
+        }
+      }
+      return false;
+    }
+
     // ---- GENERADOR ANÓNIMO LOCAL ----
     function getAnonUserId() {
       let id = localStorage.getItem("libre_anon_id");
       if (!id) {
-        id = "anon-" + Math.random().toString(36).slice(2, 17);
+        id = "anon-" + Math.random().toString(36).substr(2, 15);
         localStorage.setItem("libre_anon_id", id);
       }
       return id;
@@ -219,9 +175,10 @@
 
     function importAnonId() {
       const newId = window.prompt("Pega aquí tu identificador anónimo guardado anteriormente:");
-      if (newId && /^anon-[a-z0-9]{15}$/.test(newId)) {
+      if(newId && /^anon-[a-z0-9]{15}$/.test(newId)) {
         localStorage.setItem("libre_anon_id", newId);
         loadMyThoughts();
+        loadMyCapsules();
         alert("Identificador restaurado. Si escribiste pensamientos con ese ID, ahora deberías verlos en tu historial.");
       } else if (newId) {
         alert("El identificador no es válido.");
@@ -230,341 +187,119 @@
 
     // ---- DETECTAR PAÍS ----
     let userCountry = "Desconocido";
-    let countryReady = false;
     async function detectCountry() {
       try {
         const res = await axios.get("https://ipinfo.io/json?token=ec664cefb36ece");
         userCountry = res.data.country || "Desconocido";
-      } catch (e) {
+      } catch {
         userCountry = "Desconocido";
-      } finally {
-        countryReady = true;
       }
     }
     detectCountry();
 
     // ---- MODO "BOTELLA AL MAR" ALEATORIO ----
     document.getElementById('randomBottleBtn').onclick = async function() {
-      const randomThoughtEl = document.getElementById('randomThought');
-      if (!randomThoughtEl) return;
-      randomThoughtEl.classList.add('hidden');
-      try {
-        const snapshot = await db.collection("thoughts").get();
-        const docs = snapshot.docs;
-        if (docs.length === 0) {
-          randomThoughtEl.textContent = "No hay pensamientos aún.";
-          randomThoughtEl.classList.remove('hidden');
-          return;
-        }
-        const idx = Math.floor(Math.random() * docs.length);
-        const data = docs[idx].data();
-        randomThoughtEl.innerHTML =
-          `<div class="flex items-center space-x-2 mb-2">
-            <span class="text-xs font-medium">${data.country || "🌐"}</span>
-          </div>
-          <p class="font-medium">${data.text}</p>
-          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
-        randomThoughtEl.classList.remove('hidden');
-      } catch (e) {
-        randomThoughtEl.textContent = "Error al cargar pensamiento aleatorio.";
-        randomThoughtEl.classList.remove('hidden');
+      document.getElementById('randomThought').classList.add('hidden');
+      const snapshot = await db.collection("thoughts").get();
+      const docs = snapshot.docs;
+      if (docs.length === 0) {
+        document.getElementById('randomThought').textContent = "No hay pensamientos aún.";
+        document.getElementById('randomThought').classList.remove('hidden');
+        return;
       }
+      const idx = Math.floor(Math.random() * docs.length);
+      const data = docs[idx].data();
+      document.getElementById('randomThought').innerHTML =
+        `<div class="flex items-center space-x-2 mb-2">
+          <span class="text-xs font-medium">${data.country || "🌐"}</span>
+        </div>
+        <p class="font-medium">${data.text}</p>`;
+      document.getElementById('randomThought').classList.remove('hidden');
     };
-
-    // ---- PAGINACIÓN ----
-    const PAGE_SIZE = 10;
-    let globalPage = 1, globalMaxPages = 1;
-    let myPage = 1, myMaxPages = 1;
 
     // ---- ESCRIBIR PENSAMIENTO ----
     document.getElementById('sendBtn').onclick = async function() {
-      if (!countryReady) {
-        alert("Cargando país, por favor espera un momento e intenta de nuevo.");
-        return;
-      }
-      const textarea = document.getElementById('textarea');
-      if (!textarea) return;
-      const txt = textarea.value.trim();
+      const txt = document.getElementById('textarea').value.trim();
       if (!txt) return;
-
-      if (window.contienePalabraOfensiva(txt)) {
-        return;
-      }
-      try {
-        await db.collection("thoughts").add({
-          text: txt,
-          ts: Date.now(),
-          country: userCountry,
-          user: getAnonUserId()
-        });
-        textarea.value = '';
-        loadGlobalCount();
-        loadGlobalThoughts(globalPage);
-        loadCountryRanking();
-        loadMap();
-        loadMyThoughts(myPage);
-      } catch (e) {
-        alert("Error al guardar el pensamiento. Intenta de nuevo.");
-      }
+      if (contienePalabraOfensiva(txt)) return;
+      await db.collection("thoughts").add({
+        text: txt,
+        ts: Date.now(),
+        country: userCountry,
+        user: getAnonUserId()
+      });
+      document.getElementById('textarea').value = '';
+      loadGlobalCount();
+      loadGlobalThoughts();
+      loadCountryRanking();
+      loadMap();
+      loadMyThoughts();
     };
 
-    // ---- RESPONDER UN PENSAMIENTO ----
-    async function enviarRespuesta(thoughtId, replyText, respuestasDiv, btn, textarea) {
-      if (!replyText.trim()) return;
-      if (window.contienePalabraOfensiva(replyText)) return;
-      btn.disabled = true;
-      textarea.disabled = true;
-      try {
-        // --- Validación para que no puedas responderte a ti mismo ---
-        const thoughtDoc = await db.collection("thoughts").doc(thoughtId).get();
-        const thoughtData = thoughtDoc.data();
-        if (thoughtData.user === getAnonUserId()) {
-          alert("No puedes responder a tu propio pensamiento.");
-          btn.disabled = false;
-          textarea.disabled = false;
-          return;
-        }
-        await db.collection("thoughts").doc(thoughtId).collection("replies").add({
-          text: replyText.trim(),
-          ts: Date.now(),
-          user: getAnonUserId()
-        });
-        textarea.value = '';
-        await mostrarRespuestas(thoughtId, respuestasDiv);
-      } catch(e) {
-        alert('Error al guardar la respuesta.');
-      }
-      btn.disabled = false;
-      textarea.disabled = false;
-    }
-
-    // ---- MOSTRAR RESPUESTAS DE UN PENSAMIENTO ----
-    async function mostrarRespuestas(thoughtId, respuestasDiv) {
-      respuestasDiv.innerHTML = '';
-      try {
-        const snapshot = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "asc").get();
-        if (snapshot.empty) {
-          respuestasDiv.innerHTML = '';
-          return;
-        }
-        snapshot.forEach(doc => {
+    // ---- MI HISTORIAL ----
+    async function loadMyThoughts() {
+      const myThoughts = document.getElementById('myThoughts');
+      myThoughts.innerHTML = '';
+      const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).orderBy("ts", "desc").get();
+      if (snapshot.docs.length === 0) {
+        myThoughts.innerHTML = '<p class="text-sm font-medium text-green-900 opacity-75">No has escrito aún...</p>';
+      } else {
+        snapshot.docs.forEach(doc => {
           const data = doc.data();
-          const replyCard = document.createElement('div');
-          replyCard.className = 'reply-box';
-          replyCard.innerHTML = `
-            <div><span class="font-medium">${data.text}</span></div>
-            <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
-          `;
-          respuestasDiv.appendChild(replyCard);
-        });
-      } catch(e) {
-        respuestasDiv.innerHTML = '<div class="text-[0.7rem] text-red-500">Error al cargar respuestas.</div>';
-      }
-    }
-
-    // ---- GLOBAL THOUGHTS ----
-    async function loadGlobalThoughts(page = 1) {
-      const globalThoughts = document.getElementById('globalThoughts');
-      const globalPagination = document.getElementById('globalPagination');
-      if (!globalThoughts) return;
-      globalThoughts.innerHTML = '';
-      try {
-        const snapshot = await db.collection("thoughts").orderBy("ts", "desc").get();
-        const docs = snapshot.docs;
-        globalMaxPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
-        page = Math.max(1, Math.min(page, globalMaxPages));
-        globalPage = page;
-
-        const start = (page - 1) * PAGE_SIZE;
-        const items = docs.slice(start, start + PAGE_SIZE);
-        for (let doc of items) {
-          const data = doc.data();
-          const thoughtId = doc.id;
           const card = document.createElement('div');
           card.className = 'p-4 bg-white rounded-lg shadow-sm';
-          card.innerHTML = `
-            <div class="flex items-center space-x-2 mb-2">
-              <span class="text-xs font-medium">${data.country || "🌐"}</span>
-            </div>
-            <p class="font-medium">${data.text}</p>
-            <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
-            <div class="mt-2">
-              ${
-                data.user !== getAnonUserId()
-                ? `<button class="reply-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>`
-                : `<span class="text-xs text-gray-400">No puedes responder a tu propio pensamiento</span>`
-              }
-            </div>
-            <div class="respuestas mt-2"></div>
-            <div class="caja-respuesta mt-2 hidden"></div>
-          `;
-          globalThoughts.appendChild(card);
-
-          // Mostrar respuestas
-          const respuestasDiv = card.querySelector('.respuestas');
-          mostrarRespuestas(thoughtId, respuestasDiv);
-        }
-        // Paginación
-        if (globalPagination) {
-          globalPagination.innerHTML = `
-            <button onclick="loadGlobalThoughts(${globalPage-1})" ${globalPage<=1?'disabled':''}>Anterior</button>
-            <span>Página ${globalPage} de ${globalMaxPages}</span>
-            <button onclick="loadGlobalThoughts(${globalPage+1})" ${globalPage>=globalMaxPages?'disabled':''}>Siguiente</button>
-          `;
-        }
-      } catch (e) {
-        globalThoughts.innerHTML = '<p class="text-sm font-medium text-red-900 opacity-75">Error al cargar pensamientos globales.</p>';
-      }
-    }
-
-    // ---- MOSTRAR/OCULTAR CAJA DE RESPUESTA ----
-    window.mostrarCajaRespuesta = function(thoughtId, btn) {
-      const card = btn.closest('.p-4');
-      const caja = card.querySelector('.caja-respuesta');
-      if (!caja.classList.contains('hidden')) {
-        caja.classList.add('hidden');
-        caja.innerHTML = '';
-        return;
-      }
-      document.querySelectorAll('.caja-respuesta').forEach(el => { el.classList.add('hidden'); el.innerHTML = ''; });
-      caja.classList.remove('hidden');
-      caja.innerHTML = `
-        <textarea class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm"
-          rows="2" maxlength="300" placeholder="Escribe tu respuesta..."></textarea>
-        <button class="mt-2 px-4 py-1 rounded-lg bg-purple-500 text-white text-sm font-medium shadow hover:bg-purple-600 transition enviarRespuestaBtn">
-          Enviar respuesta
-        </button>
-      `;
-      const textarea = caja.querySelector('textarea');
-      const enviarBtn = caja.querySelector('.enviarRespuestaBtn');
-      const respuestasDiv = card.querySelector('.respuestas');
-      enviarBtn.onclick = async function() {
-        await enviarRespuesta(thoughtId, textarea.value, respuestasDiv, enviarBtn, textarea);
-        caja.classList.add('hidden');
-        caja.innerHTML = '';
-      };
-    };
-
-    // ---- FUNCION GUARDAR ECO LECTURA ----
-    // Llama a esta función cada vez que se muestre un pensamiento AJENO (no de mi user) en el feed:
-    async function registrarEco(thoughtId) {
-      if (!countryReady) return;
-      try {
-        const ecoRef = db.collection("thoughts").doc(thoughtId).collection("eco").doc(userCountry);
-        await db.runTransaction(async (tx) => {
-          const doc = await tx.get(ecoRef);
-          if (!doc.exists) {
-            tx.set(ecoRef, { count: 1 });
-          } else {
-            tx.update(ecoRef, { count: doc.data().count + 1 });
-          }
+          card.innerHTML = `<p>${data.text}</p>`;
+          myThoughts.appendChild(card);
         });
-      } catch (e) {
-        // No mostrar error al usuario, es opcional
-      }
-    }
-
-    // ---- MI HISTORIAL, CON ECO GLOBAL ----
-    async function loadMyThoughts(page = 1) {
-      const myThoughts = document.getElementById('myThoughts');
-      const myPagination = document.getElementById('myPagination');
-      if (!myThoughts) return;
-      myThoughts.innerHTML = '';
-      try {
-        const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).orderBy("ts", "desc").get();
-        const docs = snapshot.docs;
-        myMaxPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
-        page = Math.max(1, Math.min(page, myMaxPages));
-        myPage = page;
-
-        if (docs.length === 0) {
-          myThoughts.innerHTML = '<p class="text-sm font-medium text-green-900 opacity-75">No has escrito aún...</p>';
-        } else {
-          const start = (page - 1) * PAGE_SIZE;
-          const items = docs.slice(start, start + PAGE_SIZE);
-          // Para cada pensamiento, mostrar ecos
-          for (const doc of items) {
-            const data = doc.data();
-            const thoughtId = doc.id;
-            const card = document.createElement('div');
-            card.className = 'p-4 bg-white rounded-lg shadow-sm';
-
-            // Buscar ecos en subcolección eco
-            let ecosHtml = '';
-            try {
-              const ecosSnap = await db.collection("thoughts").doc(thoughtId).collection("eco").get();
-              if (ecosSnap.empty) {
-                ecosHtml = `<div class="text-xs text-gray-400">Sin ecos aún</div>`;
-              } else {
-                ecosHtml = '';
-                ecosSnap.forEach(ecodoc => {
-                  const country = ecodoc.id;
-                  const count = ecodoc.data().count;
-                  ecosHtml += `<div class="eco-block text-xs font-medium text-indigo-700">
-                    ${countryNames[country] || country} <span>(${count})</span>
-                  </div>`;
-                });
-              }
-            } catch (e) {
-              ecosHtml = `<div class="text-xs text-red-500">Error al cargar ecos</div>`;
-            }
-
-            card.innerHTML = `
-              ${ecosHtml}
-              <p class="font-medium">${data.text}</p>
-              <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
-            `;
-            myThoughts.appendChild(card);
-          }
-        }
-        if (myPagination) {
-          myPagination.innerHTML = `
-            <button onclick="loadMyThoughts(${myPage-1})" ${myPage<=1?'disabled':''}>Anterior</button>
-            <span>Página ${myPage} de ${myMaxPages}</span>
-            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=myMaxPages?'disabled':''}>Siguiente</button>
-          `;
-        }
-      } catch (e) {
-        myThoughts.innerHTML = '<p class="text-sm font-medium text-red-900 opacity-75">Error al cargar tus pensamientos.</p>';
       }
     }
 
     // ---- GLOBAL COUNT ----
     async function loadGlobalCount() {
-      try {
-        const snapshot = await db.collection("thoughts").get();
-        document.getElementById('globalCountNum').textContent = snapshot.size;
-      } catch (e) {
-        document.getElementById('globalCountNum').textContent = "?";
-      }
+      const snapshot = await db.collection("thoughts").get();
+      document.getElementById('globalCountNum').textContent = snapshot.size;
+    }
+
+    // ---- GLOBAL THOUGHTS ----
+    async function loadGlobalThoughts() {
+      const globalThoughts = document.getElementById('globalThoughts');
+      globalThoughts.innerHTML = '';
+      const snapshot = await db.collection("thoughts").orderBy("ts", "desc").limit(10).get();
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const card = document.createElement('div');
+        card.className = 'p-4 bg-white rounded-lg shadow-sm';
+        card.innerHTML = `<div class="flex items-center space-x-2 mb-2">
+            <span class="text-xs font-medium">${data.country || "🌐"}</span>
+          </div>
+          <p class="font-medium">${data.text}</p>`;
+        globalThoughts.appendChild(card);
+      });
     }
 
     // ---- RANKING DE PAÍSES ----
     async function loadCountryRanking() {
-      try {
-        const snapshot = await db.collection("thoughts").get();
-        const countryCounts = {};
-        snapshot.docs.forEach(doc => {
-          const c = doc.data().country || "Desconocido";
-          countryCounts[c] = (countryCounts[c] || 0) + 1;
-        });
-        const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
-        let html = '<div class="mb-2 font-semibold text-purple-800">Ranking de países más activos:</div>';
-        html += '<ul class="list-disc pl-4">';
-        sorted.slice(0, 5).forEach(([country, count]) => {
-          html += `<li><span class="font-bold">${country}</span>: ${count}</li>`;
-        });
-        html += '</ul>';
-        document.getElementById('countryRanking').innerHTML = html;
-      } catch (e) {
-        document.getElementById('countryRanking').innerHTML = '<span class="text-red-900">Error al cargar ranking.</span>';
-      }
+      const snapshot = await db.collection("thoughts").get();
+      const countryCounts = {};
+      snapshot.docs.forEach(doc => {
+        const c = doc.data().country || "Desconocido";
+        countryCounts[c] = (countryCounts[c] || 0) + 1;
+      });
+      const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
+      let html = '<div class="mb-2 font-semibold text-purple-800">Ranking de países más activos:</div>';
+      html += '<ul class="list-disc pl-4">';
+      sorted.slice(0, 5).forEach(([country, count]) => {
+        html += `<li><span class="font-bold">${country}</span>: ${count}</li>`;
+      });
+      html += '</ul>';
+      document.getElementById('countryRanking').innerHTML = html;
     }
 
     // ---- MAPA DE PENSAMIENTOS ----
     let map;
     let countryMarkers = {};
     async function loadMap() {
+      // Países y coordenadas aproximadas
       const countryCoords = {
         AR: {lat: -34, lng: -64},
         ES: {lat: 40, lng: -3},
@@ -573,44 +308,82 @@
         BR: {lat: -10, lng: -55},
         CL: {lat: -33, lng: -71},
         CO: {lat: 4, lng: -72},
-        Desconocido: {lat: 20, lng: 0}
+        // Agrega más países según necesidad
       };
+
+      // Reset
       if (map) { map.remove(); map = null; }
-      const mapEl = document.getElementById('map');
-      if (!mapEl) return;
-      mapEl.innerHTML = ""; // Limpia el contenedor
-      map = L.map('map', { attributionControl: false }).setView([20,0], 2);
+      map = L.map('map').setView([20,0], 2);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
       }).addTo(map);
 
-      try {
-        const snapshot = await db.collection("thoughts").get();
-        const countryCounts = {};
-        snapshot.docs.forEach(doc => {
-          const c = doc.data().country || "Desconocido";
-          countryCounts[c] = (countryCounts[c] || 0) + 1;
-        });
+      // Cargar conteo por país
+      const snapshot = await db.collection("thoughts").get();
+      const countryCounts = {};
+      snapshot.docs.forEach(doc => {
+        const c = doc.data().country || "Desconocido";
+        countryCounts[c] = (countryCounts[c] || 0) + 1;
+      });
 
-        for (let [country, count] of Object.entries(countryCounts)) {
-          let coords = countryCoords[country];
-          if (!coords) coords = countryCoords["Desconocido"];
-          const marker = L.circleMarker([coords.lat, coords.lng], {
-            radius: Math.max(8, Math.min(20, count)),
-            color: "#6D28D9",
-            fillColor: "#C4B5FD",
-            fillOpacity: 0.6
-          }).addTo(map);
-          marker.bindPopup(`<b>${country}</b>: ${count} pensamientos`);
-          countryMarkers[country] = marker;
-        }
-      } catch (e) {
-        // Mostrar error en el mapa
+      for (let [country, count] of Object.entries(countryCounts)) {
+        if (!countryCoords[country]) continue;
+        const marker = L.circleMarker([countryCoords[country].lat, countryCoords[country].lng], {
+          radius: Math.max(8, Math.min(20, count)),
+          color: "#6D28D9",
+          fillColor: "#C4B5FD",
+          fillOpacity: 0.6
+        }).addTo(map);
+        marker.bindPopup(`<b>${country}</b>: ${count} pensamientos`);
+        countryMarkers[country] = marker;
       }
     }
 
-    // ---- CAPSULA DEL TIEMPO ----
+    // ---- CAPSULA DEL TIEMPO: mostrar cápsulas desbloqueadas ----
+    async function loadMyCapsules() {
+      const list = document.getElementById('capsulesList');
+      if (!list) return;
+      list.innerHTML = '';
+      try {
+        const now = Date.now();
+        const snapshot = await db.collection("capsules")
+          .where("user", "==", getAnonUserId())
+          .orderBy("openAt", "desc")
+          .get();
+        let count = 0;
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.openAt <= now) {
+            const card = document.createElement('div');
+            card.className = 'p-4 bg-white rounded-lg shadow-md';
+            card.innerHTML = `
+              <div class="mb-2 text-blue-700 font-bold text-sm">Cápsula abierta el ${formatearFecha(data.openAt)}</div>
+              <p class="font-medium">${data.text}</p>
+              <div class="text-[0.7rem] text-gray-400 mt-1">Programada el ${formatearFecha(data.ts)}</div>
+            `;
+            list.appendChild(card);
+            count++;
+          }
+        });
+        if (count === 0) {
+          list.innerHTML = '<div class="text-blue-900 text-sm opacity-70">No hay cápsulas desbloqueadas aún.</div>';
+        }
+      } catch (e) {
+        list.innerHTML = '<div class="text-red-700 text-sm">Error al cargar tus cápsulas.</div>';
+      }
+    }
+
+    // ---- FORMATO FECHA ----
+    function formatearFecha(ts) {
+      const fecha = new Date(ts);
+      const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+      const fechaStr = fecha.toLocaleDateString('es-ES', opciones);
+      const horaStr = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      return `${fechaStr}, ${horaStr}`;
+    }
+
+    // ---- CAPSULA DEL TIEMPO: programar ----
     document.getElementById('capsuleBtn').onclick = async function() {
       const date = document.getElementById('capsuleDate').value;
       const time = document.getElementById('capsuleTime').value;
@@ -619,29 +392,20 @@
         alert('Debes escribir un mensaje y elegir fecha/hora');
         return;
       }
-      if (window.contienePalabraOfensiva(msg)) {
-        return;
-      }
-      if (!countryReady) {
-        alert("Cargando país, por favor espera un momento e intenta de nuevo.");
-        return;
-      }
+      if (contienePalabraOfensiva(msg)) return;
       const openAt = new Date(date + "T" + time + ":00").getTime();
-      try {
-        await db.collection("capsules").add({
-          text: msg,
-          openAt,
-          ts: Date.now(),
-          country: userCountry,
-          user: getAnonUserId()
-        });
-        alert(`Cápsula programada para ${date} a las ${time}`);
-        document.getElementById('capsuleMessage').value = '';
-        document.getElementById('capsuleDate').value = '';
-        document.getElementById('capsuleTime').value = '';
-      } catch (e) {
-        alert("Error al guardar la cápsula. Intenta de nuevo.");
-      }
+      await db.collection("capsules").add({
+        text: msg,
+        openAt,
+        ts: Date.now(),
+        country: userCountry,
+        user: getAnonUserId()
+      });
+      alert(`Cápsula programada para ${date} a las ${time}`);
+      document.getElementById('capsuleMessage').value = '';
+      document.getElementById('capsuleDate').value = '';
+      document.getElementById('capsuleTime').value = '';
+      loadMyCapsules();
     };
 
     // ---- TABS ----
@@ -653,52 +417,32 @@
       });
       const active = document.getElementById(tabId);
       if (active) active.classList.remove('hidden');
-      if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(globalPage); loadCountryRanking(); loadMap(); }
-      if(tabId=='mine') { loadMyThoughts(myPage); }
+      if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(); loadCountryRanking(); loadMap(); }
+      if(tabId=='mine') { loadMyThoughts(); }
+      if(tabId=='capsule') { loadMyCapsules(); }
     }
 
-    // ---- LOGO ANIMACIÓN Y CARGA INICIAL ----
+    // ---- LOGO ANIMACIÓN ----
     window.onload = function() {
       const textLogo = document.getElementById('textLogo');
       const imgLogo = document.getElementById('logolibre');
-      if (textLogo && imgLogo) {
-        textLogo.classList.remove('logo-hidden');
-        textLogo.classList.add('logo-shown');
-        imgLogo.classList.remove('visible');
-        setTimeout(() => {
-          textLogo.classList.remove('logo-shown');
-          textLogo.classList.add('logo-hidden');
-        }, 2000);
-        setTimeout(() => {
-          imgLogo.classList.add('visible');
-        }, 3500);
-      }
+      textLogo.classList.remove('logo-hidden');
+      textLogo.classList.add('logo-shown');
+      imgLogo.classList.remove('visible');
+      setTimeout(() => {
+        textLogo.classList.remove('logo-shown');
+        textLogo.classList.add('logo-hidden');
+      }, 2000);
+      setTimeout(() => {
+        imgLogo.classList.add('visible');
+      }, 3500);
       // Carga inicial
       loadGlobalCount();
-      loadGlobalThoughts(globalPage);
+      loadGlobalThoughts();
       loadCountryRanking();
       loadMap();
+      loadMyCapsules();
     };
-
-    // ---- REGISTRA ECO AL LEER UN PENSAMIENTO EN EL FEED ----
-    // Ejemplo: si quieres registrar eco sólo si el pensamiento no es del usuario actual
-    async function registrarEcosEnFeed() {
-      try {
-        const snapshot = await db.collection("thoughts").orderBy("ts", "desc").get();
-        const docs = snapshot.docs;
-        const start = (globalPage - 1) * PAGE_SIZE;
-        const items = docs.slice(start, start + PAGE_SIZE);
-        for (let doc of items) {
-          const data = doc.data();
-          const thoughtId = doc.id;
-          if (data.user !== getAnonUserId()) {
-            registrarEco(thoughtId);
-          }
-        }
-      } catch (e) { }
-    }
-    // Puedes llamar registrarEcosEnFeed() tras cargar pensamientos globales si deseas que la visualización cuente como eco.
-
   </script>
 </body>
 </html>
