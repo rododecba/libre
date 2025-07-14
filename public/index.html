@@ -94,6 +94,8 @@
         <input type="time" id="capsuleTime" class="p-2 rounded-lg bg-white border border-blue-300 focus:outline-none">
         <button id="capsuleBtn" class="px-4 py-2 rounded-lg bg-blue-500 text-white shadow-md hover:bg-blue-600 transition">Programar</button>
       </div>
+      <!-- CORRECCIÓN: Lista de cápsulas desbloqueadas -->
+      <div id="capsulesList" class="mt-6 space-y-4"></div>
     </div>
   </section>
 
@@ -639,10 +641,46 @@
         document.getElementById('capsuleMessage').value = '';
         document.getElementById('capsuleDate').value = '';
         document.getElementById('capsuleTime').value = '';
+        // Opcional: recarga la lista de cápsulas tras crear una nueva
+        loadMyCapsules();
       } catch (e) {
         alert("Error al guardar la cápsula. Intenta de nuevo.");
       }
     };
+
+    // ---- CORRECCIÓN: Mostrar cápsulas desbloqueadas ----
+    async function loadMyCapsules() {
+      const list = document.getElementById('capsulesList');
+      if (!list) return;
+      list.innerHTML = '';
+      try {
+        const now = Date.now();
+        const snapshot = await db.collection("capsules")
+          .where("user", "==", getAnonUserId())
+          .orderBy("openAt", "desc")
+          .get();
+        let count = 0;
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.openAt <= now) {
+            const card = document.createElement('div');
+            card.className = 'p-4 bg-white rounded-lg shadow-md';
+            card.innerHTML = `
+              <div class="mb-2 text-blue-700 font-bold text-sm">Cápsula abierta el ${formatearFecha(data.openAt)}</div>
+              <p class="font-medium">${data.text}</p>
+              <div class="text-[0.7rem] text-gray-400 mt-1">Programada el ${formatearFecha(data.ts)}</div>
+            `;
+            list.appendChild(card);
+            count++;
+          }
+        });
+        if (count === 0) {
+          list.innerHTML = '<div class="text-blue-900 text-sm opacity-70">No hay cápsulas desbloqueadas aún.</div>';
+        }
+      } catch (e) {
+        list.innerHTML = '<div class="text-red-700 text-sm">Error al cargar tus cápsulas.</div>';
+      }
+    }
 
     // ---- TABS ----
     function showTab(tabId) {
@@ -655,6 +693,8 @@
       if (active) active.classList.remove('hidden');
       if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(globalPage); loadCountryRanking(); loadMap(); }
       if(tabId=='mine') { loadMyThoughts(myPage); }
+      // CORRECCIÓN: cargar cápsulas desbloqueadas en la pestaña cápsula
+      if(tabId=='capsule') { loadMyCapsules(); }
     }
 
     // ---- LOGO ANIMACIÓN Y CARGA INICIAL ----
