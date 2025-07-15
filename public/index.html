@@ -140,9 +140,8 @@
   </section>
 
   <section id="write" class="w-full max-w-xl mb-6">
-    <!-- Frase inspiradora -->
-    <span id="fraseInspiradora" class="frase-inspiradora"></span>
-    <textarea id="textarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400" rows="4" maxlength="500" placeholder="Lo que no se dice, también necesita salir..."></textarea>
+    <!-- Frase inspiradora eliminada de aquí -->
+    <textarea id="textarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400" rows="4" maxlength="500"></textarea>
     <button id="sendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-blue-400 text-white hover:bg-blue-600 shadow-md hover:shadow-xl transition">Enviar pensamiento</button>
   </section>
 
@@ -174,16 +173,16 @@
       "A veces lo más importante es soltar."
     ];
 
-    function mostrarFraseInspiradora() {
+    function mostrarFraseInspiradoraEnTextarea() {
       const frase = FRASES_INSPIRADORAS[Math.floor(Math.random() * FRASES_INSPIRADORAS.length)];
-      const el = document.getElementById('fraseInspiradora');
-      if (el) el.textContent = frase;
+      const textarea = document.getElementById('textarea');
+      if (textarea) textarea.placeholder = frase;
     }
 
     // Mostrar frase al cargar y cuando se muestra la pestaña de escribir
-    mostrarFraseInspiradora();
+    mostrarFraseInspiradoraEnTextarea();
     function onShowWriteTab() {
-      mostrarFraseInspiradora();
+      mostrarFraseInspiradoraEnTextarea();
       document.getElementById('textarea').focus();
     }
 
