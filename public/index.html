@@ -43,6 +43,7 @@
       z-index: 10;
       box-shadow: 0 0 4px #ef4444aa;
     }
+    .revelation-answer { border-left: 3px solid #a78bfa; padding-left: 1rem; margin-top: 1rem; }
     @keyframes pulse-and-rotate {
       0% { transform: scale(1) rotate(0deg); }
       5% { transform: scale(1.2) rotate(-15deg); }
@@ -78,6 +79,7 @@
 
   <nav class="w-full max-w-xl flex justify-around mb-6 text-sm relative">
     <button onclick="showTab('feed')" class="hover:underline">Pensamientos globales</button>
+    <button onclick="showTab('revelacion')" class="hover:underline">🌌 Revelación Diaria</button>
     <button onclick="showTab('mine')" class="hover:underline relative">
       Mis pensamientos
       <span id="mineTabNotification" class="badge-notif hidden">¡Nuevo!</span>
@@ -113,6 +115,38 @@
       
       <div id="globalThoughts" class="space-y-4"></div>
       <div id="globalPagination" class="pagination"></div>
+    </div>
+  </section>
+
+  <section id="revelacion" class="w-full max-w-xl mb-8 hidden">
+    <div class="rounded-2xl bg-purple-100 border border-purple-300 p-6 shadow-md relative">
+        <div class="flex items-center mb-4">
+            <span class="text-3xl mr-2">🌌</span>
+            <h2 class="text-2xl font-semibold text-purple-800">Revelación Diaria</h2>
+        </div>
+        <p class="text-sm text-purple-900 mb-4">Cada día, una nueva pregunta. Responde a ciegas y vuelve mañana para ver las respuestas anónimas de todo el mundo.</p>
+
+        <div id="revelacionHoy">
+            <h3 class="font-semibold text-lg text-purple-800 mb-2">Pregunta de Hoy:</h3>
+            <p id="revelacionQuestion" class="font-medium text-lg mb-4 p-4 bg-purple-50 rounded-lg"></p>
+            
+            <div id="revelacionInputArea">
+                <textarea id="revelacionTextarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400" rows="4" maxlength="500" placeholder="Tu respuesta honesta..."></textarea>
+                <button id="revelacionSendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-purple-500 text-white hover:bg-purple-600 shadow-md transition">Enviar respuesta</button>
+            </div>
+
+            <div id="revelacionThanks" class="hidden p-4 bg-purple-200 rounded-lg text-center font-medium text-purple-900">
+                Gracias por tu contribución. Vuelve mañana para descubrir el mosaico de respuestas.
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <button onclick="showYesterdaysRevelation()" class="text-purple-600 font-semibold hover:underline">Ver la revelación de ayer →</button>
+            <div id="revelacionAyerContainer" class="mt-4 hidden">
+                <h3 id="revelacionAyerQuestion" class="font-semibold text-lg text-purple-800 mb-2"></h3>
+                <div id="revelacionAyerRespuestas" class="space-y-4"></div>
+            </div>
+        </div>
     </div>
   </section>
 
@@ -233,6 +267,143 @@
     }
 
     mostrarFraseInspiradoraEnTextarea();
+
+    // ---- REVELACIÓN DIARIA ----
+    const PREGUNTAS_REVELACION = [
+        "¿Qué es algo pequeño que te hizo feliz hoy?",
+        "Si pudieras dar un consejo a tu 'yo' más joven, ¿cuál sería?",
+        "Describe un sonido que te traiga paz.",
+        "¿Cuál es un sueño que nunca has contado a nadie?",
+        "¿Qué significa la palabra 'hogar' para ti?",
+        "¿A qué le tienes miedo en silencio?",
+        "Nombra una canción que sea la banda sonora de tu vida ahora mismo.",
+        "¿Qué es la libertad para ti?",
+        "Describe un acto de bondad que presenciaste o hiciste.",
+        "¿Cuál es el mejor olor del mundo para ti?",
+        "Si pudieras aprender una habilidad instantáneamente, ¿cuál sería?",
+        "¿Qué es algo que la gente suele malinterpretar sobre ti?",
+        "Un recuerdo de tu infancia que todavía te hace sonreír.",
+        "¿Qué te mantiene despierto por la noche?",
+        "¿Cuál es una causa por la que lucharías?",
+    ];
+
+    function getDayOfYear(date) {
+        const start = new Date(date.getFullYear(), 0, 0);
+        const diff = date - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        return Math.floor(diff / oneDay);
+    }
+
+    function getTodaysDateStr() {
+        const now = new Date();
+        return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    }
+
+    function getYesterdaysDateStr() {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
+    }
+
+    function getQuestionForDate(date) {
+        const dayIndex = getDayOfYear(date);
+        return PREGUNTAS_REVELACION[dayIndex % PREGUNTAS_REVELACION.length];
+    }
+
+    async function loadRevelacionDiaria() {
+        const todayStr = getTodaysDateStr();
+        const question = getQuestionForDate(new Date());
+        
+        document.getElementById('revelacionQuestion').textContent = question;
+
+        const hasAnsweredToday = localStorage.getItem('libre_revelacion_answered') === todayStr;
+
+        if (hasAnsweredToday) {
+            document.getElementById('revelacionInputArea').classList.add('hidden');
+            document.getElementById('revelacionThanks').classList.remove('hidden');
+        } else {
+            document.getElementById('revelacionInputArea').classList.remove('hidden');
+            document.getElementById('revelacionThanks').classList.add('hidden');
+        }
+    }
+
+    document.getElementById('revelacionSendBtn').onclick = async function() {
+        const textarea = document.getElementById('revelacionTextarea');
+        const text = textarea.value.trim();
+        if (!text) return;
+        if (window.contienePalabraOfensiva(text)) return;
+        if (!countryReady) {
+            alert("Cargando país, por favor espera un momento e intenta de nuevo.");
+            return;
+        }
+
+        this.disabled = true;
+        const todayStr = getTodaysDateStr();
+
+        try {
+            await db.collection('revelations').doc(todayStr).collection('responses').add({
+                text: text,
+                ts: Date.now(),
+                country: userCountry,
+                user: getAnonUserId()
+            });
+            
+            localStorage.setItem('libre_revelacion_answered', todayStr);
+            textarea.value = '';
+            loadRevelacionDiaria();
+
+        } catch (e) {
+            console.error("Error saving revelation answer:", e);
+            alert("Hubo un error al guardar tu respuesta. Inténtalo de nuevo.");
+        } finally {
+            this.disabled = false;
+        }
+    };
+
+    async function showYesterdaysRevelation() {
+        const container = document.getElementById('revelacionAyerContainer');
+        const questionEl = document.getElementById('revelacionAyerQuestion');
+        const respuestasEl = document.getElementById('revelacionAyerRespuestas');
+        
+        container.classList.toggle('hidden');
+        if (container.classList.contains('hidden')) return;
+
+        respuestasEl.innerHTML = '<p class="text-sm text-purple-700">Cargando respuestas de ayer...</p>';
+
+        const yesterdayStr = getYesterdaysDateStr();
+        const yesterdayQuestion = getQuestionForDate(new Date(yesterdayStr));
+        questionEl.textContent = `Pregunta de ayer: ${yesterdayQuestion}`;
+
+        try {
+            const snapshot = await db.collection('revelations').doc(yesterdayStr).collection('responses').orderBy('ts', 'asc').get();
+            if (snapshot.empty) {
+                respuestasEl.innerHTML = '<p class="text-sm font-medium text-purple-900 opacity-75">Nadie respondió a la pregunta de ayer. ¡Asegúrate de responder hoy!</p>';
+                return;
+            }
+
+            respuestasEl.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const answerDiv = document.createElement('div');
+                answerDiv.className = 'revelation-answer';
+
+                const p = document.createElement('p');
+                p.className = 'font-medium';
+                p.textContent = data.text;
+
+                const footer = document.createElement('div');
+                footer.className = 'text-xs text-gray-500 mt-1';
+                footer.textContent = `Desde ${countryNames[data.country] || data.country || 'un lugar desconocido'}`;
+
+                answerDiv.append(p, footer);
+                respuestasEl.appendChild(answerDiv);
+            });
+
+        } catch (e) {
+            console.error("Error loading yesterday's revelation:", e);
+            respuestasEl.innerHTML = '<p class="text-sm font-medium text-red-700">Error al cargar las respuestas de ayer.</p>';
+        }
+    }
 
     // ---- FORMATO FECHA ----
     function formatearFecha(ts) {
@@ -906,16 +1077,18 @@
     }
 
     function showTab(tabId) {
-      const sections = ['feed', 'mine', 'capsule', 'about'];
+      const sections = ['feed', 'mine', 'capsule', 'about', 'revelacion'];
       sections.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
       });
       const active = document.getElementById(tabId);
       if (active) active.classList.remove('hidden');
+
       if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(globalPage); loadCountryRanking(); loadMap(); loadEstadisticasAnonimas(); mostrarFraseInspiradoraEnTextarea(); }
       if(tabId=='mine') { loadMyThoughts(myPage); markRepliesAsSeen(); }
       if(tabId=='capsule') { loadMyCapsules(); }
+      if(tabId=='revelacion') { loadRevelacionDiaria(); }
     }
 
     window.onload = function() {
