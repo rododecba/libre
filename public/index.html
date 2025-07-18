@@ -21,16 +21,14 @@
     .pagination button { background: #e5e7eb; border-radius: 6px; padding: 4px 10px; font-size: 0.9rem; }
     .pagination button[disabled] { opacity: 0.5; cursor: not-allowed; }
     .reply-box { background: #fafafa; border-radius: 1rem; padding: 0.75rem; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
-    .reply-btn { font-size: 0.8rem; color: #6d28d9; background: none; border: none; cursor: pointer; transition: color 0.2s; }
-    .reply-btn:hover { color: #4b2995; text-decoration: underline; }
-    .reply-btn:disabled { color: #9ca3af; cursor: not-allowed; text-decoration: none; }
-    .reply-separator { border-bottom: 1px dashed #e5e7eb; margin: 0.5rem 0; }
+    .action-btn { font-size: 0.8rem; color: #6d28d9; background: none; border: none; cursor: pointer; transition: color 0.2s; }
+    .action-btn:hover { color: #4b2995; text-decoration: underline; }
+    .action-btn:disabled { color: #9ca3af; cursor: not-allowed; text-decoration: none; }
     .frase-inspiradora { color: #6D28D9; font-weight: 500; font-style: italic; margin-bottom: 0.5rem; display: block; transition: color 0.3s; min-height: 1.5rem;}
     .estadisticas-anonimas { margin-top: 1.5rem; background: #F3F0FF; border-radius: 0.75rem; padding: 1rem; }
     .estadisticas-anonimas .titulo { font-weight: 600; color: #6D28D9; margin-bottom: 0.2rem; }
     .estadisticas-anonimas .dato { font-size: 1.07rem; font-weight: 500; color: #2D3748; margin-bottom: 0.1rem; }
     .estadisticas-anonimas .dato strong { color: #6D28D9; }
-    /* Badge notificación */
     .badge-notif {
       display: inline-block;
       min-width: 16px;
@@ -45,27 +43,22 @@
       z-index: 10;
       box-shadow: 0 0 4px #ef4444aa;
     }
-    
-    /* Animación automática para el globo */
     @keyframes pulse-and-rotate {
       0% { transform: scale(1) rotate(0deg); }
       5% { transform: scale(1.2) rotate(-15deg); }
       10% { transform: scale(1) rotate(0deg); }
       100% { transform: scale(1) rotate(0deg); }
     }
-
     #randomThoughtGlobe {
         cursor: pointer;
         display: inline-block;
         animation: pulse-and-rotate 5s infinite;
         transition: transform 0.3s ease-in-out;
     }
-    
     #randomThoughtGlobe:hover {
         animation-play-state: paused;
         transform: scale(1.2) rotate(-15deg);
     }
-
     @media (max-width: 640px) {
       .estadisticas-anonimas { font-size: 0.97rem; }
     }
@@ -211,6 +204,9 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="badwords.js"></script>
   <script>
+    // ---- CONFIGURACIÓN GLOBAL ----
+    const userLang = navigator.language.slice(0, 2) || 'es';
+
     // ---- FRASES INSPIRADORAS ----
     const FRASES_INSPIRADORAS = [
       "La libertad es el oxígeno del alma. – Moshe Dayan",
@@ -242,8 +238,8 @@
     function formatearFecha(ts) {
       const fecha = new Date(ts);
       const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
-      const fechaStr = fecha.toLocaleDateString('es-ES', opciones);
-      const horaStr = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      const fechaStr = fecha.toLocaleDateString(userLang, opciones);
+      const horaStr = fecha.toLocaleTimeString(userLang, { hour: '2-digit', minute: '2-digit' });
       return `${fechaStr}, ${horaStr}`;
     }
 
@@ -331,15 +327,14 @@
         const idx = Math.floor(Math.random() * docs.length);
         const data = docs[idx].data();
         
-        // --- SECURE TEXT RENDERING ---
-        randomThoughtEl.innerHTML = ''; // Clear previous content
+        randomThoughtEl.innerHTML = '';
         const headerDiv = document.createElement('div');
         headerDiv.className = 'flex items-center space-x-2 mb-2';
         headerDiv.innerHTML = `<span class="text-xs font-medium">${countryNames[data.country] || data.country || "🌐"}</span>`;
         
         const p = document.createElement('p');
         p.className = 'font-medium text-justify';
-        p.textContent = data.text; // Use .textContent to prevent XSS
+        p.textContent = data.text;
         
         const dateDiv = document.createElement('div');
         dateDiv.className = 'text-[0.7rem] text-gray-400 mt-1';
@@ -347,7 +342,6 @@
         
         randomThoughtEl.append(headerDiv, p, dateDiv);
         randomThoughtEl.classList.remove('hidden');
-        // --- END SECURE TEXT RENDERING ---
 
       } catch (e) {
         console.error("Error loading random thought:", e);
@@ -385,9 +379,7 @@
           }
         }
         const notifEl = document.getElementById("mineTabNotification");
-        if(notifEl) {
-          notifEl.classList.toggle("hidden", !hasNewReply);
-        }
+        if(notifEl) notifEl.classList.toggle("hidden", !hasNewReply);
       } catch (e) {
         console.error("Error checking new replies:", e);
       }
@@ -417,13 +409,11 @@
         return;
       }
       const textarea = document.getElementById('textarea');
-      if (!textarea) return;
       const txt = textarea.value.trim();
       if (!txt) return;
 
-      if (window.contienePalabraOfensiva(txt)) {
-        return;
-      }
+      if (window.contienePalabraOfensiva(txt)) return;
+      
       try {
         await db.collection("thoughts").add({
           text: txt,
@@ -446,7 +436,16 @@
       }
     };
 
-    // ---- RESPONDER UN PENSAMIENTO ----
+    // ---- ACCIONES DE PENSAMIENTO (RESPONDER, TRADUCIR) ----
+    function handleTranslateClick(text) {
+        const confirmation = window.confirm("Estás a punto de salir de Libre para ver la traducción en Google Translate. Esta función es experimental.\n\n¿Deseas continuar?");
+        if (confirmation) {
+            const encodedText = encodeURIComponent(text);
+            const url = `https://translate.google.com/?sl=auto&tl=${userLang}&text=${encodedText}&op=translate`;
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+    }
+
     async function enviarRespuesta(thoughtId, replyText, respuestasDiv, btn, textarea) {
       if (!replyText.trim()) return;
       if (window.contienePalabraOfensiva(replyText)) return;
@@ -460,8 +459,7 @@
           textarea.disabled = false;
           return;
         }
-        const thoughtData = thoughtDoc.data();
-        if (thoughtData.user === getAnonUserId()) {
+        if (thoughtDoc.data().user === getAnonUserId()) {
           alert("No puedes responder a tu propio pensamiento.");
           btn.disabled = false;
           textarea.disabled = false;
@@ -483,7 +481,6 @@
       textarea.disabled = false;
     }
 
-    // ---- MOSTRAR RESPUESTAS DE UN PENSAMIENTO ----
     async function mostrarRespuestas(thoughtId, respuestasDiv) {
       respuestasDiv.innerHTML = '';
       try {
@@ -498,7 +495,7 @@
           const textDiv = document.createElement('div');
           const span = document.createElement('span');
           span.className = 'font-medium';
-          span.textContent = data.text; // Secure rendering
+          span.textContent = data.text;
           textDiv.appendChild(span);
 
           const dateDiv = document.createElement('div');
@@ -534,7 +531,7 @@
         allItems.sort((a, b) => (b.data.openAt || b.data.ts) - (a.data.openAt || a.data.ts));
 
         if (allItems.length === 0) {
-            globalThoughts.innerHTML = '<p class="text-sm font-medium text-blue-900 opacity-75">Aún no hay pensamientos. ¡Sé el primero en lanzar uno al mundo!</p>';
+            globalThoughts.innerHTML = '<p class="text-sm font-medium text-blue-900 opacity-75">Aún no hay pensamientos. ¡Sé el primero!</p>';
             return;
         }
 
@@ -558,25 +555,32 @@
           const card = document.createElement('div');
           card.className = 'p-4 bg-white rounded-lg shadow-sm';
           
-          // --- SECURE RENDERING ---
           const headerDiv = document.createElement('div');
           headerDiv.className = 'flex items-center space-x-2 mb-2';
           headerDiv.innerHTML = `<span class="text-xs font-medium">${countryNames[data.country] || data.country || "🌐"} ${headerIcon}</span>`;
           
           const p = document.createElement('p');
           p.className = 'font-medium text-justify';
-          p.textContent = data.text; // Secure
+          p.textContent = data.text;
           
           const dateDiv = document.createElement('div');
           dateDiv.className = 'text-[0.7rem] text-gray-400 mt-1';
           dateDiv.textContent = formatearFecha(data.openAt || data.ts);
 
           const interactionDiv = document.createElement('div');
-          interactionDiv.className = 'mt-2';
+          interactionDiv.className = 'mt-2 flex space-x-4';
           if (data.user !== getAnonUserId() && !isCapsule) {
-            interactionDiv.innerHTML = `<button class="reply-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>`;
+            interactionDiv.innerHTML = `<button class="action-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>`;
           } else {
             interactionDiv.innerHTML = `<span class="text-xs text-gray-400">${isCapsule ? 'Mensaje de una cápsula del tiempo' : 'Es tu propio pensamiento'}</span>`;
+          }
+          
+          if (data.user !== getAnonUserId()) {
+              const translateBtn = document.createElement('button');
+              translateBtn.className = 'action-btn';
+              translateBtn.textContent = '[ Traducir ]';
+              translateBtn.onclick = () => handleTranslateClick(data.text);
+              interactionDiv.appendChild(translateBtn);
           }
 
           const respuestasDiv = document.createElement('div');
@@ -586,7 +590,6 @@
 
           card.append(headerDiv, p, dateDiv, interactionDiv, respuestasDiv, cajaRespuestaDiv);
           globalThoughts.appendChild(card);
-          // --- END SECURE RENDERING ---
 
           if (!isCapsule) {
             mostrarRespuestas(thoughtId, respuestasDiv);
@@ -606,7 +609,6 @@
     }
 
 
-    // ---- MOSTRAR/OCULTAR CAJA DE RESPUESTA ----
     window.mostrarCajaRespuesta = function(thoughtId, btn) {
       const card = btn.closest('.p-4');
       const caja = card.querySelector('.caja-respuesta');
@@ -634,7 +636,6 @@
       };
     };
 
-    // ---- FUNCION GUARDAR ECO LECTURA ----
     async function registrarEco(docId, type = 'thought') {
       if (!countryReady || type !== 'thought') return;
       try {
@@ -647,12 +648,9 @@
             tx.update(ecoRef, { count: firebase.firestore.FieldValue.increment(1) });
           }
         });
-      } catch (e) {
-        // Silently fail is ok here, not critical
-      }
+      } catch (e) { /* Silently fail */ }
     }
 
-    // ---- MI HISTORIAL (SIMPLIFICADO) ----
     async function loadMyThoughts(page = 1) {
       const myThoughts = document.getElementById('myThoughts');
       const myPagination = document.getElementById('myPagination');
@@ -677,7 +675,7 @@
             
             const p = document.createElement('p');
             p.className = 'font-medium text-justify';
-            p.textContent = data.text; // Secure
+            p.textContent = data.text;
 
             const dateDiv = document.createElement('div');
             dateDiv.className = 'text-[0.7rem] text-gray-400 mt-1';
@@ -700,7 +698,6 @@
       }
     }
 
-    // ---- GLOBAL COUNT ----
     async function loadGlobalCount() {
       try {
         const snapshot = await db.collection("thoughts").get();
@@ -711,7 +708,6 @@
       }
     }
 
-    // ---- RANKING DE PAÍSES ----
     async function loadCountryRanking() {
       try {
         const snapshot = await db.collection("thoughts").get();
@@ -734,7 +730,6 @@
       }
     }
 
-    // ---- ESTADÍSTICAS ANÓNIMAS ----
     async function loadEstadisticasAnonimas() {
       const el = document.getElementById('estadisticasAnonimas');
       if (!el) return;
@@ -754,7 +749,7 @@
           const fechaDoc = new Date(data.ts);
           if (fechaDoc >= hoy) pensamientosHoy++;
           if (fechaDoc >= inicioSemana) paisesSemana.add(data.country || "Desconocido");
-          const diaKey = fechaDoc.getFullYear() + "-" + (fechaDoc.getMonth()+1).toString().padStart(2,"0") + "-" + fechaDoc.getDate().toString().padStart(2,"0");
+          const diaKey = fechaDoc.toISOString().split('T')[0];
           pensamientosPorDia[diaKey] = (pensamientosPorDia[diaKey] || 0) + 1;
         });
 
@@ -776,7 +771,6 @@
       }
     }
 
-    // ---- MAPA DE PENSAMIENTOS ----
     let map;
     async function loadMap() {
       const countryCoords = {
@@ -815,7 +809,6 @@
       }
     }
 
-    // ---- CAPSULA DEL TIEMPO ----
     document.getElementById('capsuleBtn').onclick = async function() {
       const date = document.getElementById('capsuleDate').value;
       const time = document.getElementById('capsuleTime').value;
@@ -876,7 +869,6 @@
               </div>
             `;
           } else {
-            // Secure rendering for opened capsules
             const card = document.createElement('div');
             card.className = 'p-4 bg-white rounded-lg shadow-md';
             const header = document.createElement('div');
@@ -913,7 +905,6 @@
       }
     }
 
-    // ---- TABS ----
     function showTab(tabId) {
       const sections = ['feed', 'mine', 'capsule', 'about'];
       sections.forEach(id => {
@@ -927,7 +918,6 @@
       if(tabId=='capsule') { loadMyCapsules(); }
     }
 
-    // ---- LOGO ANIMACIÓN Y CARGA INICIAL ----
     window.onload = function() {
       const textLogo = document.getElementById('textLogo');
       const imgLogo = document.getElementById('logolibre');
