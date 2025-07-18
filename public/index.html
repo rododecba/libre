@@ -47,6 +47,14 @@
       z-index: 10;
       box-shadow: 0 0 4px #ef4444aa;
     }
+    /* NUEVO: Estilo para el botón de botella */
+    #randomBottleIcon {
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
+    }
+    #randomBottleIcon:hover {
+        transform: scale(1.2) rotate(10deg);
+    }
     @media (max-width: 640px) {
       .estadisticas-anonimas { font-size: 0.97rem; }
     }
@@ -76,9 +84,12 @@
 
   <section id="feed" class="w-full max-w-xl mb-8">
     <div class="rounded-2xl bg-blue-100 border border-blue-300 p-6 shadow-md relative">
-      <div class="flex items-center mb-4">
-        <span class="text-3xl mr-2">🌍</span>
-        <h2 class="text-2xl font-semibold text-blue-800">Pensamientos de todo el mundo</h2>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center">
+            <span class="text-3xl mr-2">🌍</span>
+            <h2 class="text-2xl font-semibold text-blue-800">Pensamientos de todo el mundo</h2>
+        </div>
+        <span id="randomBottleIcon" title="Encontrar una botella al mar" class="text-3xl">🍾</span>
       </div>
       
       <details class="mb-6">
@@ -95,7 +106,6 @@
         <button id="sendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-xl transition">Enviar pensamiento</button>
       </div>
 
-      <button id="randomBottleBtn" class="mb-4 px-4 py-2 rounded-lg bg-blue-500 text-white shadow-md hover:bg-blue-600 transition">Modo Botella al Mar (Random)</button>
       <div id="randomThought" class="p-4 bg-white rounded-lg shadow-sm mb-4 hidden"></div>
       
       <div id="globalThoughts" class="space-y-4"></div>
@@ -321,7 +331,7 @@
     detectCountry();
 
     // ---- MODO "BOTELLA AL MAR" ALEATORIO ----
-    document.getElementById('randomBottleBtn').onclick = async function() {
+    document.getElementById('randomBottleIcon').onclick = async function() {
       const randomThoughtEl = document.getElementById('randomThought');
       if (!randomThoughtEl) return;
       randomThoughtEl.classList.add('hidden');
