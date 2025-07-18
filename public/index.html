@@ -445,7 +445,7 @@
       try {
         const thoughtDoc = await db.collection("thoughts").doc(thoughtId).get();
         if (!thoughtDoc.exists) {
-          alert("Error: No se puede responder a un pensamiento que no existe en la base de datos.");
+          alert("Error: No se puede responder a este pensamiento.");
           btn.disabled = false;
           textarea.disabled = false;
           return;
@@ -475,7 +475,6 @@
 
     // ---- MOSTRAR RESPUESTAS DE UN PENSAMIENTO ----
     async function mostrarRespuestas(thoughtId, respuestasDiv) {
-      if (thoughtId.startsWith('simulada_')) return; // No cargar respuestas para simulaciones
       respuestasDiv.innerHTML = '';
       try {
         const snapshot = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "asc").get();
@@ -507,22 +506,12 @@
       try {
         const snapshot = await db.collection("thoughts").orderBy("ts", "desc").get();
         const docs = snapshot.docs;
-        // INICIO: Si está vacío, poblar con simulaciones
+        
         if (docs.length === 0) {
-          // Frases simuladas de ejemplo (puedes extender este array)
-          const frasesSimuladas = window.frasesSimuladasEjemplo || [];
-          let simuladas = [];
-          for (let i=0; i<frasesSimuladas.length; i++) {
-            simuladas.push({
-              data: () => frasesSimuladas[i],
-              id: "simulada_"+i
-            });
-          }
-          mostrarGlobalThoughtsSimulados(simuladas, page, globalThoughts, globalPagination);
-          globalMaxPages = Math.max(1, Math.ceil(simuladas.length/PAGE_SIZE));
-          return;
+            globalThoughts.innerHTML = '<p class="text-sm font-medium text-blue-900 opacity-75">Aún no hay pensamientos. ¡Sé el primero en lanzar uno al mundo!</p>';
+            return;
         }
-        // FIN SIMULACIÓN
+
         globalMaxPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
         page = Math.max(1, Math.min(page, globalMaxPages));
         globalPage = page;
@@ -544,7 +533,7 @@
               ${
                 data.user !== getAnonUserId()
                 ? `<button class="reply-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>`
-                : `<span class="text-xs text-gray-400">No puedes responder a tu propio pensamiento</span>`
+                : `<span class="text-xs text-gray-400">Es tu propio pensamiento</span>`
               }
             </div>
             <div class="respuestas mt-2"></div>
@@ -565,42 +554,6 @@
         }
       } catch (e) {
         globalThoughts.innerHTML = '<p class="text-sm font-medium text-red-900 opacity-75">Error al cargar pensamientos globales.</p>';
-      }
-    }
-
-    // Mostrar pensamientos simulados si la BD está vacía
-    function mostrarGlobalThoughtsSimulados(simuladas, page, globalThoughts, globalPagination) {
-      globalMaxPages = Math.max(1, Math.ceil(simuladas.length / PAGE_SIZE));
-      page = Math.max(1, Math.min(page, globalMaxPages));
-      globalPage = page;
-      const start = (page - 1) * PAGE_SIZE;
-      const items = simuladas.slice(start, start + PAGE_SIZE);
-      globalThoughts.innerHTML = '';
-      for (let item of items) {
-        const data = item.data();
-        const thoughtId = item.id;
-        const card = document.createElement('div');
-        card.className = 'p-4 bg-white rounded-lg shadow-sm';
-        card.innerHTML = `
-          <div class="flex items-center space-x-2 mb-2">
-            <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
-          </div>
-          <p class="font-medium">${data.text}</p>
-          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
-          <div class="mt-2">
-            <button class="reply-btn" disabled title="Las respuestas se activan cuando hay pensamientos reales.">💬 Responder</button>
-          </div>
-          <div class="respuestas mt-2"></div>
-          <div class="caja-respuesta mt-2 hidden"></div>
-        `;
-        globalThoughts.appendChild(card);
-      }
-      if (globalPagination) {
-        globalPagination.innerHTML = `
-          <button onclick="loadGlobalThoughts(${globalPage-1})" ${globalPage<=1?'disabled':''}>Anterior</button>
-          <span>Página ${globalPage} de ${globalMaxPages}</span>
-          <button onclick="loadGlobalThoughts(${globalPage+1})" ${globalPage>=globalMaxPages?'disabled':''}>Siguiente</button>
-        `;
       }
     }
 
@@ -717,13 +670,7 @@
     async function loadGlobalCount() {
       try {
         const snapshot = await db.collection("thoughts").get();
-        const countEl = document.getElementById('globalCountNum');
-        if (snapshot.size === 0) {
-          const simulatedCount = window.frasesSimuladasEjemplo ? window.frasesSimuladasEjemplo.length : 0;
-          countEl.textContent = simulatedCount;
-        } else {
-          countEl.textContent = snapshot.size;
-        }
+        document.getElementById('globalCountNum').textContent = snapshot.size;
       } catch (e) {
         document.getElementById('globalCountNum').textContent = "?";
       }
@@ -948,145 +895,6 @@
 
     // Auto-check de notificaciones cada 40s
     setInterval(() => { checkNewReplies(); }, 40000);
-
-    // ---- PENSAMIENTOS SIMULADOS ----
-    // Puedes modificar, agregar o quitar frases a gusto. Ejemplo para AR, ES, MX y CO:
-    window.frasesSimuladasEjemplo = [
-      {
-        text: "Che, ¿alguien más tiene días en los que el mate no alcanza para levantar el ánimo? 😂 Hoy fue uno de esos. Pero igual, mañana será otro día.",
-        country: "AR",
-        user: "anon-argentino",
-        ts: Date.now() - 1000*60*60*24*2 // hace 2 días
-      },
-      {
-        text: "Hoy en el bondi me crucé a una señora que me sonrió sin motivo. Esas cosas raras que te dejan pensando todo el día.",
-        country: "AR",
-        user: "anon-argentino",
-        ts: Date.now() - 1000*60*60*22 // hace 22 horas
-      },
-      {
-        text: "¿Por qué cuando llueve en Buenos Aires nadie maneja bien? Es como si se olvidaran cómo funciona todo. 😂",
-        country: "AR",
-        user: "anon-argentino",
-        ts: Date.now() - 1000*60*60*35 // hace 35 horas
-      },
-      {
-        text: "Hoy he salido a la calle y me ha dado toda la pereza socializar. ¿A alguien más le pasa o soy yo? A veces sólo quiero desaparecer entre la gente.",
-        country: "ES",
-        user: "anon-españa",
-        ts: Date.now() - 1000*60*60*20 // hace 20 horas
-      },
-      {
-        text: "En serio, ¿por qué siempre que digo 'una caña' terminan siendo tres? Esto es un bucle. Y claro, mañana a currar como si nada.",
-        country: "ES",
-        user: "anon-españa",
-        ts: Date.now() - 1000*60*60*28 // hace 28 horas
-      },
-      {
-        text: "Mi madre me ha vuelto a preguntar si ya tengo trabajo fijo. Spoiler: no. Pero le sonrío igual.",
-        country: "ES",
-        user: "anon-españa",
-        ts: Date.now() - 1000*60*60*60 // hace 2.5 días
-      },
-      {
-        text: "Hoy mi abuela hizo chilaquiles y neta, no hay mejor remedio para el mal de amores que la comida de la abuela. 😋",
-        country: "MX",
-        user: "anon-mex",
-        ts: Date.now() - 1000*60*60*6 // hace 6 horas
-      },
-      {
-        text: "Cuando llego al Oxxo y no hay pan dulce, siento que el universo me está trolleando. ¿A alguien más le pasa?",
-        country: "MX",
-        user: "anon-mex",
-        ts: Date.now() - 1000*60*60*15 // hace 15 horas
-      },
-      {
-        text: "Confieso que a veces le hablo a mi perro como si me entendiera todo. Y creo que sí me entiende.",
-        country: "MX",
-        user: "anon-mex",
-        ts: Date.now() - 1000*60*60*11 // hace 11 horas
-      },
-      {
-        text: "Hoy el tinto me supo a gloria, literal, me salvó del madrugón. En Bogotá el café es casi religión.",
-        country: "CO",
-        user: "anon-col",
-        ts: Date.now() - 1000*60*60*36 // hace 36 horas
-      },
-      {
-        text: "Me gustaría vivir un día sin trancón, pero bueno, soñar no cuesta nada. Bogotá y sus trancones eternos.",
-        country: "CO",
-        user: "anon-col",
-        ts: Date.now() - 1000*60*60*48 // hace 2 días
-      },
-      {
-        text: "¿Será que algún día aprenderé a bailar salsa bien? Por ahora, solo hago el intento y me río de mí mismo.",
-        country: "CO",
-        user: "anon-col",
-        ts: Date.now() - 1000*60*60*3 // hace 3 horas
-      },
-      {
-        text: "A veces uno sólo quiere escribir y que nadie lo lea. Pero si alguien llegó hasta acá, que sepa que hoy no fue un gran día, pero tampoco fue el peor.",
-        country: "AR",
-        user: "anon-argentino",
-        ts: Date.now() - 1000*60*60*50 // hace 50 horas
-      },
-      {
-        text: "Hoy me di cuenta de que llevo años guardando mensajes en borradores que jamás enviaré. Quizás este sea uno más, pero al menos aquí sale al mar.",
-        country: "ES",
-        user: "anon-españa",
-        ts: Date.now() - 1000*60*60*42
-      },
-      {
-        text: "Amo los atardeceres en mi ciudad, aunque el tráfico esté del nabo. A veces creo que podría escribir un libro solo con lo que pienso mientras manejo.",
-        country: "MX",
-        user: "anon-mex",
-        ts: Date.now() - 1000*60*60*19
-      },
-      {
-        text: "Echo de menos las noches de terraceo con mis colegas, pero toca sobrevivir al curro otro día más. España y sus contradicciones.",
-        country: "ES",
-        user: "anon-españa",
-        ts: Date.now() - 1000*60*60*110
-      },
-      {
-        text: "Hoy la lluvia me hizo pensar en viejos recuerdos. Es impresionante cómo los olores pueden hacerte viajar en el tiempo.",
-        country: "AR",
-        user: "anon-argentino",
-        ts: Date.now() - 1000*60*60*55
-      },
-      {
-        text: "Hoy fue el típico día en que todo sale al revés, pero igual, aquí ando, escribiendo esto como terapia anónima.",
-        country: "MX",
-        user: "anon-mex",
-        ts: Date.now() - 1000*60*60*7
-      },
-      // Simulaciones largas (hasta 500 caracteres)
-      {
-        text: "A veces siento que me paso la vida esperando algo que no sé si va a llegar, pero igual sigo, porque de eso se trata, ¿no? De ir avanzando, aunque sea a ciegas, aunque nadie te aplauda, aunque a veces ni vos mismo sepas el porqué. Me gustaría pensar que alguien, en algún lugar, entiende esto. Y si no, bueno, al menos lo escribí acá y ya está.",
-        country: "AR",
-        user: "anon-argentino",
-        ts: Date.now() - 1000*60*60*90
-      },
-      {
-        text: "Hoy vi a una pareja mayor darse la mano en la plaza y me llenó de esperanza, porque en un mundo en el que todo parece tan fugaz, tan de usar y tirar, ver a dos personas que todavía se eligen después de años me hace creer que algo de magia queda. Ojalá todos tengamos a alguien con quien compartir silencios y también risas.",
-        country: "ES",
-        user: "anon-españa",
-        ts: Date.now() - 1000*60*60*130
-      },
-      {
-        text: "No sé si escribir esto sirve de algo, pero me siento menos solo sabiendo que puede que alguien lea esto, que tal vez ni siquiera hable mi idioma, pero que en algún rincón del mundo, por un segundo, nuestras vidas se crucen a través de un pensamiento perdido en el mar digital.",
-        country: "CO",
-        user: "anon-col",
-        ts: Date.now() - 1000*60*60*5
-      },
-      {
-        text: "Hoy no tengo nada profundo que decir, solo vine a desahogarme un rato. Si llegaste hasta acá, ojalá tengas un día mejor que el mío, aunque sea por poquito. 😅",
-        country: "MX",
-        user: "anon-mex",
-        ts: Date.now() - 1000*60*60*2
-      }
-    ];
-    // ---- FIN SIMULACIONES ----
 
   </script>
 </body>
