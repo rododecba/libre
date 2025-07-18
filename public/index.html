@@ -182,8 +182,32 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="badwords.js"></script>
   <script>
+    // Lista de palabras ofensivas
+    window.contienePalabraOfensiva = function(texto) {
+      const palabrasOfensivas = [
+        "puta", "puto", "marica", "maricón", "joto", "maricon", "perra", "zorra",
+        "negro", "negra", "indio", "judio", "sudaca", "inmigrante", "moro", "gitano",
+        "gordo", "gorda", "retrasado", "mongólico", "autista", "mongolo", "mongolico",
+        "imbécil", "imbecil", "idiota", "subnormal", "retrasada", "discapacitado",
+        "prostituta", "prost", "gay", "lesbiana", "homosexual", "heterosexual", "bisexual",
+        "travesti", "transexual", "trans", "feminazi", "machista", "feminista", "hembrista"
+      ];
+
+      // Convertir a minúsculas y eliminar acentos
+      const textoNormalizado = texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      
+      for (let palabra of palabrasOfensivas) {
+        // Buscar la palabra como palabra completa usando regex
+        const regex = new RegExp(`\\b${palabra}\\b`, 'i');
+        if (regex.test(textoNormalizado)) {
+          alert("Tu mensaje contiene lenguaje que puede ser ofensivo. Por favor, revísalo y modifícalo para que respete a todos.");
+          return true;
+        }
+      }
+      return false;
+    };
+    
     // ---- FRASES INSPIRADORAS ----
     const FRASES_INSPIRADORAS = [
       "La libertad es el oxígeno del alma. – Moshe Dayan",
@@ -1050,4 +1074,22 @@
       loadGlobalThoughts(globalPage);
       loadCountryRanking();
       loadMap();
-      loadEsta
+      loadEstadisticasAnonimas();
+      // Chequear notificaciones de respuestas
+      setTimeout(checkNewReplies, 1500);
+      
+      // Mostrar la pestaña de escritura por defecto
+      showTab('write');
+    };
+
+    // Auto-check de notificaciones cada 40s
+    setInterval(() => { checkNewReplies(); }, 40000);
+
+    // ---- PENSAMIENTOS SIMULADOS ----
+    // Puedes modificar, agregar o quitar frases a gusto
+    window.frasesSimuladasEjemplo = [
+      {
+        text: "Che, ¿alguien más tiene días en los que el mate no alcanza para levantar el ánimo? 😂 Hoy fue uno de esos. Pero igual, mañana será otro día.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000
