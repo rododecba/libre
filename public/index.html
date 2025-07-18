@@ -50,39 +50,6 @@
       .estadisticas-anonimas { font-size: 0.97rem; }
     }
   </style>
-  
-  <!-- IMPORTANTE: Definir showTab al principio para que esté disponible globalmente -->
-  <script>
-    // Definir showTab como una función global para que esté disponible inmediatamente
-    function showTab(tabId) {
-      const sections = ['write', 'feed', 'mine', 'capsule', 'about'];
-      sections.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-      });
-      const active = document.getElementById(tabId);
-      if (active) active.classList.remove('hidden');
-      
-      // Solo llamar a estas funciones si están definidas (serán definidas más tarde en el script principal)
-      if(tabId=='feed' && window.loadGlobalCount) { 
-        window.loadGlobalCount(); 
-        window.loadGlobalThoughts(window.globalPage); 
-        window.loadCountryRanking(); 
-        window.loadMap(); 
-        window.loadEstadisticasAnonimas(); 
-      }
-      if(tabId=='mine' && window.loadMyThoughts) { 
-        window.loadMyThoughts(window.myPage); 
-        window.markRepliesAsSeen(); 
-      }
-      if(tabId=='capsule' && window.loadMyCapsules) { 
-        window.loadMyCapsules(); 
-      }
-      if(tabId=='write' && window.onShowWriteTab) { 
-        window.onShowWriteTab(); 
-      }
-    }
-  </script>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col items-center p-4">
   <header class="mb-6 text-center w-full max-w-xl">
@@ -97,14 +64,14 @@
   </header>
 
   <nav class="w-full max-w-xl flex justify-around mb-6 text-sm relative">
-    <button id="btn-write" class="hover:underline">Escribir</button>
-    <button id="btn-feed" class="hover:underline">Pensamientos globales</button>
-    <button id="btn-mine" class="hover:underline relative">
+    <button onclick="showTab('write')" class="hover:underline">Escribir</button>
+    <button onclick="showTab('feed')" class="hover:underline">Pensamientos globales</button>
+    <button onclick="showTab('mine')" class="hover:underline relative">
       Mis pensamientos
       <span id="mineTabNotification" class="badge-notif hidden">¡Nuevo!</span>
     </button>
-    <button id="btn-capsule" class="hover:underline">Cápsula del tiempo</button>
-    <button id="btn-about" class="hover:underline">Acerca de</button>
+    <button onclick="showTab('capsule')" class="hover:underline">Cápsula del tiempo</button>
+    <button onclick="showTab('about')" class="hover:underline">Acerca de</button>
   </nav>
 
   <section id="feed" class="w-full max-w-xl mb-8 hidden">
@@ -131,8 +98,8 @@
         <h2 class="text-2xl font-semibold text-green-800">Historial de mensajes</h2>
       </div>
       <div class="flex mb-3">
-        <button id="export-anon-btn" class="px-3 py-1 rounded bg-gray-300 mr-2 text-sm">Exportar ID</button>
-        <button id="import-anon-btn" class="px-3 py-1 rounded bg-gray-300 text-sm">Importar ID</button>
+        <button onclick="exportAnonId()" class="px-3 py-1 rounded bg-gray-300 mr-2 text-sm">Exportar ID</button>
+        <button onclick="importAnonId()" class="px-3 py-1 rounded bg-gray-300 text-sm">Importar ID</button>
       </div>
       <div class="mb-4 text-xs text-green-900 opacity-60">Para mantener tu historial aunque borres caché o cambies de dispositivo, exporta tu ID y guárdalo en un lugar seguro. Sólo tú lo conoces.</div>
       <div id="myThoughts" class="space-y-4">
@@ -169,7 +136,7 @@
         <summary class="font-medium cursor-pointer">¿Por qué Libre?</summary>
         <ul class="pl-0 text-sm font-medium text-yellow-0 text-justify">
           <li>🔒 <b>Anonimato radical:</b> Nadie te sigue, nadie sabe quién eres. Tu identidad no importa, solo tu pensamiento.</li>
-          <li>🚫 <b>Sin validación social:</b> No hay "me gusta", ni seguidores, ni comentarios públicos que te condicionen. La única interacción es lanzar tu botella (pensamiento) y, si alguien la encuentra, puede responderte de forma igual de anónima.</li>
+          <li>🚫 <b>Sin validación social:</b> No hay “me gusta”, ni seguidores, ni comentarios públicos que te condicionen. La única interacción es lanzar tu botella (pensamiento) y, si alguien la encuentra, puede responderte de forma igual de anónima.</li>
           <li>🕊️ <b>Libertad de expresión pura:</b> Puedes escribir lo que quieras, sin miedo a juicios, sin presión social. Es tu espacio para soltar lo que llevas dentro, sin esperar nada a cambio.</li>
           <li>🌎 <b>Conexión humana inesperada:</b> Tu mensaje puede llegar a cualquier persona, en cualquier país, en cualquier momento. Es un acto de fe en la humanidad y en el azar.</li>
           <li>💭 <b>Sin historial, sin reputación:</b> Olvida el pasado. Aquí nadie construye un perfil, ni una imagen. Cada mensaje es un instante aislado, sin contexto previo ni futuro.</li>
@@ -215,32 +182,8 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="badwords.js"></script>
   <script>
-    // Lista de palabras ofensivas
-    window.contienePalabraOfensiva = function(texto) {
-      const palabrasOfensivas = [
-        "puta", "puto", "marica", "maricón", "joto", "maricon", "perra", "zorra",
-        "negro", "negra", "indio", "judio", "sudaca", "inmigrante", "moro", "gitano",
-        "gordo", "gorda", "retrasado", "mongólico", "autista", "mongolo", "mongolico",
-        "imbécil", "imbecil", "idiota", "subnormal", "retrasada", "discapacitado",
-        "prostituta", "prost", "gay", "lesbiana", "homosexual", "heterosexual", "bisexual",
-        "travesti", "transexual", "trans", "feminazi", "machista", "feminista", "hembrista"
-      ];
-
-      // Convertir a minúsculas y eliminar acentos
-      const textoNormalizado = texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      
-      for (let palabra of palabrasOfensivas) {
-        // Buscar la palabra como palabra completa usando regex
-        const regex = new RegExp(`\\b${palabra}\\b`, 'i');
-        if (regex.test(textoNormalizado)) {
-          alert("Tu mensaje contiene lenguaje que puede ser ofensivo. Por favor, revísalo y modifícalo para que respete a todos.");
-          return true;
-        }
-      }
-      return false;
-    };
-    
     // ---- FRASES INSPIRADORAS ----
     const FRASES_INSPIRADORAS = [
       "La libertad es el oxígeno del alma. – Moshe Dayan",
@@ -260,11 +203,6 @@
       "A veces lo más importante es soltar."
     ];
 
-    window.onShowWriteTab = function() {
-      mostrarFraseInspiradoraEnTextarea();
-      document.getElementById('textarea').focus();
-    }
-
     function mostrarFraseInspiradoraEnTextarea() {
       const frase = FRASES_INSPIRADORAS[Math.floor(Math.random() * FRASES_INSPIRADORAS.length)];
       const textarea = document.getElementById('textarea');
@@ -272,6 +210,10 @@
     }
 
     mostrarFraseInspiradoraEnTextarea();
+    function onShowWriteTab() {
+      mostrarFraseInspiradoraEnTextarea();
+      document.getElementById('textarea').focus();
+    }
 
     // ---- FORMATO FECHA ----
     function formatearFecha(ts) {
@@ -344,12 +286,12 @@
     }
 
     // ---- EXPORTAR/IMPORTAR IDENTIFICADOR ANÓNIMO ----
-    window.exportAnonId = function() {
+    function exportAnonId() {
       const id = getAnonUserId();
       window.prompt("Este es tu identificador anónimo. Cópialo y guárdalo en un lugar seguro para restaurar tu historial cuando quieras:", id);
     }
 
-    window.importAnonId = function() {
+    function importAnonId() {
       const newId = window.prompt("Pega aquí tu identificador anónimo guardado anteriormente:");
       if (newId && /^anon-[a-z0-9]{15}$/.test(newId)) {
         localStorage.setItem("libre_anon_id", newId);
@@ -359,10 +301,6 @@
         alert("El identificador no es válido.");
       }
     }
-
-    // Conectar los botones de exportar/importar con las funciones
-    document.getElementById('export-anon-btn').addEventListener('click', exportAnonId);
-    document.getElementById('import-anon-btn').addEventListener('click', importAnonId);
 
     // ---- DETECTAR PAÍS ----
     let userCountry = "Desconocido";
@@ -379,12 +317,38 @@
     }
     detectCountry();
 
+    // ---- MODO "BOTELLA AL MAR" ALEATORIO ----
+    document.getElementById('randomBottleBtn').onclick = async function() {
+      const randomThoughtEl = document.getElementById('randomThought');
+      if (!randomThoughtEl) return;
+      randomThoughtEl.classList.add('hidden');
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const docs = snapshot.docs;
+        if (docs.length === 0) {
+          randomThoughtEl.textContent = "No hay pensamientos aún.";
+          randomThoughtEl.classList.remove('hidden');
+          return;
+        }
+        const idx = Math.floor(Math.random() * docs.length);
+        const data = docs[idx].data();
+        randomThoughtEl.innerHTML =
+          `<div class="flex items-center space-x-2 mb-2">
+            <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
+          </div>
+          <p class="font-medium">${data.text}</p>
+          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
+        randomThoughtEl.classList.remove('hidden');
+      } catch (e) {
+        randomThoughtEl.textContent = "Error al cargar pensamiento aleatorio.";
+        randomThoughtEl.classList.remove('hidden');
+      }
+    };
+
     // ---- PAGINACIÓN ----
-    window.PAGE_SIZE = 10;
-    window.globalPage = 1;
-    window.globalMaxPages = 1;
-    window.myPage = 1;
-    window.myMaxPages = 1;
+    const PAGE_SIZE = 10;
+    let globalPage = 1, globalMaxPages = 1;
+    let myPage = 1, myMaxPages = 1;
 
     // ---- SISTEMA DE NOTIFICACIONES BÁSICO ----
     function getLastSeenReplyTimestamp(thoughtId) {
@@ -393,7 +357,7 @@
     function setLastSeenReplyTimestamp(thoughtId, ts) {
       localStorage.setItem("libre_last_seen_reply_" + thoughtId, String(ts));
     }
-    window.checkNewReplies = async function() {
+    async function checkNewReplies() {
       try {
         const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).get();
         let hasNewReply = false;
@@ -416,9 +380,8 @@
         // Silenciar errores
       }
     }
-    
     // Marca como visto al entrar a "Mis pensamientos"
-    window.markRepliesAsSeen = async function() {
+    async function markRepliesAsSeen() {
       try {
         const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).get();
         for (const doc of snapshot.docs) {
@@ -435,7 +398,7 @@
     }
 
     // ---- ESCRIBIR PENSAMIENTO ----
-    document.getElementById('sendBtn').addEventListener('click', async function() {
+    document.getElementById('sendBtn').onclick = async function() {
       if (!countryReady) {
         alert("Cargando país, por favor espera un momento e intenta de nuevo.");
         return;
@@ -467,7 +430,7 @@
       } catch (e) {
         alert("Error al guardar el pensamiento. Intenta de nuevo.");
       }
-    });
+    };
 
     // ---- RESPONDER UN PENSAMIENTO ----
     async function enviarRespuesta(thoughtId, replyText, respuestasDiv, btn, textarea) {
@@ -504,24 +467,6 @@
     async function mostrarRespuestas(thoughtId, respuestasDiv) {
       respuestasDiv.innerHTML = '';
       try {
-        // Si es un pensamiento simulado, usar respuestas simuladas
-        if (thoughtId.startsWith("simulada_")) {
-          const idx = parseInt(thoughtId.split("_")[1]);
-          const simulados = window.frasesSimuladasEjemplo || [];
-          if (idx >= 0 && idx < simulados.length && simulados[idx].replies) {
-            simulados[idx].replies.forEach(reply => {
-              const replyCard = document.createElement('div');
-              replyCard.className = 'reply-box';
-              replyCard.innerHTML = `
-                <div><span class="font-medium">${reply.text}</span></div>
-                <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(reply.ts)}</div>
-              `;
-              respuestasDiv.appendChild(replyCard);
-            });
-          }
-          return;
-        }
-
         const snapshot = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "asc").get();
         if (snapshot.empty) {
           respuestasDiv.innerHTML = '';
@@ -543,7 +488,7 @@
     }
 
     // ---- GLOBAL THOUGHTS ----
-    window.loadGlobalThoughts = async function(page = 1) {
+    async function loadGlobalThoughts(page = 1) {
       const globalThoughts = document.getElementById('globalThoughts');
       const globalPagination = document.getElementById('globalPagination');
       if (!globalThoughts) return;
@@ -553,7 +498,7 @@
         const docs = snapshot.docs;
         // INICIO: Si está vacío, poblar con simulaciones
         if (docs.length === 0) {
-          // Frases simuladas de ejemplo
+          // Frases simuladas de ejemplo (puedes extender este array)
           const frasesSimuladas = window.frasesSimuladasEjemplo || [];
           let simuladas = [];
           for (let i=0; i<frasesSimuladas.length; i++) {
@@ -562,61 +507,11 @@
               id: "simulada_"+i
             });
           }
-          
-          // Actualizar contador global
-          document.getElementById('globalCountNum').textContent = frasesSimuladas.length;
-          
+          mostrarGlobalThoughtsSimulados(simuladas, page, globalThoughts, globalPagination);
           globalMaxPages = Math.max(1, Math.ceil(simuladas.length/PAGE_SIZE));
-          page = Math.max(1, Math.min(page, globalMaxPages));
-          globalPage = page;
-
-          const start = (page - 1) * PAGE_SIZE;
-          const items = simuladas.slice(start, start + PAGE_SIZE);
-          
-          for (let doc of items) {
-            const data = doc.data();
-            const thoughtId = doc.id;
-            const card = document.createElement('div');
-            card.className = 'p-4 bg-white rounded-lg shadow-sm';
-            
-            // Ver si tiene respuestas simuladas
-            const tieneRespuestas = data.replies && data.replies.length > 0;
-            
-            card.innerHTML = `
-              <div class="flex items-center space-x-2 mb-2">
-                <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
-              </div>
-              <p class="font-medium">${data.text}</p>
-              <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
-              <div class="mt-2">
-                <button class="reply-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>
-              </div>
-              <div class="respuestas mt-2"></div>
-              <div class="caja-respuesta mt-2 hidden"></div>
-            `;
-            globalThoughts.appendChild(card);
-            
-            // Mostrar respuestas si las tiene
-            if (tieneRespuestas) {
-              const respuestasDiv = card.querySelector('.respuestas');
-              mostrarRespuestas(thoughtId, respuestasDiv);
-            }
-          }
-          
-          if (globalPagination) {
-            globalPagination.innerHTML = `
-              <button onclick="loadGlobalThoughts(${globalPage-1})" ${globalPage<=1?'disabled':''}>Anterior</button>
-              <span>Página ${globalPage} de ${globalMaxPages}</span>
-              <button onclick="loadGlobalThoughts(${globalPage+1})" ${globalPage>=globalMaxPages?'disabled':''}>Siguiente</button>
-            `;
-          }
           return;
         }
         // FIN SIMULACIÓN
-        
-        // Actualizar contador global con datos reales
-        document.getElementById('globalCountNum').textContent = docs.length;
-        
         globalMaxPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
         page = Math.max(1, Math.min(page, globalMaxPages));
         globalPage = page;
@@ -662,47 +557,45 @@
       }
     }
 
-    // ---- MODO "BOTELLA AL MAR" ALEATORIO ----
-    document.getElementById('randomBottleBtn').addEventListener('click', async function() {
-      const randomThoughtEl = document.getElementById('randomThought');
-      if (!randomThoughtEl) return;
-      randomThoughtEl.classList.add('hidden');
-      try {
-        const snapshot = await db.collection("thoughts").get();
-        const docs = snapshot.docs;
-        if (docs.length === 0) {
-          // Usar simulados en caso de que no haya reales
-          const simulados = window.frasesSimuladasEjemplo || [];
-          if (simulados.length === 0) {
-            randomThoughtEl.textContent = "No hay pensamientos aún.";
-            randomThoughtEl.classList.remove('hidden');
-            return;
-          }
-          const idx = Math.floor(Math.random() * simulados.length);
-          const data = simulados[idx];
-          randomThoughtEl.innerHTML =
-            `<div class="flex items-center space-x-2 mb-2">
-              <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
-            </div>
-            <p class="font-medium">${data.text}</p>
-            <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
-          randomThoughtEl.classList.remove('hidden');
-          return;
-        }
-        const idx = Math.floor(Math.random() * docs.length);
-        const data = docs[idx].data();
-        randomThoughtEl.innerHTML =
-          `<div class="flex items-center space-x-2 mb-2">
+    // Mostrar pensamientos simulados si la BD está vacía
+    function mostrarGlobalThoughtsSimulados(simuladas, page, globalThoughts, globalPagination) {
+      globalMaxPages = Math.max(1, Math.ceil(simuladas.length / PAGE_SIZE));
+      page = Math.max(1, Math.min(page, globalMaxPages));
+      globalPage = page;
+      const start = (page - 1) * PAGE_SIZE;
+      const items = simuladas.slice(start, start + PAGE_SIZE);
+      globalThoughts.innerHTML = '';
+      for (let item of items) {
+        const data = item.data();
+        const thoughtId = item.id;
+        const card = document.createElement('div');
+        card.className = 'p-4 bg-white rounded-lg shadow-sm';
+        card.innerHTML = `
+          <div class="flex items-center space-x-2 mb-2">
             <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
           </div>
           <p class="font-medium">${data.text}</p>
-          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
-        randomThoughtEl.classList.remove('hidden');
-      } catch (e) {
-        randomThoughtEl.textContent = "Error al cargar pensamiento aleatorio.";
-        randomThoughtEl.classList.remove('hidden');
+          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
+          <div class="mt-2">
+            ${
+              data.user !== getAnonUserId()
+              ? `<button class="reply-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>`
+              : `<span class="text-xs text-gray-400">No puedes responder a tu propio pensamiento</span>`
+            }
+          </div>
+          <div class="respuestas mt-2"></div>
+          <div class="caja-respuesta mt-2 hidden"></div>
+        `;
+        globalThoughts.appendChild(card);
       }
-    });
+      if (globalPagination) {
+        globalPagination.innerHTML = `
+          <button onclick="loadGlobalThoughts(${globalPage-1})" ${globalPage<=1?'disabled':''}>Anterior</button>
+          <span>Página ${globalPage} de ${globalMaxPages}</span>
+          <button onclick="loadGlobalThoughts(${globalPage+1})" ${globalPage>=globalMaxPages?'disabled':''}>Siguiente</button>
+        `;
+      }
+    }
 
     // ---- MOSTRAR/OCULTAR CAJA DE RESPUESTA ----
     window.mostrarCajaRespuesta = function(thoughtId, btn) {
@@ -725,52 +618,16 @@
       const textarea = caja.querySelector('textarea');
       const enviarBtn = caja.querySelector('.enviarRespuestaBtn');
       const respuestasDiv = card.querySelector('.respuestas');
-      
-      // Si es un pensamiento simulado
-      if (thoughtId.startsWith("simulada_")) {
-        enviarBtn.onclick = async function() {
-          const replyText = textarea.value.trim();
-          if (!replyText) return;
-          if (window.contienePalabraOfensiva(replyText)) return;
-          
-          // Agregar respuesta simulada
-          const idx = parseInt(thoughtId.split("_")[1]);
-          const simulados = window.frasesSimuladasEjemplo || [];
-          
-          if (idx >= 0 && idx < simulados.length) {
-            if (!simulados[idx].replies) {
-              simulados[idx].replies = [];
-            }
-            
-            simulados[idx].replies.push({
-              text: replyText,
-              ts: Date.now(),
-              user: getAnonUserId()
-            });
-            
-            // Mostrar respuestas actualizadas
-            await mostrarRespuestas(thoughtId, respuestasDiv);
-            caja.classList.add('hidden');
-            caja.innerHTML = '';
-          }
-        };
-      } else {
-        // Pensamiento real
-        enviarBtn.onclick = async function() {
-          await enviarRespuesta(thoughtId, textarea.value, respuestasDiv, enviarBtn, textarea);
-          caja.classList.add('hidden');
-          caja.innerHTML = '';
-        };
-      }
+      enviarBtn.onclick = async function() {
+        await enviarRespuesta(thoughtId, textarea.value, respuestasDiv, enviarBtn, textarea);
+        caja.classList.add('hidden');
+        caja.innerHTML = '';
+      };
     };
 
     // ---- FUNCION GUARDAR ECO LECTURA ----
     async function registrarEco(thoughtId) {
       if (!countryReady) return;
-      
-      // No registrar ecos para pensamientos simulados
-      if (thoughtId.startsWith("simulada_")) return;
-      
       try {
         const ecoRef = db.collection("thoughts").doc(thoughtId).collection("eco").doc(userCountry);
         await db.runTransaction(async (tx) => {
@@ -787,7 +644,7 @@
     }
 
     // ---- MI HISTORIAL, CON ECO GLOBAL ----
-    window.loadMyThoughts = async function(page = 1) {
+    async function loadMyThoughts(page = 1) {
       const myThoughts = document.getElementById('myThoughts');
       const myPagination = document.getElementById('myPagination');
       if (!myThoughts) return;
@@ -850,41 +707,24 @@
     }
 
     // ---- GLOBAL COUNT ----
-    window.loadGlobalCount = async function() {
+    async function loadGlobalCount() {
       try {
         const snapshot = await db.collection("thoughts").get();
-        // Si no hay pensamientos reales, usar simulados
-        if (snapshot.size === 0) {
-          const simulados = window.frasesSimuladasEjemplo || [];
-          document.getElementById('globalCountNum').textContent = simulados.length;
-        } else {
-          document.getElementById('globalCountNum').textContent = snapshot.size;
-        }
+        document.getElementById('globalCountNum').textContent = snapshot.size;
       } catch (e) {
         document.getElementById('globalCountNum').textContent = "?";
       }
     }
 
     // ---- RANKING DE PAÍSES ----
-    window.loadCountryRanking = async function() {
+    async function loadCountryRanking() {
       try {
         const snapshot = await db.collection("thoughts").get();
-        let countryCounts = {};
-        
-        // Si no hay pensamientos reales, usar simulados
-        if (snapshot.size === 0) {
-          const simulados = window.frasesSimuladasEjemplo || [];
-          simulados.forEach(pensamiento => {
-            const c = pensamiento.country || "Desconocido";
-            countryCounts[c] = (countryCounts[c] || 0) + 1;
-          });
-        } else {
-          snapshot.docs.forEach(doc => {
-            const c = doc.data().country || "Desconocido";
-            countryCounts[c] = (countryCounts[c] || 0) + 1;
-          });
-        }
-        
+        const countryCounts = {};
+        snapshot.docs.forEach(doc => {
+          const c = doc.data().country || "Desconocido";
+          countryCounts[c] = (countryCounts[c] || 0) + 1;
+        });
         const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
         let html = '<div class="mb-2 font-semibold text-purple-800">Ranking de países más activos:</div>';
         html += '<ul class="list-disc pl-4">';
@@ -899,7 +739,7 @@
     }
 
     // ---- ESTADÍSTICAS ANÓNIMAS ----
-    window.loadEstadisticasAnonimas = async function() {
+    async function loadEstadisticasAnonimas() {
       const el = document.getElementById('estadisticasAnonimas');
       if (!el) return;
       el.innerHTML = '<div class="titulo">Cargando estadísticas...</div>';
@@ -912,27 +752,15 @@
         let paisesSemana = new Set();
         let recordDia = { fecha: null, cantidad: 0 };
         let pensamientosPorDia = {};
-        
-        // Si no hay pensamientos reales, usar simulados
-        if (snapshot.size === 0) {
-          const simulados = window.frasesSimuladasEjemplo || [];
-          simulados.forEach(data => {
-            const fechaDoc = new Date(data.ts);
-            if (fechaDoc >= hoy) pensamientosHoy++;
-            if (fechaDoc >= inicioSemana) paisesSemana.add(data.country || "Desconocido");
-            const diaKey = fechaDoc.getFullYear() + "-" + (fechaDoc.getMonth()+1).toString().padStart(2,"0") + "-" + fechaDoc.getDate().toString().padStart(2,"0");
-            pensamientosPorDia[diaKey] = (pensamientosPorDia[diaKey] || 0) + 1;
-          });
-        } else {
-          snapshot.docs.forEach(doc => {
-            const data = doc.data();
-            const fechaDoc = new Date(data.ts);
-            if (fechaDoc >= hoy) pensamientosHoy++;
-            if (fechaDoc >= inicioSemana) paisesSemana.add(data.country || "Desconocido");
-            const diaKey = fechaDoc.getFullYear() + "-" + (fechaDoc.getMonth()+1).toString().padStart(2,"0") + "-" + fechaDoc.getDate().toString().padStart(2,"0");
-            pensamientosPorDia[diaKey] = (pensamientosPorDia[diaKey] || 0) + 1;
-          });
-        }
+
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const fechaDoc = new Date(data.ts);
+          if (fechaDoc >= hoy) pensamientosHoy++;
+          if (fechaDoc >= inicioSemana) paisesSemana.add(data.country || "Desconocido");
+          const diaKey = fechaDoc.getFullYear() + "-" + (fechaDoc.getMonth()+1).toString().padStart(2,"0") + "-" + fechaDoc.getDate().toString().padStart(2,"0");
+          pensamientosPorDia[diaKey] = (pensamientosPorDia[diaKey] || 0) + 1;
+        });
 
         for (const [dia, cantidad] of Object.entries(pensamientosPorDia)) {
           if (cantidad > recordDia.cantidad) {
@@ -954,7 +782,7 @@
     // ---- MAPA DE PENSAMIENTOS ----
     let map;
     let countryMarkers = {};
-    window.loadMap = async function() {
+    async function loadMap() {
       const countryCoords = {
         AR: {lat: -34, lng: -64},
         ES: {lat: 40, lng: -3},
@@ -977,21 +805,11 @@
 
       try {
         const snapshot = await db.collection("thoughts").get();
-        let countryCounts = {};
-        
-        // Si no hay pensamientos reales, usar simulados
-        if (snapshot.size === 0) {
-          const simulados = window.frasesSimuladasEjemplo || [];
-          simulados.forEach(data => {
-            const c = data.country || "Desconocido";
-            countryCounts[c] = (countryCounts[c] || 0) + 1;
-          });
-        } else {
-          snapshot.docs.forEach(doc => {
-            const c = doc.data().country || "Desconocido";
-            countryCounts[c] = (countryCounts[c] || 0) + 1;
-          });
-        }
+        const countryCounts = {};
+        snapshot.docs.forEach(doc => {
+          const c = doc.data().country || "Desconocido";
+          countryCounts[c] = (countryCounts[c] || 0) + 1;
+        });
 
         for (let [country, count] of Object.entries(countryCounts)) {
           let coords = countryCoords[country];
@@ -1011,7 +829,7 @@
     }
 
     // ---- CAPSULA DEL TIEMPO ----
-    document.getElementById('capsuleBtn').addEventListener('click', async function() {
+    document.getElementById('capsuleBtn').onclick = async function() {
       const date = document.getElementById('capsuleDate').value;
       const time = document.getElementById('capsuleTime').value;
       const msg = document.getElementById('capsuleMessage').value.trim();
@@ -1043,10 +861,10 @@
       } catch (e) {
         alert("Error al guardar la cápsula. Intenta de nuevo.");
       }
-    });
+    };
 
     // ---- Mostrar cápsulas desbloqueadas ----
-    window.loadMyCapsules = async function() {
+    async function loadMyCapsules() {
       const list = document.getElementById('capsulesList');
       if (!list) return;
       list.innerHTML = '';
@@ -1075,4 +893,193 @@
           list.innerHTML = '<div class="text-blue-900 text-sm opacity-70">No hay cápsulas desbloqueadas aún.</div>';
         }
       } catch (e) {
-        list.innerHTML = '<div class="text-red-
+        list.innerHTML = '<div class="text-red-700 text-sm">Error al cargar tus cápsulas.</div>';
+      }
+    }
+
+    // ---- TABS ----
+    function showTab(tabId) {
+      const sections = ['write', 'feed', 'mine', 'capsule', 'about'];
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      const active = document.getElementById(tabId);
+      if (active) active.classList.remove('hidden');
+      if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(globalPage); loadCountryRanking(); loadMap(); loadEstadisticasAnonimas(); }
+      if(tabId=='mine') { loadMyThoughts(myPage); markRepliesAsSeen(); }
+      if(tabId=='capsule') { loadMyCapsules(); }
+      if(tabId=='write') { onShowWriteTab(); }
+    }
+
+    // ---- LOGO ANIMACIÓN Y CARGA INICIAL ----
+    window.onload = function() {
+      const textLogo = document.getElementById('textLogo');
+      const imgLogo = document.getElementById('logolibre');
+      if (textLogo && imgLogo) {
+        textLogo.classList.remove('logo-hidden');
+        textLogo.classList.add('logo-shown');
+        imgLogo.classList.remove('visible');
+        setTimeout(() => {
+          textLogo.classList.remove('logo-shown');
+          textLogo.classList.add('logo-hidden');
+        }, 2000);
+        setTimeout(() => {
+          imgLogo.classList.add('visible');
+        }, 3500);
+      }
+      // Carga inicial
+      loadGlobalCount();
+      loadGlobalThoughts(globalPage);
+      loadCountryRanking();
+      loadMap();
+      loadEstadisticasAnonimas();
+      // Chequear notificaciones de respuestas
+      setTimeout(checkNewReplies, 1500);
+    };
+
+    // Auto-check de notificaciones cada 40s
+    setInterval(() => { checkNewReplies(); }, 40000);
+
+    // ---- PENSAMIENTOS SIMULADOS ----
+    // Puedes modificar, agregar o quitar frases a gusto. Ejemplo para AR, ES, MX y CO:
+    window.frasesSimuladasEjemplo = [
+      {
+        text: "Che, ¿alguien más tiene días en los que el mate no alcanza para levantar el ánimo? 😂 Hoy fue uno de esos. Pero igual, mañana será otro día.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*24*2 // hace 2 días
+      },
+      {
+        text: "Hoy en el bondi me crucé a una señora que me sonrió sin motivo. Esas cosas raras que te dejan pensando todo el día.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*22 // hace 22 horas
+      },
+      {
+        text: "¿Por qué cuando llueve en Buenos Aires nadie maneja bien? Es como si se olvidaran cómo funciona todo. 😂",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*35 // hace 35 horas
+      },
+      {
+        text: "Hoy he salido a la calle y me ha dado toda la pereza socializar. ¿A alguien más le pasa o soy yo? A veces sólo quiero desaparecer entre la gente.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*20 // hace 20 horas
+      },
+      {
+        text: "En serio, ¿por qué siempre que digo 'una caña' terminan siendo tres? Esto es un bucle. Y claro, mañana a currar como si nada.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*28 // hace 28 horas
+      },
+      {
+        text: "Mi madre me ha vuelto a preguntar si ya tengo trabajo fijo. Spoiler: no. Pero le sonrío igual.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*60 // hace 2.5 días
+      },
+      {
+        text: "Hoy mi abuela hizo chilaquiles y neta, no hay mejor remedio para el mal de amores que la comida de la abuela. 😋",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*6 // hace 6 horas
+      },
+      {
+        text: "Cuando llego al Oxxo y no hay pan dulce, siento que el universo me está trolleando. ¿A alguien más le pasa?",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*15 // hace 15 horas
+      },
+      {
+        text: "Confieso que a veces le hablo a mi perro como si me entendiera todo. Y creo que sí me entiende.",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*11 // hace 11 horas
+      },
+      {
+        text: "Hoy el tinto me supo a gloria, literal, me salvó del madrugón. En Bogotá el café es casi religión.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*36 // hace 36 horas
+      },
+      {
+        text: "Me gustaría vivir un día sin trancón, pero bueno, soñar no cuesta nada. Bogotá y sus trancones eternos.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*48 // hace 2 días
+      },
+      {
+        text: "¿Será que algún día aprenderé a bailar salsa bien? Por ahora, solo hago el intento y me río de mí mismo.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*3 // hace 3 horas
+      },
+      {
+        text: "A veces uno sólo quiere escribir y que nadie lo lea. Pero si alguien llegó hasta acá, que sepa que hoy no fue un gran día, pero tampoco fue el peor.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*50 // hace 50 horas
+      },
+      {
+        text: "Hoy me di cuenta de que llevo años guardando mensajes en borradores que jamás enviaré. Quizás este sea uno más, pero al menos aquí sale al mar.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*42
+      },
+      {
+        text: "Amo los atardeceres en mi ciudad, aunque el tráfico esté del nabo. A veces creo que podría escribir un libro solo con lo que pienso mientras manejo.",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*19
+      },
+      {
+        text: "Echo de menos las noches de terraceo con mis colegas, pero toca sobrevivir al curro otro día más. España y sus contradicciones.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*110
+      },
+      {
+        text: "Hoy la lluvia me hizo pensar en viejos recuerdos. Es impresionante cómo los olores pueden hacerte viajar en el tiempo.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*55
+      },
+      {
+        text: "Hoy fue el típico día en que todo sale al revés, pero igual, aquí ando, escribiendo esto como terapia anónima.",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*7
+      },
+      // Simulaciones largas (hasta 500 caracteres)
+      {
+        text: "A veces siento que me paso la vida esperando algo que no sé si va a llegar, pero igual sigo, porque de eso se trata, ¿no? De ir avanzando, aunque sea a ciegas, aunque nadie te aplauda, aunque a veces ni vos mismo sepas el porqué. Me gustaría pensar que alguien, en algún lugar, entiende esto. Y si no, bueno, al menos lo escribí acá y ya está.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*90
+      },
+      {
+        text: "Hoy vi a una pareja mayor darse la mano en la plaza y me llenó de esperanza, porque en un mundo en el que todo parece tan fugaz, tan de usar y tirar, ver a dos personas que todavía se eligen después de años me hace creer que algo de magia queda. Ojalá todos tengamos a alguien con quien compartir silencios y también risas.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*130
+      },
+      {
+        text: "No sé si escribir esto sirve de algo, pero me siento menos solo sabiendo que puede que alguien lea esto, que tal vez ni siquiera hable mi idioma, pero que en algún rincón del mundo, por un segundo, nuestras vidas se crucen a través de un pensamiento perdido en el mar digital.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*5
+      },
+      {
+        text: "Hoy no tengo nada profundo que decir, solo vine a desahogarme un rato. Si llegaste hasta acá, ojalá tengas un día mejor que el mío, aunque sea por poquito. 😅",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*2
+      }
+    ];
+    // ---- FIN SIMULACIONES ----
+
+  </script>
+</body>
+</html>
