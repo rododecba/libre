@@ -47,15 +47,28 @@
       z-index: 10;
       box-shadow: 0 0 4px #ef4444aa;
     }
-    /* NUEVO: Estilo para el GLOBO interactivo */
+    
+    /* NUEVO: Animación automática para el globo */
+    @keyframes pulse-and-rotate {
+      0% { transform: scale(1) rotate(0deg); }
+      5% { transform: scale(1.2) rotate(-15deg); }
+      10% { transform: scale(1) rotate(0deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
     #randomThoughtGlobe {
         cursor: pointer;
-        transition: transform 0.3s ease-in-out;
-        display: inline-block; /* Necesario para que transform funcione bien */
+        display: inline-block;
+        /* Aplicamos la animación para que se repita infinitamente cada 5 segundos */
+        animation: pulse-and-rotate 5s infinite;
+        transition: transform 0.3s ease-in-out; /* Mantenemos la transición para el hover */
     }
+    
     #randomThoughtGlobe:hover {
-        transform: scale(1.2) rotate(-15deg);
+        animation-play-state: paused; /* Pausamos la animación automática al pasar el cursor */
+        transform: scale(1.2) rotate(-15deg); /* Mantenemos el efecto hover */
     }
+
     @media (max-width: 640px) {
       .estadisticas-anonimas { font-size: 0.97rem; }
     }
