@@ -47,13 +47,14 @@
       z-index: 10;
       box-shadow: 0 0 4px #ef4444aa;
     }
-    /* NUEVO: Estilo para el botón de botella */
-    #randomBottleIcon {
+    /* NUEVO: Estilo para el GLOBO interactivo */
+    #randomThoughtGlobe {
         cursor: pointer;
-        transition: transform 0.2s ease-in-out;
+        transition: transform 0.3s ease-in-out;
+        display: inline-block; /* Necesario para que transform funcione bien */
     }
-    #randomBottleIcon:hover {
-        transform: scale(1.2) rotate(10deg);
+    #randomThoughtGlobe:hover {
+        transform: scale(1.2) rotate(-15deg);
     }
     @media (max-width: 640px) {
       .estadisticas-anonimas { font-size: 0.97rem; }
@@ -84,12 +85,11 @@
 
   <section id="feed" class="w-full max-w-xl mb-8">
     <div class="rounded-2xl bg-blue-100 border border-blue-300 p-6 shadow-md relative">
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center">
-            <span class="text-3xl mr-2">🌍</span>
-            <h2 class="text-2xl font-semibold text-blue-800">Pensamientos de todo el mundo</h2>
-        </div>
-        <span id="randomBottleIcon" title="Encontrar una botella al mar" class="text-3xl">🍾</span>
+      <div class="flex items-center mb-4">
+        <h2 class="text-2xl font-semibold text-blue-800 flex items-center">
+            <span id="randomThoughtGlobe" title="Ver un pensamiento aleatorio del mundo" class="text-3xl mr-2">🌍</span>
+            Pensamientos de todo el mundo
+        </h2>
       </div>
       
       <details class="mb-6">
@@ -331,7 +331,7 @@
     detectCountry();
 
     // ---- MODO "BOTELLA AL MAR" ALEATORIO ----
-    document.getElementById('randomBottleIcon').onclick = async function() {
+    document.getElementById('randomThoughtGlobe').onclick = async function() {
       const randomThoughtEl = document.getElementById('randomThought');
       if (!randomThoughtEl) return;
       randomThoughtEl.classList.add('hidden');
