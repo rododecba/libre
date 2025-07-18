@@ -23,6 +23,7 @@
     .reply-box { background: #fafafa; border-radius: 1rem; padding: 0.75rem; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
     .reply-btn { font-size: 0.8rem; color: #6d28d9; background: none; border: none; cursor: pointer; transition: color 0.2s; }
     .reply-btn:hover { color: #4b2995; text-decoration: underline; }
+    .reply-separator { border-bottom: 1px dashed #e5e7eb; margin: 0.5rem 0; }
     .eco-block { margin-bottom: 0.35rem; }
     .eco-block span { font-weight: 600; }
     .frase-inspiradora { color: #6D28D9; font-weight: 500; font-style: italic; margin-bottom: 0.5rem; display: block; transition: color 0.3s; min-height: 1.5rem;}
@@ -30,6 +31,7 @@
     .estadisticas-anonimas .titulo { font-weight: 600; color: #6D28D9; margin-bottom: 0.2rem; }
     .estadisticas-anonimas .dato { font-size: 1.07rem; font-weight: 500; color: #2D3748; margin-bottom: 0.1rem; }
     .estadisticas-anonimas .dato strong { color: #6D28D9; }
+    /* Badge notificación */
     .badge-notif {
       display: inline-block;
       min-width: 16px;
@@ -80,6 +82,7 @@
       </div>
       <div id="map"></div>
       <div id="countryRanking" class="mb-4"></div>
+      <!-- NUEVO: Estadísticas Anónimas -->
       <div id="estadisticasAnonimas" class="estadisticas-anonimas"></div>
       <button id="randomBottleBtn" class="mb-4 px-4 py-2 rounded-lg bg-purple-500 text-white shadow-md hover:bg-purple-600 transition">Modo Botella al Mar (Random)</button>
       <div id="randomThought" class="p-4 bg-white rounded-lg shadow-sm mb-4 hidden"></div>
@@ -181,12 +184,714 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="badwords.js"></script>
   <script>
-    // ... AQUÍ VA TODO EL CÓDIGO JAVASCRIPT QUE TE ENTREGUÉ ANTES,
-    // incluyendo los pensamientos simulados, replies, estadísticas, y toda la lógica,
-    // y al final, la definición global de showTab:
+    // ---- FRASES INSPIRADORAS ----
+    const FRASES_INSPIRADORAS = [
+      "La libertad es el oxígeno del alma. – Moshe Dayan",
+      "La creatividad requiere tener el valor de desprenderse de las certezas. – Erich Fromm",
+      "Ser anónimo es ser verdaderamente libre.",
+      "A veces, lo que más necesitamos decir es lo que menos nos atrevemos a compartir.",
+      "La honestidad florece en el anonimato.",
+      "Tus pensamientos pueden ser el faro para alguien más.",
+      "Escribir sin miedo es un acto de valentía.",
+      "La mente es más ligera cuando se libera lo que pesa.",
+      "La autenticidad no necesita nombre ni rostro.",
+      "Las palabras anónimas pueden resonar en todo el mundo.",
+      "Deja que tus pensamientos viajen libres, sin destino.",
+      "Lo que no se dice, también necesita salir.",
+      "En el anonimato, todos somos iguales.",
+      "Expresarte es un regalo para ti mismo.",
+      "A veces lo más importante es soltar."
+    ];
 
-    // ---- FUNCIÓN showTab GLOBAL ----
-    window.showTab = function(tabId) {
+    function mostrarFraseInspiradoraEnTextarea() {
+      const frase = FRASES_INSPIRADORAS[Math.floor(Math.random() * FRASES_INSPIRADORAS.length)];
+      const textarea = document.getElementById('textarea');
+      if (textarea) textarea.placeholder = frase;
+    }
+
+    mostrarFraseInspiradoraEnTextarea();
+    function onShowWriteTab() {
+      mostrarFraseInspiradoraEnTextarea();
+      document.getElementById('textarea').focus();
+    }
+
+    // ---- FORMATO FECHA ----
+    function formatearFecha(ts) {
+      const fecha = new Date(ts);
+      const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+      const fechaStr = fecha.toLocaleDateString('es-ES', opciones);
+      const horaStr = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      return `${fechaStr}, ${horaStr}`;
+    }
+
+    // ---- DICCIONARIO PAÍSES ----
+    const countryNames = {
+      AR: "Argentina",
+      ES: "España",
+      MX: "México",
+      US: "Estados Unidos",
+      BR: "Brasil",
+      CL: "Chile",
+      CO: "Colombia",
+      PE: "Perú",
+      VE: "Venezuela",
+      UY: "Uruguay",
+      PY: "Paraguay",
+      BO: "Bolivia",
+      EC: "Ecuador",
+      CR: "Costa Rica",
+      PA: "Panamá",
+      GT: "Guatemala",
+      HN: "Honduras",
+      NI: "Nicaragua",
+      SV: "El Salvador",
+      DO: "República Dominicana",
+      CU: "Cuba",
+      PR: "Puerto Rico",
+      CA: "Canadá",
+      FR: "Francia",
+      IT: "Italia",
+      DE: "Alemania",
+      GB: "Reino Unido",
+      PT: "Portugal",
+      JP: "Japón",
+      KR: "Corea del Sur",
+      IN: "India",
+      CN: "China",
+      RU: "Rusia",
+      AU: "Australia",
+      "Desconocido": "Desconocido"
+    };
+
+    // ---- CONFIGURACIÓN DE FIREBASE ----
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7MKy2T8CFvpay4FBp8FTrVp8tpU0Niwc",
+      authDomain: "libre-c5bf7.firebaseapp.com",
+      projectId: "libre-c5bf7",
+      storageBucket: "libre-c5bf7.appspot.com",
+      messagingSenderId: "339942652190",
+      appId: "1:339942652190:web:595ce692456b9df806f10f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ---- GENERADOR ANÓNIMO LOCAL ----
+    function getAnonUserId() {
+      let id = localStorage.getItem("libre_anon_id");
+      if (!id) {
+        id = "anon-" + Math.random().toString(36).slice(2, 17);
+        localStorage.setItem("libre_anon_id", id);
+      }
+      return id;
+    }
+
+    // ---- EXPORTAR/IMPORTAR IDENTIFICADOR ANÓNIMO ----
+    function exportAnonId() {
+      const id = getAnonUserId();
+      window.prompt("Este es tu identificador anónimo. Cópialo y guárdalo en un lugar seguro para restaurar tu historial cuando quieras:", id);
+    }
+
+    function importAnonId() {
+      const newId = window.prompt("Pega aquí tu identificador anónimo guardado anteriormente:");
+      if (newId && /^anon-[a-z0-9]{15}$/.test(newId)) {
+        localStorage.setItem("libre_anon_id", newId);
+        loadMyThoughts();
+        alert("Identificador restaurado. Si escribiste pensamientos con ese ID, ahora deberías verlos en tu historial.");
+      } else if (newId) {
+        alert("El identificador no es válido.");
+      }
+    }
+
+    // ---- DETECTAR PAÍS ----
+    let userCountry = "Desconocido";
+    let countryReady = false;
+    async function detectCountry() {
+      try {
+        const res = await axios.get("https://ipinfo.io/json?token=ec664cefb36ece");
+        userCountry = res.data.country || "Desconocido";
+      } catch (e) {
+        userCountry = "Desconocido";
+      } finally {
+        countryReady = true;
+      }
+    }
+    detectCountry();
+
+    // ---- MODO "BOTELLA AL MAR" ALEATORIO ----
+    document.getElementById('randomBottleBtn').onclick = async function() {
+      const randomThoughtEl = document.getElementById('randomThought');
+      if (!randomThoughtEl) return;
+      randomThoughtEl.classList.add('hidden');
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const docs = snapshot.docs;
+        if (docs.length === 0) {
+          randomThoughtEl.textContent = "No hay pensamientos aún.";
+          randomThoughtEl.classList.remove('hidden');
+          return;
+        }
+        const idx = Math.floor(Math.random() * docs.length);
+        const data = docs[idx].data();
+        randomThoughtEl.innerHTML =
+          `<div class="flex items-center space-x-2 mb-2">
+            <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
+          </div>
+          <p class="font-medium">${data.text}</p>
+          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
+        randomThoughtEl.classList.remove('hidden');
+      } catch (e) {
+        randomThoughtEl.textContent = "Error al cargar pensamiento aleatorio.";
+        randomThoughtEl.classList.remove('hidden');
+      }
+    };
+
+    // ---- PAGINACIÓN ----
+    const PAGE_SIZE = 10;
+    let globalPage = 1, globalMaxPages = 1;
+    let myPage = 1, myMaxPages = 1;
+
+    // ---- SISTEMA DE NOTIFICACIONES BÁSICO ----
+    function getLastSeenReplyTimestamp(thoughtId) {
+      return Number(localStorage.getItem("libre_last_seen_reply_" + thoughtId) || 0);
+    }
+    function setLastSeenReplyTimestamp(thoughtId, ts) {
+      localStorage.setItem("libre_last_seen_reply_" + thoughtId, String(ts));
+    }
+    async function checkNewReplies() {
+      try {
+        const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).get();
+        let hasNewReply = false;
+        for (const doc of snapshot.docs) {
+          const thoughtId = doc.id;
+          const repliesSnap = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "desc").limit(1).get();
+          if (!repliesSnap.empty) {
+            const latestReply = repliesSnap.docs[0].data();
+            const lastSeen = getLastSeenReplyTimestamp(thoughtId);
+            if (latestReply.ts > lastSeen) {
+              hasNewReply = true;
+            }
+          }
+        }
+        const notifEl = document.getElementById("mineTabNotification");
+        if(notifEl) {
+          notifEl.classList.toggle("hidden", !hasNewReply);
+        }
+      } catch (e) {
+        // Silenciar errores
+      }
+    }
+    // Marca como visto al entrar a "Mis pensamientos"
+    async function markRepliesAsSeen() {
+      try {
+        const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).get();
+        for (const doc of snapshot.docs) {
+          const thoughtId = doc.id;
+          const repliesSnap = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "desc").limit(1).get();
+          if (!repliesSnap.empty) {
+            const latestReply = repliesSnap.docs[0].data();
+            setLastSeenReplyTimestamp(thoughtId, latestReply.ts);
+          }
+        }
+        const notifEl = document.getElementById("mineTabNotification");
+        if(notifEl) notifEl.classList.add("hidden");
+      } catch (e) {}
+    }
+
+    // ---- ESCRIBIR PENSAMIENTO ----
+    document.getElementById('sendBtn').onclick = async function() {
+      if (!countryReady) {
+        alert("Cargando país, por favor espera un momento e intenta de nuevo.");
+        return;
+      }
+      const textarea = document.getElementById('textarea');
+      if (!textarea) return;
+      const txt = textarea.value.trim();
+      if (!txt) return;
+
+      if (window.contienePalabraOfensiva(txt)) {
+        return;
+      }
+      try {
+        await db.collection("thoughts").add({
+          text: txt,
+          ts: Date.now(),
+          country: userCountry,
+          user: getAnonUserId()
+        });
+        textarea.value = '';
+        loadGlobalCount();
+        loadGlobalThoughts(globalPage);
+        loadCountryRanking();
+        loadMap();
+        loadEstadisticasAnonimas();
+        loadMyThoughts(myPage);
+        // Revisa notificaciones después de enviar
+        setTimeout(checkNewReplies, 2000);
+      } catch (e) {
+        alert("Error al guardar el pensamiento. Intenta de nuevo.");
+      }
+    };
+
+    // ---- RESPONDER UN PENSAMIENTO ----
+    async function enviarRespuesta(thoughtId, replyText, respuestasDiv, btn, textarea) {
+      if (!replyText.trim()) return;
+      if (window.contienePalabraOfensiva(replyText)) return;
+      btn.disabled = true;
+      textarea.disabled = true;
+      try {
+        const thoughtDoc = await db.collection("thoughts").doc(thoughtId).get();
+        const thoughtData = thoughtDoc.data();
+        if (thoughtData.user === getAnonUserId()) {
+          alert("No puedes responder a tu propio pensamiento.");
+          btn.disabled = false;
+          textarea.disabled = false;
+          return;
+        }
+        await db.collection("thoughts").doc(thoughtId).collection("replies").add({
+          text: replyText.trim(),
+          ts: Date.now(),
+          user: getAnonUserId()
+        });
+        textarea.value = '';
+        await mostrarRespuestas(thoughtId, respuestasDiv);
+        // Notificaciones: revisa por si tocó a mi user
+        setTimeout(checkNewReplies, 1000);
+      } catch(e) {
+        alert('Error al guardar la respuesta.');
+      }
+      btn.disabled = false;
+      textarea.disabled = false;
+    }
+
+    // ---- MOSTRAR RESPUESTAS DE UN PENSAMIENTO ----
+    async function mostrarRespuestas(thoughtId, respuestasDiv) {
+      respuestasDiv.innerHTML = '';
+      try {
+        const snapshot = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "asc").get();
+        if (snapshot.empty) {
+          respuestasDiv.innerHTML = '';
+          return;
+        }
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const replyCard = document.createElement('div');
+          replyCard.className = 'reply-box';
+          replyCard.innerHTML = `
+            <div><span class="font-medium">${data.text}</span></div>
+            <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
+          `;
+          respuestasDiv.appendChild(replyCard);
+        });
+      } catch(e) {
+        respuestasDiv.innerHTML = '<div class="text-[0.7rem] text-red-500">Error al cargar respuestas.</div>';
+      }
+    }
+
+    // ---- GLOBAL THOUGHTS ----
+    async function loadGlobalThoughts(page = 1) {
+      const globalThoughts = document.getElementById('globalThoughts');
+      const globalPagination = document.getElementById('globalPagination');
+      if (!globalThoughts) return;
+      globalThoughts.innerHTML = '';
+      try {
+        const snapshot = await db.collection("thoughts").orderBy("ts", "desc").get();
+        const docs = snapshot.docs;
+        // INICIO: Si está vacío, poblar con simulaciones
+        if (docs.length === 0) {
+          // Frases simuladas de ejemplo (puedes extender este array)
+          const frasesSimuladas = window.frasesSimuladasEjemplo || [];
+          let simuladas = [];
+          for (let i=0; i<frasesSimuladas.length; i++) {
+            simuladas.push({
+              data: () => frasesSimuladas[i],
+              id: "simulada_"+i
+            });
+          }
+          mostrarGlobalThoughtsSimulados(simuladas, page, globalThoughts, globalPagination);
+          globalMaxPages = Math.max(1, Math.ceil(simuladas.length/PAGE_SIZE));
+          return;
+        }
+        // FIN SIMULACIÓN
+        globalMaxPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
+        page = Math.max(1, Math.min(page, globalMaxPages));
+        globalPage = page;
+
+        const start = (page - 1) * PAGE_SIZE;
+        const items = docs.slice(start, start + PAGE_SIZE);
+        for (let doc of items) {
+          const data = doc.data();
+          const thoughtId = doc.id;
+          const card = document.createElement('div');
+          card.className = 'p-4 bg-white rounded-lg shadow-sm';
+          card.innerHTML = `
+            <div class="flex items-center space-x-2 mb-2">
+              <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
+            </div>
+            <p class="font-medium">${data.text}</p>
+            <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
+            <div class="mt-2">
+              ${
+                data.user !== getAnonUserId()
+                ? `<button class="reply-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>`
+                : `<span class="text-xs text-gray-400">No puedes responder a tu propio pensamiento</span>`
+              }
+            </div>
+            <div class="respuestas mt-2"></div>
+            <div class="caja-respuesta mt-2 hidden"></div>
+          `;
+          globalThoughts.appendChild(card);
+
+          // Mostrar respuestas
+          const respuestasDiv = card.querySelector('.respuestas');
+          mostrarRespuestas(thoughtId, respuestasDiv);
+        }
+        if (globalPagination) {
+          globalPagination.innerHTML = `
+            <button onclick="loadGlobalThoughts(${globalPage-1})" ${globalPage<=1?'disabled':''}>Anterior</button>
+            <span>Página ${globalPage} de ${globalMaxPages}</span>
+            <button onclick="loadGlobalThoughts(${globalPage+1})" ${globalPage>=globalMaxPages?'disabled':''}>Siguiente</button>
+          `;
+        }
+      } catch (e) {
+        globalThoughts.innerHTML = '<p class="text-sm font-medium text-red-900 opacity-75">Error al cargar pensamientos globales.</p>';
+      }
+    }
+
+    // Mostrar pensamientos simulados si la BD está vacía
+    function mostrarGlobalThoughtsSimulados(simuladas, page, globalThoughts, globalPagination) {
+      globalMaxPages = Math.max(1, Math.ceil(simuladas.length / PAGE_SIZE));
+      page = Math.max(1, Math.min(page, globalMaxPages));
+      globalPage = page;
+      const start = (page - 1) * PAGE_SIZE;
+      const items = simuladas.slice(start, start + PAGE_SIZE);
+      globalThoughts.innerHTML = '';
+      for (let item of items) {
+        const data = item.data();
+        const card = document.createElement('div');
+        card.className = 'p-4 bg-white rounded-lg shadow-sm';
+        card.innerHTML = `
+          <div class="flex items-center space-x-2 mb-2">
+            <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
+          </div>
+          <p class="font-medium">${data.text}</p>
+          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
+          <div class="mt-2">
+            <span class="text-xs text-gray-400">Simulación</span>
+          </div>
+        `;
+        globalThoughts.appendChild(card);
+      }
+      if (globalPagination) {
+        globalPagination.innerHTML = `
+          <button onclick="loadGlobalThoughts(${globalPage-1})" ${globalPage<=1?'disabled':''}>Anterior</button>
+          <span>Página ${globalPage} de ${globalMaxPages}</span>
+          <button onclick="loadGlobalThoughts(${globalPage+1})" ${globalPage>=globalMaxPages?'disabled':''}>Siguiente</button>
+        `;
+      }
+    }
+
+    // ---- MOSTRAR/OCULTAR CAJA DE RESPUESTA ----
+    window.mostrarCajaRespuesta = function(thoughtId, btn) {
+      const card = btn.closest('.p-4');
+      const caja = card.querySelector('.caja-respuesta');
+      if (!caja.classList.contains('hidden')) {
+        caja.classList.add('hidden');
+        caja.innerHTML = '';
+        return;
+      }
+      document.querySelectorAll('.caja-respuesta').forEach(el => { el.classList.add('hidden'); el.innerHTML = ''; });
+      caja.classList.remove('hidden');
+      caja.innerHTML = `
+        <textarea class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm"
+          rows="2" maxlength="300" placeholder="Escribe tu respuesta..."></textarea>
+        <button class="mt-2 px-4 py-1 rounded-lg bg-purple-500 text-white text-sm font-medium shadow hover:bg-purple-600 transition enviarRespuestaBtn">
+          Enviar respuesta
+        </button>
+      `;
+      const textarea = caja.querySelector('textarea');
+      const enviarBtn = caja.querySelector('.enviarRespuestaBtn');
+      const respuestasDiv = card.querySelector('.respuestas');
+      enviarBtn.onclick = async function() {
+        await enviarRespuesta(thoughtId, textarea.value, respuestasDiv, enviarBtn, textarea);
+        caja.classList.add('hidden');
+        caja.innerHTML = '';
+      };
+    };
+
+    // ---- FUNCION GUARDAR ECO LECTURA ----
+    async function registrarEco(thoughtId) {
+      if (!countryReady) return;
+      try {
+        const ecoRef = db.collection("thoughts").doc(thoughtId).collection("eco").doc(userCountry);
+        await db.runTransaction(async (tx) => {
+          const doc = await tx.get(ecoRef);
+          if (!doc.exists) {
+            tx.set(ecoRef, { count: 1 });
+          } else {
+            tx.update(ecoRef, { count: doc.data().count + 1 });
+          }
+        });
+      } catch (e) {
+        // Silenciar
+      }
+    }
+
+    // ---- MI HISTORIAL, CON ECO GLOBAL ----
+    async function loadMyThoughts(page = 1) {
+      const myThoughts = document.getElementById('myThoughts');
+      const myPagination = document.getElementById('myPagination');
+      if (!myThoughts) return;
+      myThoughts.innerHTML = '';
+      try {
+        const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).orderBy("ts", "desc").get();
+        const docs = snapshot.docs;
+        myMaxPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
+        page = Math.max(1, Math.min(page, myMaxPages));
+        myPage = page;
+
+        if (docs.length === 0) {
+          myThoughts.innerHTML = '<p class="text-sm font-medium text-green-900 opacity-75">No has escrito aún...</p>';
+        } else {
+          const start = (page - 1) * PAGE_SIZE;
+          const items = docs.slice(start, start + PAGE_SIZE);
+          for (const doc of items) {
+            const data = doc.data();
+            const thoughtId = doc.id;
+            const card = document.createElement('div');
+            card.className = 'p-4 bg-white rounded-lg shadow-sm';
+
+            let ecosHtml = '';
+            try {
+              const ecosSnap = await db.collection("thoughts").doc(thoughtId).collection("eco").get();
+              if (ecosSnap.empty) {
+                ecosHtml = `<div class="text-xs text-gray-400">Sin ecos aún</div>`;
+              } else {
+                ecosHtml = '';
+                ecosSnap.forEach(ecodoc => {
+                  const country = ecodoc.id;
+                  const count = ecodoc.data().count;
+                  ecosHtml += `<div class="eco-block text-xs font-medium text-indigo-700">
+                    ${countryNames[country] || country} <span>(${count})</span>
+                  </div>`;
+                });
+              }
+            } catch (e) {
+              ecosHtml = `<div class="text-xs text-red-500">Error al cargar ecos</div>`;
+            }
+
+            card.innerHTML = `
+              ${ecosHtml}
+              <p class="font-medium">${data.text}</p>
+              <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
+            `;
+            myThoughts.appendChild(card);
+          }
+        }
+        if (myPagination) {
+          myPagination.innerHTML = `
+            <button onclick="loadMyThoughts(${myPage-1})" ${myPage<=1?'disabled':''}>Anterior</button>
+            <span>Página ${myPage} de ${myMaxPages}</span>
+            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=myMaxPages?'disabled':''}>Siguiente</button>
+          `;
+        }
+      } catch (e) {
+        myThoughts.innerHTML = '<p class="text-sm font-medium text-red-900 opacity-75">Error al cargar tus pensamientos.</p>';
+      }
+    }
+
+    // ---- GLOBAL COUNT ----
+    async function loadGlobalCount() {
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        document.getElementById('globalCountNum').textContent = snapshot.size;
+      } catch (e) {
+        document.getElementById('globalCountNum').textContent = "?";
+      }
+    }
+
+    // ---- RANKING DE PAÍSES ----
+    async function loadCountryRanking() {
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const countryCounts = {};
+        snapshot.docs.forEach(doc => {
+          const c = doc.data().country || "Desconocido";
+          countryCounts[c] = (countryCounts[c] || 0) + 1;
+        });
+        const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
+        let html = '<div class="mb-2 font-semibold text-purple-800">Ranking de países más activos:</div>';
+        html += '<ul class="list-disc pl-4">';
+        sorted.slice(0, 5).forEach(([country, count]) => {
+          html += `<li><span class="font-bold">${countryNames[country] || country}</span>: ${count}</li>`;
+        });
+        html += '</ul>';
+        document.getElementById('countryRanking').innerHTML = html;
+      } catch (e) {
+        document.getElementById('countryRanking').innerHTML = '<span class="text-red-900">Error al cargar ranking.</span>';
+      }
+    }
+
+    // ---- ESTADÍSTICAS ANÓNIMAS ----
+    async function loadEstadisticasAnonimas() {
+      const el = document.getElementById('estadisticasAnonimas');
+      if (!el) return;
+      el.innerHTML = '<div class="titulo">Cargando estadísticas...</div>';
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const ahora = new Date();
+        const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+        const inicioSemana = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - 6);
+        let pensamientosHoy = 0;
+        let paisesSemana = new Set();
+        let recordDia = { fecha: null, cantidad: 0 };
+        let pensamientosPorDia = {};
+
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const fechaDoc = new Date(data.ts);
+          if (fechaDoc >= hoy) pensamientosHoy++;
+          if (fechaDoc >= inicioSemana) paisesSemana.add(data.country || "Desconocido");
+          const diaKey = fechaDoc.getFullYear() + "-" + (fechaDoc.getMonth()+1).toString().padStart(2,"0") + "-" + fechaDoc.getDate().toString().padStart(2,"0");
+          pensamientosPorDia[diaKey] = (pensamientosPorDia[diaKey] || 0) + 1;
+        });
+
+        for (const [dia, cantidad] of Object.entries(pensamientosPorDia)) {
+          if (cantidad > recordDia.cantidad) {
+            recordDia = { fecha: dia, cantidad };
+          }
+        }
+
+        el.innerHTML = `
+          <div class="titulo">📊 Estadísticas anónimas</div>
+          <div class="dato">Pensamientos escritos <strong>hoy</strong>: <strong>${pensamientosHoy}</strong></div>
+          <div class="dato">Países diferentes la última semana: <strong>${Array.from(paisesSemana).map(c => countryNames[c]||c).join(', ') || "0"}</strong></div>
+          <div class="dato">Récord de pensamientos en un día: <strong>${recordDia.cantidad}</strong> (${recordDia.fecha ? recordDia.fecha : "-"})</div>
+        `;
+      } catch (e) {
+        el.innerHTML = '<div class="titulo text-red-700">No se pudieron cargar las estadísticas.</div>';
+      }
+    }
+
+    // ---- MAPA DE PENSAMIENTOS ----
+    let map;
+    let countryMarkers = {};
+    async function loadMap() {
+      const countryCoords = {
+        AR: {lat: -34, lng: -64},
+        ES: {lat: 40, lng: -3},
+        MX: {lat: 23, lng: -102},
+        US: {lat: 37, lng: -95},
+        BR: {lat: -10, lng: -55},
+        CL: {lat: -33, lng: -71},
+        CO: {lat: 4, lng: -72},
+        Desconocido: {lat: 20, lng: 0}
+      };
+      if (map) { map.remove(); map = null; }
+      const mapEl = document.getElementById('map');
+      if (!mapEl) return;
+      mapEl.innerHTML = "";
+      map = L.map('map', { attributionControl: false }).setView([20,0], 2);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const countryCounts = {};
+        snapshot.docs.forEach(doc => {
+          const c = doc.data().country || "Desconocido";
+          countryCounts[c] = (countryCounts[c] || 0) + 1;
+        });
+
+        for (let [country, count] of Object.entries(countryCounts)) {
+          let coords = countryCoords[country];
+          if (!coords) coords = countryCoords["Desconocido"];
+          const marker = L.circleMarker([coords.lat, coords.lng], {
+            radius: Math.max(8, Math.min(20, count)),
+            color: "#6D28D9",
+            fillColor: "#C4B5FD",
+            fillOpacity: 0.6
+          }).addTo(map);
+          marker.bindPopup(`<b>${countryNames[country] || country}</b>: ${count} pensamientos`);
+          countryMarkers[country] = marker;
+        }
+      } catch (e) {
+        // Silenciar
+      }
+    }
+
+    // ---- CAPSULA DEL TIEMPO ----
+    document.getElementById('capsuleBtn').onclick = async function() {
+      const date = document.getElementById('capsuleDate').value;
+      const time = document.getElementById('capsuleTime').value;
+      const msg = document.getElementById('capsuleMessage').value.trim();
+      if (!date || !time || !msg) {
+        alert('Debes escribir un mensaje y elegir fecha/hora');
+        return;
+      }
+      if (window.contienePalabraOfensiva(msg)) {
+        return;
+      }
+      if (!countryReady) {
+        alert("Cargando país, por favor espera un momento e intenta de nuevo.");
+        return;
+      }
+      const openAt = new Date(date + "T" + time + ":00").getTime();
+      try {
+        await db.collection("capsules").add({
+          text: msg,
+          openAt,
+          ts: Date.now(),
+          country: userCountry,
+          user: getAnonUserId()
+        });
+        alert(`Cápsula programada para ${date} a las ${time}`);
+        document.getElementById('capsuleMessage').value = '';
+        document.getElementById('capsuleDate').value = '';
+        document.getElementById('capsuleTime').value = '';
+        loadMyCapsules();
+      } catch (e) {
+        alert("Error al guardar la cápsula. Intenta de nuevo.");
+      }
+    };
+
+    // ---- Mostrar cápsulas desbloqueadas ----
+    async function loadMyCapsules() {
+      const list = document.getElementById('capsulesList');
+      if (!list) return;
+      list.innerHTML = '';
+      try {
+        const now = Date.now();
+        const snapshot = await db.collection("capsules")
+          .where("user", "==", getAnonUserId())
+          .orderBy("openAt", "desc")
+          .get();
+        let count = 0;
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.openAt <= now) {
+            const card = document.createElement('div');
+            card.className = 'p-4 bg-white rounded-lg shadow-md';
+            card.innerHTML = `
+              <div class="mb-2 text-blue-700 font-bold text-sm">Cápsula abierta el ${formatearFecha(data.openAt)}</div>
+              <p class="font-medium">${data.text}</p>
+              <div class="text-[0.7rem] text-gray-400 mt-1">Programada el ${formatearFecha(data.ts)}</div>
+            `;
+            list.appendChild(card);
+            count++;
+          }
+        });
+        if (count === 0) {
+          list.innerHTML = '<div class="text-blue-900 text-sm opacity-70">No hay cápsulas desbloqueadas aún.</div>';
+        }
+      } catch (e) {
+        list.innerHTML = '<div class="text-red-700 text-sm">Error al cargar tus cápsulas.</div>';
+      }
+    }
+
+    // ---- TABS ----
+    function showTab(tabId) {
       const sections = ['write', 'feed', 'mine', 'capsule', 'about'];
       sections.forEach(id => {
         const el = document.getElementById(id);
@@ -198,7 +903,176 @@
       if(tabId=='mine') { loadMyThoughts(myPage); markRepliesAsSeen(); }
       if(tabId=='capsule') { loadMyCapsules(); }
       if(tabId=='write') { onShowWriteTab(); }
+    }
+
+    // ---- LOGO ANIMACIÓN Y CARGA INICIAL ----
+    window.onload = function() {
+      const textLogo = document.getElementById('textLogo');
+      const imgLogo = document.getElementById('logolibre');
+      if (textLogo && imgLogo) {
+        textLogo.classList.remove('logo-hidden');
+        textLogo.classList.add('logo-shown');
+        imgLogo.classList.remove('visible');
+        setTimeout(() => {
+          textLogo.classList.remove('logo-shown');
+          textLogo.classList.add('logo-hidden');
+        }, 2000);
+        setTimeout(() => {
+          imgLogo.classList.add('visible');
+        }, 3500);
+      }
+      // Carga inicial
+      loadGlobalCount();
+      loadGlobalThoughts(globalPage);
+      loadCountryRanking();
+      loadMap();
+      loadEstadisticasAnonimas();
+      // Chequear notificaciones de respuestas
+      setTimeout(checkNewReplies, 1500);
     };
+
+    // Auto-check de notificaciones cada 40s
+    setInterval(() => { checkNewReplies(); }, 40000);
+
+    // ---- PENSAMIENTOS SIMULADOS ----
+    // Puedes modificar, agregar o quitar frases a gusto. Ejemplo para AR, ES, MX y CO:
+    window.frasesSimuladasEjemplo = [
+      {
+        text: "Che, ¿alguien más tiene días en los que el mate no alcanza para levantar el ánimo? 😂 Hoy fue uno de esos. Pero igual, mañana será otro día.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*24*2 // hace 2 días
+      },
+      {
+        text: "Hoy en el bondi me crucé a una señora que me sonrió sin motivo. Esas cosas raras que te dejan pensando todo el día.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*22 // hace 22 horas
+      },
+      {
+        text: "¿Por qué cuando llueve en Buenos Aires nadie maneja bien? Es como si se olvidaran cómo funciona todo. 😂",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*35 // hace 35 horas
+      },
+      {
+        text: "Hoy he salido a la calle y me ha dado toda la pereza socializar. ¿A alguien más le pasa o soy yo? A veces sólo quiero desaparecer entre la gente.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*20 // hace 20 horas
+      },
+      {
+        text: "En serio, ¿por qué siempre que digo 'una caña' terminan siendo tres? Esto es un bucle. Y claro, mañana a currar como si nada.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*28 // hace 28 horas
+      },
+      {
+        text: "Mi madre me ha vuelto a preguntar si ya tengo trabajo fijo. Spoiler: no. Pero le sonrío igual.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*60 // hace 2.5 días
+      },
+      {
+        text: "Hoy mi abuela hizo chilaquiles y neta, no hay mejor remedio para el mal de amores que la comida de la abuela. 😋",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*6 // hace 6 horas
+      },
+      {
+        text: "Cuando llego al Oxxo y no hay pan dulce, siento que el universo me está trolleando. ¿A alguien más le pasa?",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*15 // hace 15 horas
+      },
+      {
+        text: "Confieso que a veces le hablo a mi perro como si me entendiera todo. Y creo que sí me entiende.",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*11 // hace 11 horas
+      },
+      {
+        text: "Hoy el tinto me supo a gloria, literal, me salvó del madrugón. En Bogotá el café es casi religión.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*36 // hace 36 horas
+      },
+      {
+        text: "Me gustaría vivir un día sin trancón, pero bueno, soñar no cuesta nada. Bogotá y sus trancones eternos.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*48 // hace 2 días
+      },
+      {
+        text: "¿Será que algún día aprenderé a bailar salsa bien? Por ahora, solo hago el intento y me río de mí mismo.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*3 // hace 3 horas
+      },
+      {
+        text: "A veces uno sólo quiere escribir y que nadie lo lea. Pero si alguien llegó hasta acá, que sepa que hoy no fue un gran día, pero tampoco fue el peor.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*50 // hace 50 horas
+      },
+      {
+        text: "Hoy me di cuenta de que llevo años guardando mensajes en borradores que jamás enviaré. Quizás este sea uno más, pero al menos aquí sale al mar.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*42
+      },
+      {
+        text: "Amo los atardeceres en mi ciudad, aunque el tráfico esté del nabo. A veces creo que podría escribir un libro solo con lo que pienso mientras manejo.",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*19
+      },
+      {
+        text: "Echo de menos las noches de terraceo con mis colegas, pero toca sobrevivir al curro otro día más. España y sus contradicciones.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*110
+      },
+      {
+        text: "Hoy la lluvia me hizo pensar en viejos recuerdos. Es impresionante cómo los olores pueden hacerte viajar en el tiempo.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*55
+      },
+      {
+        text: "Hoy fue el típico día en que todo sale al revés, pero igual, aquí ando, escribiendo esto como terapia anónima.",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*7
+      },
+      // Simulaciones largas (hasta 500 caracteres)
+      {
+        text: "A veces siento que me paso la vida esperando algo que no sé si va a llegar, pero igual sigo, porque de eso se trata, ¿no? De ir avanzando, aunque sea a ciegas, aunque nadie te aplauda, aunque a veces ni vos mismo sepas el porqué. Me gustaría pensar que alguien, en algún lugar, entiende esto. Y si no, bueno, al menos lo escribí acá y ya está.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*90
+      },
+      {
+        text: "Hoy vi a una pareja mayor darse la mano en la plaza y me llenó de esperanza, porque en un mundo en el que todo parece tan fugaz, tan de usar y tirar, ver a dos personas que todavía se eligen después de años me hace creer que algo de magia queda. Ojalá todos tengamos a alguien con quien compartir silencios y también risas.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*130
+      },
+      {
+        text: "No sé si escribir esto sirve de algo, pero me siento menos solo sabiendo que puede que alguien lea esto, que tal vez ni siquiera hable mi idioma, pero que en algún rincón del mundo, por un segundo, nuestras vidas se crucen a través de un pensamiento perdido en el mar digital.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*5
+      },
+      {
+        text: "Hoy no tengo nada profundo que decir, solo vine a desahogarme un rato. Si llegaste hasta acá, ojalá tengas un día mejor que el mío, aunque sea por poquito. 😅",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*2
+      }
+    ];
+    // ---- FIN SIMULACIONES ----
+
   </script>
 </body>
 </html>
