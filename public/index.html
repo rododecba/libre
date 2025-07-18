@@ -710,7 +710,13 @@
     async function loadGlobalCount() {
       try {
         const snapshot = await db.collection("thoughts").get();
-        document.getElementById('globalCountNum').textContent = snapshot.size;
+        const countEl = document.getElementById('globalCountNum');
+        if (snapshot.size === 0) {
+          const simulatedCount = window.frasesSimuladasEjemplo ? window.frasesSimuladasEjemplo.length : 0;
+          countEl.textContent = simulatedCount;
+        } else {
+          countEl.textContent = snapshot.size;
+        }
       } catch (e) {
         document.getElementById('globalCountNum').textContent = "?";
       }
