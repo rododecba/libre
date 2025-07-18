@@ -432,7 +432,7 @@
       const textarea = document.getElementById('textarea');
       if (!textarea) return;
       const txt = textarea.value.trim();
-      if (!txt) return; // <-- ¡CAMBIO REALIZADO AQUÍ!
+      if (!txt) return;
 
       if (window.contienePalabraOfensiva(txt)) {
         return;
@@ -544,6 +544,12 @@
         for (let doc of items) {
           const data = doc.data();
           const thoughtId = doc.id;
+
+          // Si el pensamiento no es mío, registro que lo he visto (un eco).
+          if (data.user !== getAnonUserId()) {
+            registrarEco(thoughtId);
+          }
+
           const card = document.createElement('div');
           card.className = 'p-4 bg-white rounded-lg shadow-sm';
           card.innerHTML = `
@@ -681,7 +687,7 @@
           myPagination.innerHTML = `
             <button onclick="loadMyThoughts(${myPage-1})" ${myPage<=1?'disabled':''}>Anterior</button>
             <span>Página ${myPage} de ${myMaxPages}</span>
-            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=myMaxPages?'disabled':''}>Siguiente</button>
+            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=globalMaxPages?'disabled':''}>Siguiente</button>
           `;
         }
       } catch (e) {
