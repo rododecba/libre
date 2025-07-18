@@ -48,7 +48,7 @@
       box-shadow: 0 0 4px #ef4444aa;
     }
     
-    /* NUEVO: Animación automática para el globo */
+    /* Animación automática para el globo */
     @keyframes pulse-and-rotate {
       0% { transform: scale(1) rotate(0deg); }
       5% { transform: scale(1.2) rotate(-15deg); }
@@ -59,14 +59,13 @@
     #randomThoughtGlobe {
         cursor: pointer;
         display: inline-block;
-        /* Aplicamos la animación para que se repita infinitamente cada 5 segundos */
         animation: pulse-and-rotate 5s infinite;
-        transition: transform 0.3s ease-in-out; /* Mantenemos la transición para el hover */
+        transition: transform 0.3s ease-in-out;
     }
     
     #randomThoughtGlobe:hover {
-        animation-play-state: paused; /* Pausamos la animación automática al pasar el cursor */
-        transform: scale(1.2) rotate(-15deg); /* Mantenemos el efecto hover */
+        animation-play-state: paused;
+        transform: scale(1.2) rotate(-15deg);
     }
 
     @media (max-width: 640px) {
@@ -336,6 +335,7 @@
         const res = await axios.get("https://ipinfo.io/json?token=ec664cefb36ece");
         userCountry = res.data.country || "Desconocido";
       } catch (e) {
+        console.error("Error detecting country:", e);
         userCountry = "Desconocido";
       } finally {
         countryReady = true;
@@ -366,6 +366,7 @@
           <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
         randomThoughtEl.classList.remove('hidden');
       } catch (e) {
+        console.error("Error loading random thought:", e);
         randomThoughtEl.textContent = "Error al cargar pensamiento aleatorio.";
         randomThoughtEl.classList.remove('hidden');
       }
@@ -403,7 +404,7 @@
           notifEl.classList.toggle("hidden", !hasNewReply);
         }
       } catch (e) {
-        // Silenciar errores
+        console.error("Error checking new replies:", e);
       }
     }
     // Marca como visto al entrar a "Mis pensamientos"
@@ -420,7 +421,9 @@
         }
         const notifEl = document.getElementById("mineTabNotification");
         if(notifEl) notifEl.classList.add("hidden");
-      } catch (e) {}
+      } catch (e) {
+        console.error("Error marking replies as seen:", e);
+      }
     }
 
     // ---- ESCRIBIR PENSAMIENTO ----
@@ -452,9 +455,9 @@
         loadMap();
         loadEstadisticasAnonimas();
         loadMyThoughts(myPage);
-        // Revisa notificaciones después de enviar
         setTimeout(checkNewReplies, 2000);
       } catch (e) {
+        console.error("Error saving thought:", e);
         alert("Error al guardar el pensamiento. Intenta de nuevo.");
       }
     };
@@ -487,9 +490,9 @@
         });
         textarea.value = '';
         await mostrarRespuestas(thoughtId, respuestasDiv);
-        // Notificaciones: revisa por si tocó a mi user
         setTimeout(checkNewReplies, 1000);
       } catch(e) {
+        console.error("Error saving reply:", e);
         alert('Error al guardar la respuesta.');
       }
       btn.disabled = false;
@@ -516,53 +519,70 @@
           respuestasDiv.appendChild(replyCard);
         });
       } catch(e) {
+        console.error("Error loading replies:", e);
         respuestasDiv.innerHTML = '<div class="text-[0.7rem] text-red-500">Error al cargar respuestas.</div>';
       }
     }
 
-    // ---- GLOBAL THOUGHTS ----
+    // ---- GLOBAL THOUGHTS (INCLUYE CÁPSULAS ABIERTAS) ----
     async function loadGlobalThoughts(page = 1) {
       const globalThoughts = document.getElementById('globalThoughts');
       const globalPagination = document.getElementById('globalPagination');
       if (!globalThoughts) return;
       globalThoughts.innerHTML = '';
       try {
-        const snapshot = await db.collection("thoughts").orderBy("ts", "desc").get();
-        const docs = snapshot.docs;
+        const now = Date.now();
+        // 1. Obtener ambos tipos de documentos
+        const thoughtsPromise = db.collection("thoughts").get();
+        const capsulesPromise = db.collection("capsules").where("openAt", "<=", now).get();
         
-        if (docs.length === 0) {
+        const [thoughtsSnap, capsulesSnap] = await Promise.all([thoughtsPromise, capsulesPromise]);
+
+        // 2. Mapear y combinar en una sola lista
+        let allItems = [];
+        thoughtsSnap.forEach(doc => allItems.push({ id: doc.id, data: doc.data(), type: 'thought' }));
+        capsulesSnap.forEach(doc => allItems.push({ id: doc.id, data: doc.data(), type: 'capsule' }));
+
+        // 3. Ordenar por timestamp
+        allItems.sort((a, b) => b.data.ts - a.data.ts);
+
+        if (allItems.length === 0) {
             globalThoughts.innerHTML = '<p class="text-sm font-medium text-blue-900 opacity-75">Aún no hay pensamientos. ¡Sé el primero en lanzar uno al mundo!</p>';
             return;
         }
 
-        globalMaxPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
+        // 4. Paginación sobre la lista combinada
+        globalMaxPages = Math.max(1, Math.ceil(allItems.length / PAGE_SIZE));
         page = Math.max(1, Math.min(page, globalMaxPages));
         globalPage = page;
 
         const start = (page - 1) * PAGE_SIZE;
-        const items = docs.slice(start, start + PAGE_SIZE);
-        for (let doc of items) {
-          const data = doc.data();
-          const thoughtId = doc.id;
+        const pagedItems = allItems.slice(start, start + PAGE_SIZE);
 
-          // Si el pensamiento no es mío, registro que lo he visto (un eco).
+        // 5. Renderizar los items
+        for (let item of pagedItems) {
+          const { id: thoughtId, data, type } = item;
+
           if (data.user !== getAnonUserId()) {
-            registrarEco(thoughtId);
+            registrarEco(thoughtId, type);
           }
+          
+          const isCapsule = type === 'capsule';
+          const headerIcon = isCapsule ? '🕰️' : ''; // Icono para la cápsula
 
           const card = document.createElement('div');
           card.className = 'p-4 bg-white rounded-lg shadow-sm';
           card.innerHTML = `
             <div class="flex items-center space-x-2 mb-2">
-              <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
+              <span class="text-xs font-medium">${countryNames[data.country] || "🌐"} ${headerIcon}</span>
             </div>
             <p class="font-medium">${data.text}</p>
             <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
             <div class="mt-2">
               ${
-                data.user !== getAnonUserId()
+                data.user !== getAnonUserId() && !isCapsule
                 ? `<button class="reply-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>`
-                : `<span class="text-xs text-gray-400">Es tu propio pensamiento</span>`
+                : `<span class="text-xs text-gray-400">${isCapsule ? 'Mensaje de una cápsula del tiempo' : 'Es tu propio pensamiento'}</span>`
               }
             </div>
             <div class="respuestas mt-2"></div>
@@ -570,9 +590,10 @@
           `;
           globalThoughts.appendChild(card);
 
-          // Mostrar respuestas
-          const respuestasDiv = card.querySelector('.respuestas');
-          mostrarRespuestas(thoughtId, respuestasDiv);
+          if (!isCapsule) {
+            const respuestasDiv = card.querySelector('.respuestas');
+            mostrarRespuestas(thoughtId, respuestasDiv);
+          }
         }
         if (globalPagination) {
           globalPagination.innerHTML = `
@@ -582,9 +603,11 @@
           `;
         }
       } catch (e) {
+        console.error("Error loading global thoughts:", e);
         globalThoughts.innerHTML = '<p class="text-sm font-medium text-red-900 opacity-75">Error al cargar pensamientos globales.</p>';
       }
     }
+
 
     // ---- MOSTRAR/OCULTAR CAJA DE RESPUESTA ----
     window.mostrarCajaRespuesta = function(thoughtId, btn) {
@@ -615,10 +638,12 @@
     };
 
     // ---- FUNCION GUARDAR ECO LECTURA ----
-    async function registrarEco(thoughtId) {
+    async function registrarEco(docId, type = 'thought') {
       if (!countryReady) return;
+      // Los ecos solo aplican a pensamientos, no a cápsulas.
+      if (type !== 'thought') return;
       try {
-        const ecoRef = db.collection("thoughts").doc(thoughtId).collection("eco").doc(userCountry);
+        const ecoRef = db.collection("thoughts").doc(docId).collection("eco").doc(userCountry);
         await db.runTransaction(async (tx) => {
           const doc = await tx.get(ecoRef);
           if (!doc.exists) {
@@ -628,7 +653,7 @@
           }
         });
       } catch (e) {
-        // Silenciar
+        console.error("Error registering eco:", e);
       }
     }
 
@@ -672,6 +697,7 @@
                 });
               }
             } catch (e) {
+              console.error("Error loading ecos:", e);
               ecosHtml = `<div class="text-xs text-red-500">Error al cargar ecos</div>`;
             }
 
@@ -687,10 +713,11 @@
           myPagination.innerHTML = `
             <button onclick="loadMyThoughts(${myPage-1})" ${myPage<=1?'disabled':''}>Anterior</button>
             <span>Página ${myPage} de ${myMaxPages}</span>
-            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=globalMaxPages?'disabled':''}>Siguiente</button>
+            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=myMaxPages?'disabled':''}>Siguiente</button>
           `;
         }
       } catch (e) {
+        console.error("Error loading my thoughts:", e);
         myThoughts.innerHTML = '<p class="text-sm font-medium text-red-900 opacity-75">Error al cargar tus pensamientos.</p>';
       }
     }
@@ -701,6 +728,7 @@
         const snapshot = await db.collection("thoughts").get();
         document.getElementById('globalCountNum').textContent = snapshot.size;
       } catch (e) {
+        console.error("Error loading global count:", e);
         document.getElementById('globalCountNum').textContent = "?";
       }
     }
@@ -723,6 +751,7 @@
         html += '</ul>';
         document.getElementById('countryRanking').innerHTML = html;
       } catch (e) {
+        console.error("Error loading country ranking:", e);
         document.getElementById('countryRanking').innerHTML = '<span class="text-red-900">Error al cargar ranking.</span>';
       }
     }
@@ -764,6 +793,7 @@
           <div class="dato">Récord de pensamientos en un día: <strong>${recordDia.cantidad}</strong> (${recordDia.fecha ? recordDia.fecha : "-"})</div>
         `;
       } catch (e) {
+        console.error("Error loading stats:", e);
         el.innerHTML = '<div class="titulo text-red-700">No se pudieron cargar las estadísticas.</div>';
       }
     }
@@ -773,14 +803,9 @@
     let countryMarkers = {};
     async function loadMap() {
       const countryCoords = {
-        AR: {lat: -34, lng: -64},
-        ES: {lat: 40, lng: -3},
-        MX: {lat: 23, lng: -102},
-        US: {lat: 37, lng: -95},
-        BR: {lat: -10, lng: -55},
-        CL: {lat: -33, lng: -71},
-        CO: {lat: 4, lng: -72},
-        Desconocido: {lat: 20, lng: 0}
+        AR: {lat: -34, lng: -64}, ES: {lat: 40, lng: -3}, MX: {lat: 23, lng: -102},
+        US: {lat: 37, lng: -95}, BR: {lat: -10, lng: -55}, CL: {lat: -33, lng: -71},
+        CO: {lat: 4, lng: -72}, Desconocido: {lat: 20, lng: 0}
       };
       if (map) { map.remove(); map = null; }
       const mapEl = document.getElementById('map');
@@ -805,15 +830,13 @@
           if (!coords) coords = countryCoords["Desconocido"];
           const marker = L.circleMarker([coords.lat, coords.lng], {
             radius: Math.max(8, Math.min(20, count)),
-            color: "#6D28D9",
-            fillColor: "#C4B5FD",
-            fillOpacity: 0.6
+            color: "#6D28D9", fillColor: "#C4B5FD", fillOpacity: 0.6
           }).addTo(map);
           marker.bindPopup(`<b>${countryNames[country] || country}</b>: ${count} pensamientos`);
           countryMarkers[country] = marker;
         }
       } catch (e) {
-        // Silenciar
+        console.error("Error loading map:", e);
       }
     }
 
@@ -826,9 +849,7 @@
         alert('Debes escribir un mensaje y elegir fecha/hora');
         return;
       }
-      if (window.contienePalabraOfensiva(msg)) {
-        return;
-      }
+      if (window.contienePalabraOfensiva(msg)) return;
       if (!countryReady) {
         alert("Cargando país, por favor espera un momento e intenta de nuevo.");
         return;
@@ -848,11 +869,11 @@
         document.getElementById('capsuleTime').value = '';
         loadMyCapsules();
       } catch (e) {
+        console.error("Error saving capsule:", e);
         alert("Error al guardar la cápsula. Intenta de nuevo.");
       }
     };
 
-    // ---- Cargar y mostrar cápsulas (PENDIENTES y ABIERTAS) ----
     async function loadMyCapsules() {
       const list = document.getElementById('capsulesList');
       if (!list) return;
@@ -861,7 +882,7 @@
         const now = Date.now();
         const snapshot = await db.collection("capsules")
           .where("user", "==", getAnonUserId())
-          .orderBy("openAt", "asc") // Ordenamos ascendente para ver las próximas a abrirse primero
+          .orderBy("openAt", "asc")
           .get();
 
         let pendingHtml = '';
@@ -870,7 +891,6 @@
         snapshot.forEach(doc => {
           const data = doc.data();
           if (data.openAt > now) {
-            // Cápsula pendiente (futura)
             pendingHtml += `
               <div class="p-4 bg-gray-100 rounded-lg shadow-sm border border-dashed border-gray-300">
                 <div class="flex items-center text-blue-800 font-bold text-sm">
@@ -881,14 +901,13 @@
               </div>
             `;
           } else {
-            // Cápsula abierta (pasada)
             openedHtml = `
               <div class="p-4 bg-white rounded-lg shadow-md">
                 <div class="mb-2 text-blue-700 font-bold text-sm">Cápsula abierta el ${formatearFecha(data.openAt)}</div>
                 <p class="font-medium">${data.text}</p>
                 <div class="text-[0.7rem] text-gray-400 mt-1">Programada el ${formatearFecha(data.ts)}</div>
               </div>
-            ` + openedHtml; // Se añade al principio para que las más recientes aparezcan primero
+            ` + openedHtml;
           }
         });
 
@@ -907,10 +926,10 @@
         }
 
       } catch (e) {
+        console.error("Error loading my capsules:", e);
         list.innerHTML = '<div class="text-red-700 text-sm">Error al cargar tus cápsulas.</div>';
       }
     }
-
 
     // ---- TABS ----
     function showTab(tabId) {
@@ -942,13 +961,10 @@
           imgLogo.classList.add('visible');
         }, 3500);
       }
-      // Carga inicial
-      showTab('feed'); // Mostrar la pestaña principal por defecto
-      // Chequear notificaciones de respuestas
+      showTab('feed');
       setTimeout(checkNewReplies, 1500);
     };
 
-    // Auto-check de notificaciones cada 40s
     setInterval(() => { checkNewReplies(); }, 40000);
 
   </script>
