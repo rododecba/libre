@@ -31,6 +31,21 @@
     .estadisticas-anonimas .titulo { font-weight: 600; color: #6D28D9; margin-bottom: 0.2rem; }
     .estadisticas-anonimas .dato { font-size: 1.07rem; font-weight: 500; color: #2D3748; margin-bottom: 0.1rem; }
     .estadisticas-anonimas .dato strong { color: #6D28D9; }
+    /* Badge notificación */
+    .badge-notif {
+      display: inline-block;
+      min-width: 16px;
+      background: #ef4444;
+      color: #fff;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      position: absolute;
+      top: -6px;
+      right: -10px;
+      z-index: 10;
+      box-shadow: 0 0 4px #ef4444aa;
+    }
     @media (max-width: 640px) {
       .estadisticas-anonimas { font-size: 0.97rem; }
     }
@@ -48,10 +63,13 @@
     </div>
   </header>
 
-  <nav class="w-full max-w-xl flex justify-around mb-6 text-sm">
+  <nav class="w-full max-w-xl flex justify-around mb-6 text-sm relative">
     <button onclick="showTab('write')" class="hover:underline">Escribir</button>
     <button onclick="showTab('feed')" class="hover:underline">Pensamientos globales</button>
-    <button onclick="showTab('mine')" class="hover:underline">Mis pensamientos</button>
+    <button onclick="showTab('mine')" class="hover:underline relative">
+      Mis pensamientos
+      <span id="mineTabNotification" class="badge-notif hidden">¡Nuevo!</span>
+    </button>
     <button onclick="showTab('capsule')" class="hover:underline">Cápsula del tiempo</button>
     <button onclick="showTab('about')" class="hover:underline">Acerca de</button>
   </nav>
@@ -104,7 +122,6 @@
         <input type="time" id="capsuleTime" class="p-2 rounded-lg bg-white border border-blue-300 focus:outline-none">
         <button id="capsuleBtn" class="px-4 py-2 rounded-lg bg-blue-500 text-white shadow-md hover:bg-blue-600 transition">Programar</button>
       </div>
-      <!-- CORRECCIÓN: Lista de cápsulas desbloqueadas -->
       <div id="capsulesList" class="mt-6 space-y-4"></div>
     </div>
   </section>
@@ -115,32 +132,45 @@
         <span class="text-3xl mr-2">ℹ️</span>
         <h2 class="text-2xl font-semibold text-black-400">Acerca de & Preguntas Frecuentes</h2>
       </div>
- <details class="mb-2">
-  <summary class="font-medium cursor-pointer">¿Por qué Libre?</summary>
-  <ul class="pl-0 text-sm font-medium text-yellow-0 text-justify">
-    <li>🔒 <b>Anonimato radical:</b> Nadie te sigue, nadie sabe quién eres. Tu identidad no importa, solo tu pensamiento.</li>
-    <li>🚫 <b>Sin validación social:</b> No hay “me gusta”, ni seguidores, ni comentarios públicos que te condicionen. La única interacción es lanzar tu botella (pensamiento) y, si alguien la encuentra, puede responderte de forma igual de anónima.</li>
-    <li>🕊️ <b>Libertad de expresión pura:</b> Puedes escribir lo que quieras, sin miedo a juicios, sin presión social. Es tu espacio para soltar lo que llevas dentro, sin esperar nada a cambio.</li>
-    <li>🌎 <b>Conexión humana inesperada:</b> Tu mensaje puede llegar a cualquier persona, en cualquier país, en cualquier momento. Es un acto de fe en la humanidad y en el azar.</li>
-    <li>💭 <b>Sin historial, sin reputación:</b> Olvida el pasado. Aquí nadie construye un perfil, ni una imagen. Cada mensaje es un instante aislado, sin contexto previo ni futuro.</li>
-    <li>🛡️ <b>Antídoto a la sobreexposición:</b> Un refugio frente a la hiperconectividad, la presión social y la búsqueda constante de aprobación.</li>
-    <li>🤝 <b>Espacio seguro y respetuoso:</b> Aunque anónimo, el respeto sigue siendo la base. No toleramos mensajes de odio, violencia o discriminación.</li>
-    <li>🎲 <b>Cero algoritmos, cero manipulación:</b> No hay feeds personalizados, ni trending topics. Todo es azar, todo es igual de importante.</li>
-  </ul>
-</details>
+      <details class="mb-2">
+        <summary class="font-medium cursor-pointer">¿Por qué Libre?</summary>
+        <ul class="pl-0 text-sm font-medium text-yellow-0 text-justify">
+          <li>🔒 <b>Anonimato radical:</b> Nadie te sigue, nadie sabe quién eres. Tu identidad no importa, solo tu pensamiento.</li>
+          <li>🚫 <b>Sin validación social:</b> No hay “me gusta”, ni seguidores, ni comentarios públicos que te condicionen. La única interacción es lanzar tu botella (pensamiento) y, si alguien la encuentra, puede responderte de forma igual de anónima.</li>
+          <li>🕊️ <b>Libertad de expresión pura:</b> Puedes escribir lo que quieras, sin miedo a juicios, sin presión social. Es tu espacio para soltar lo que llevas dentro, sin esperar nada a cambio.</li>
+          <li>🌎 <b>Conexión humana inesperada:</b> Tu mensaje puede llegar a cualquier persona, en cualquier país, en cualquier momento. Es un acto de fe en la humanidad y en el azar.</li>
+          <li>💭 <b>Sin historial, sin reputación:</b> Olvida el pasado. Aquí nadie construye un perfil, ni una imagen. Cada mensaje es un instante aislado, sin contexto previo ni futuro.</li>
+          <li>🛡️ <b>Antídoto a la sobreexposición:</b> Un refugio frente a la hiperconectividad, la presión social y la búsqueda constante de aprobación.</li>
+          <li>🤝 <b>Espacio seguro y respetuoso:</b> Aunque anónimo, el respeto sigue siendo la base. No toleramos mensajes de odio, violencia o discriminación.</li>
+          <li>🎲 <b>Cero algoritmos, cero manipulación:</b> No hay feeds personalizados, ni trending topics. Todo es azar, todo es igual de importante.</li>
+        </ul>
+      </details>
       <details class="mb-2">
         <summary class="font-medium cursor-pointer">¿Por qué no hay login ni perfiles?</summary>
         <p class="mt-1 text-sm font-medium text-yellow-0 text-justify">La ausencia de login y perfiles es el pilar central de la filosofía de LIBRE. Queremos que te expreses sin la presión social, sin la necesidad de construir una imagen o de buscar validación. Tus palabras son libres, tú eres libre.</p>
       </details>
-      <details>
+      <details class="mb-2">
         <summary class="font-medium cursor-pointer">¿Es LIBRE realmente anónimo?</summary>
         <p class="mt-1 text-sm font-medium text-yellow-0 text-justify">Sí, absolutamente. No te pedimos nombre, email, ni ningún dato personal. Tu pensamiento se lanza con un ID anónimo generado en tu propio navegador, que no te identifica. El país se determina por tu IP, pero no se vincula a tu persona y solo se usa para fines estadísticos globales.</p>
+      </details>
+      <details class="mb-2">
+        <summary class="font-medium cursor-pointer">⚖️ Aviso legal y de responsabilidad</summary>
+        <div class="mt-1 text-sm font-medium text-yellow-0 text-justify">
+          <b>LIBRE</b> es una plataforma que permite a los usuarios compartir pensamientos y mensajes de manera completamente anónima. Al utilizar este sitio, aceptas los siguientes términos y condiciones:
+          <ul class="list-disc pl-4 mt-2">
+            <li><b>Naturaleza del servicio:</b> LIBRE no requiere registro, no almacena datos personales identificables, ni utiliza sistemas de seguimiento de usuarios. Todos los mensajes publicados son completamente anónimos y no pueden ser vinculados a una persona real.</li>
+            <li><b>Contenido de los usuarios:</b> El contenido publicado en LIBRE es generado exclusivamente por los usuarios, quienes son responsables de sus propias publicaciones. El equipo de LIBRE no se hace responsable por el contenido, opiniones o ideas expresadas por los usuarios. No se permite la publicación de mensajes que inciten al odio, violencia, discriminación, o que infrinjan la ley. El equipo de LIBRE se reserva el derecho de eliminar contenido que considere inapropiado sin previo aviso.</li>
+            <li><b>Limitación de responsabilidad:</b> LIBRE no garantiza la veracidad, integridad o actualidad de los contenidos publicados por los usuarios. El uso de la información contenida en este sitio se realiza bajo la exclusiva responsabilidad del usuario. LIBRE declina cualquier responsabilidad por daños y perjuicios de cualquier naturaleza que puedan deberse a la utilización de la información publicada, así como por la falta de disponibilidad o continuidad del funcionamiento del sitio.</li>
+            <li><b>Uso anónimo:</b> El anonimato es uno de los pilares de LIBRE. Sin embargo, no podemos garantizar el anonimato absoluto frente a terceros ajenos a la plataforma (por ejemplo, proveedores de servicios de internet). La detección del país se realiza únicamente con fines estadísticos y no se asocia con datos personales.</li>
+            <li><b>Enlaces externos:</b> En caso de que los usuarios compartan enlaces a sitios de terceros, LIBRE no se responsabiliza por los contenidos, servicios o posibles daños derivados del uso de esos enlaces externos.</li>
+            <li><b>Cambios en el aviso legal:</b> LIBRE se reserva el derecho de modificar este aviso legal en cualquier momento. Se recomienda revisar periódicamente esta sección para estar informado sobre posibles cambios.</li>
+          </ul>
+        </div>
       </details>
     </div>
   </section>
 
   <section id="write" class="w-full max-w-xl mb-6">
-    <!-- Frase inspiradora eliminada de aquí -->
     <textarea id="textarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400" rows="4" maxlength="500"></textarea>
     <button id="sendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-blue-400 text-white hover:bg-blue-600 shadow-md hover:shadow-xl transition">Enviar pensamiento</button>
   </section>
@@ -179,7 +209,6 @@
       if (textarea) textarea.placeholder = frase;
     }
 
-    // Mostrar frase al cargar y cuando se muestra la pestaña de escribir
     mostrarFraseInspiradoraEnTextarea();
     function onShowWriteTab() {
       mostrarFraseInspiradoraEnTextarea();
@@ -321,6 +350,53 @@
     let globalPage = 1, globalMaxPages = 1;
     let myPage = 1, myMaxPages = 1;
 
+    // ---- SISTEMA DE NOTIFICACIONES BÁSICO ----
+    function getLastSeenReplyTimestamp(thoughtId) {
+      return Number(localStorage.getItem("libre_last_seen_reply_" + thoughtId) || 0);
+    }
+    function setLastSeenReplyTimestamp(thoughtId, ts) {
+      localStorage.setItem("libre_last_seen_reply_" + thoughtId, String(ts));
+    }
+    async function checkNewReplies() {
+      try {
+        const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).get();
+        let hasNewReply = false;
+        for (const doc of snapshot.docs) {
+          const thoughtId = doc.id;
+          const repliesSnap = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "desc").limit(1).get();
+          if (!repliesSnap.empty) {
+            const latestReply = repliesSnap.docs[0].data();
+            const lastSeen = getLastSeenReplyTimestamp(thoughtId);
+            if (latestReply.ts > lastSeen) {
+              hasNewReply = true;
+            }
+          }
+        }
+        const notifEl = document.getElementById("mineTabNotification");
+        if(notifEl) {
+          notifEl.classList.toggle("hidden", !hasNewReply);
+        }
+      } catch (e) {
+        // Silenciar errores
+      }
+    }
+    // Marca como visto al entrar a "Mis pensamientos"
+    async function markRepliesAsSeen() {
+      try {
+        const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).get();
+        for (const doc of snapshot.docs) {
+          const thoughtId = doc.id;
+          const repliesSnap = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "desc").limit(1).get();
+          if (!repliesSnap.empty) {
+            const latestReply = repliesSnap.docs[0].data();
+            setLastSeenReplyTimestamp(thoughtId, latestReply.ts);
+          }
+        }
+        const notifEl = document.getElementById("mineTabNotification");
+        if(notifEl) notifEl.classList.add("hidden");
+      } catch (e) {}
+    }
+
     // ---- ESCRIBIR PENSAMIENTO ----
     document.getElementById('sendBtn').onclick = async function() {
       if (!countryReady) {
@@ -349,6 +425,8 @@
         loadMap();
         loadEstadisticasAnonimas();
         loadMyThoughts(myPage);
+        // Revisa notificaciones después de enviar
+        setTimeout(checkNewReplies, 2000);
       } catch (e) {
         alert("Error al guardar el pensamiento. Intenta de nuevo.");
       }
@@ -361,7 +439,6 @@
       btn.disabled = true;
       textarea.disabled = true;
       try {
-        // --- Validación para que no puedas responderte a ti mismo ---
         const thoughtDoc = await db.collection("thoughts").doc(thoughtId).get();
         const thoughtData = thoughtDoc.data();
         if (thoughtData.user === getAnonUserId()) {
@@ -377,6 +454,8 @@
         });
         textarea.value = '';
         await mostrarRespuestas(thoughtId, respuestasDiv);
+        // Notificaciones: revisa por si tocó a mi user
+        setTimeout(checkNewReplies, 1000);
       } catch(e) {
         alert('Error al guardar la respuesta.');
       }
@@ -417,6 +496,22 @@
       try {
         const snapshot = await db.collection("thoughts").orderBy("ts", "desc").get();
         const docs = snapshot.docs;
+        // INICIO: Si está vacío, poblar con simulaciones
+        if (docs.length === 0) {
+          // Frases simuladas de ejemplo (puedes extender este array)
+          const frasesSimuladas = window.frasesSimuladasEjemplo || [];
+          let simuladas = [];
+          for (let i=0; i<frasesSimuladas.length; i++) {
+            simuladas.push({
+              data: () => frasesSimuladas[i],
+              id: "simulada_"+i
+            });
+          }
+          mostrarGlobalThoughtsSimulados(simuladas, page, globalThoughts, globalPagination);
+          globalMaxPages = Math.max(1, Math.ceil(simuladas.length/PAGE_SIZE));
+          return;
+        }
+        // FIN SIMULACIÓN
         globalMaxPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
         page = Math.max(1, Math.min(page, globalMaxPages));
         globalPage = page;
@@ -450,7 +545,6 @@
           const respuestasDiv = card.querySelector('.respuestas');
           mostrarRespuestas(thoughtId, respuestasDiv);
         }
-        // Paginación
         if (globalPagination) {
           globalPagination.innerHTML = `
             <button onclick="loadGlobalThoughts(${globalPage-1})" ${globalPage<=1?'disabled':''}>Anterior</button>
@@ -460,6 +554,39 @@
         }
       } catch (e) {
         globalThoughts.innerHTML = '<p class="text-sm font-medium text-red-900 opacity-75">Error al cargar pensamientos globales.</p>';
+      }
+    }
+
+    // Mostrar pensamientos simulados si la BD está vacía
+    function mostrarGlobalThoughtsSimulados(simuladas, page, globalThoughts, globalPagination) {
+      globalMaxPages = Math.max(1, Math.ceil(simuladas.length / PAGE_SIZE));
+      page = Math.max(1, Math.min(page, globalMaxPages));
+      globalPage = page;
+      const start = (page - 1) * PAGE_SIZE;
+      const items = simuladas.slice(start, start + PAGE_SIZE);
+      globalThoughts.innerHTML = '';
+      for (let item of items) {
+        const data = item.data();
+        const card = document.createElement('div');
+        card.className = 'p-4 bg-white rounded-lg shadow-sm';
+        card.innerHTML = `
+          <div class="flex items-center space-x-2 mb-2">
+            <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
+          </div>
+          <p class="font-medium">${data.text}</p>
+          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
+          <div class="mt-2">
+            <span class="text-xs text-gray-400">Simulación</span>
+          </div>
+        `;
+        globalThoughts.appendChild(card);
+      }
+      if (globalPagination) {
+        globalPagination.innerHTML = `
+          <button onclick="loadGlobalThoughts(${globalPage-1})" ${globalPage<=1?'disabled':''}>Anterior</button>
+          <span>Página ${globalPage} de ${globalMaxPages}</span>
+          <button onclick="loadGlobalThoughts(${globalPage+1})" ${globalPage>=globalMaxPages?'disabled':''}>Siguiente</button>
+        `;
       }
     }
 
@@ -492,7 +619,6 @@
     };
 
     // ---- FUNCION GUARDAR ECO LECTURA ----
-    // Llama a esta función cada vez que se muestre un pensamiento AJENO (no de mi user) en el feed:
     async function registrarEco(thoughtId) {
       if (!countryReady) return;
       try {
@@ -506,7 +632,7 @@
           }
         });
       } catch (e) {
-        // No mostrar error al usuario, es opcional
+        // Silenciar
       }
     }
 
@@ -528,14 +654,12 @@
         } else {
           const start = (page - 1) * PAGE_SIZE;
           const items = docs.slice(start, start + PAGE_SIZE);
-          // Para cada pensamiento, mostrar ecos
           for (const doc of items) {
             const data = doc.data();
             const thoughtId = doc.id;
             const card = document.createElement('div');
             card.className = 'p-4 bg-white rounded-lg shadow-sm';
 
-            // Buscar ecos en subcolección eco
             let ecosHtml = '';
             try {
               const ecosSnap = await db.collection("thoughts").doc(thoughtId).collection("eco").get();
@@ -625,16 +749,12 @@
         snapshot.docs.forEach(doc => {
           const data = doc.data();
           const fechaDoc = new Date(data.ts);
-          // Pensamientos de hoy
           if (fechaDoc >= hoy) pensamientosHoy++;
-          // Países última semana
           if (fechaDoc >= inicioSemana) paisesSemana.add(data.country || "Desconocido");
-          // Record de pensamientos en un día
           const diaKey = fechaDoc.getFullYear() + "-" + (fechaDoc.getMonth()+1).toString().padStart(2,"0") + "-" + fechaDoc.getDate().toString().padStart(2,"0");
           pensamientosPorDia[diaKey] = (pensamientosPorDia[diaKey] || 0) + 1;
         });
 
-        // Buscar récord
         for (const [dia, cantidad] of Object.entries(pensamientosPorDia)) {
           if (cantidad > recordDia.cantidad) {
             recordDia = { fecha: dia, cantidad };
@@ -669,7 +789,7 @@
       if (map) { map.remove(); map = null; }
       const mapEl = document.getElementById('map');
       if (!mapEl) return;
-      mapEl.innerHTML = ""; // Limpia el contenedor
+      mapEl.innerHTML = "";
       map = L.map('map', { attributionControl: false }).setView([20,0], 2);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -697,7 +817,7 @@
           countryMarkers[country] = marker;
         }
       } catch (e) {
-        // Mostrar error en el mapa
+        // Silenciar
       }
     }
 
@@ -730,14 +850,13 @@
         document.getElementById('capsuleMessage').value = '';
         document.getElementById('capsuleDate').value = '';
         document.getElementById('capsuleTime').value = '';
-        // Opcional: recarga la lista de cápsulas tras crear una nueva
         loadMyCapsules();
       } catch (e) {
         alert("Error al guardar la cápsula. Intenta de nuevo.");
       }
     };
 
-    // ---- CORRECCIÓN: Mostrar cápsulas desbloqueadas ----
+    // ---- Mostrar cápsulas desbloqueadas ----
     async function loadMyCapsules() {
       const list = document.getElementById('capsulesList');
       if (!list) return;
@@ -781,8 +900,7 @@
       const active = document.getElementById(tabId);
       if (active) active.classList.remove('hidden');
       if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(globalPage); loadCountryRanking(); loadMap(); loadEstadisticasAnonimas(); }
-      if(tabId=='mine') { loadMyThoughts(myPage); }
-      // CORRECCIÓN: cargar cápsulas desbloqueadas en la pestaña cápsula
+      if(tabId=='mine') { loadMyThoughts(myPage); markRepliesAsSeen(); }
       if(tabId=='capsule') { loadMyCapsules(); }
       if(tabId=='write') { onShowWriteTab(); }
     }
@@ -809,26 +927,151 @@
       loadCountryRanking();
       loadMap();
       loadEstadisticasAnonimas();
+      // Chequear notificaciones de respuestas
+      setTimeout(checkNewReplies, 1500);
     };
 
-    // ---- REGISTRA ECO AL LEER UN PENSAMIENTO EN EL FEED ----
-    // Ejemplo: si quieres registrar eco sólo si el pensamiento no es del usuario actual
-    async function registrarEcosEnFeed() {
-      try {
-        const snapshot = await db.collection("thoughts").orderBy("ts", "desc").get();
-        const docs = snapshot.docs;
-        const start = (globalPage - 1) * PAGE_SIZE;
-        const items = docs.slice(start, start + PAGE_SIZE);
-        for (let doc of items) {
-          const data = doc.data();
-          const thoughtId = doc.id;
-          if (data.user !== getAnonUserId()) {
-            registrarEco(thoughtId);
-          }
-        }
-      } catch (e) { }
-    }
-    // Puedes llamar registrarEcosEnFeed() tras cargar pensamientos globales si deseas que la visualización cuente como eco.
+    // Auto-check de notificaciones cada 40s
+    setInterval(() => { checkNewReplies(); }, 40000);
+
+    // ---- PENSAMIENTOS SIMULADOS ----
+    // Puedes modificar, agregar o quitar frases a gusto. Ejemplo para AR, ES, MX y CO:
+    window.frasesSimuladasEjemplo = [
+      {
+        text: "Che, ¿alguien más tiene días en los que el mate no alcanza para levantar el ánimo? 😂 Hoy fue uno de esos. Pero igual, mañana será otro día.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*24*2 // hace 2 días
+      },
+      {
+        text: "Hoy en el bondi me crucé a una señora que me sonrió sin motivo. Esas cosas raras que te dejan pensando todo el día.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*22 // hace 22 horas
+      },
+      {
+        text: "¿Por qué cuando llueve en Buenos Aires nadie maneja bien? Es como si se olvidaran cómo funciona todo. 😂",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*35 // hace 35 horas
+      },
+      {
+        text: "Hoy he salido a la calle y me ha dado toda la pereza socializar. ¿A alguien más le pasa o soy yo? A veces sólo quiero desaparecer entre la gente.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*20 // hace 20 horas
+      },
+      {
+        text: "En serio, ¿por qué siempre que digo 'una caña' terminan siendo tres? Esto es un bucle. Y claro, mañana a currar como si nada.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*28 // hace 28 horas
+      },
+      {
+        text: "Mi madre me ha vuelto a preguntar si ya tengo trabajo fijo. Spoiler: no. Pero le sonrío igual.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*60 // hace 2.5 días
+      },
+      {
+        text: "Hoy mi abuela hizo chilaquiles y neta, no hay mejor remedio para el mal de amores que la comida de la abuela. 😋",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*6 // hace 6 horas
+      },
+      {
+        text: "Cuando llego al Oxxo y no hay pan dulce, siento que el universo me está trolleando. ¿A alguien más le pasa?",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*15 // hace 15 horas
+      },
+      {
+        text: "Confieso que a veces le hablo a mi perro como si me entendiera todo. Y creo que sí me entiende.",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*11 // hace 11 horas
+      },
+      {
+        text: "Hoy el tinto me supo a gloria, literal, me salvó del madrugón. En Bogotá el café es casi religión.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*36 // hace 36 horas
+      },
+      {
+        text: "Me gustaría vivir un día sin trancón, pero bueno, soñar no cuesta nada. Bogotá y sus trancones eternos.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*48 // hace 2 días
+      },
+      {
+        text: "¿Será que algún día aprenderé a bailar salsa bien? Por ahora, solo hago el intento y me río de mí mismo.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*3 // hace 3 horas
+      },
+      {
+        text: "A veces uno sólo quiere escribir y que nadie lo lea. Pero si alguien llegó hasta acá, que sepa que hoy no fue un gran día, pero tampoco fue el peor.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*50 // hace 50 horas
+      },
+      {
+        text: "Hoy me di cuenta de que llevo años guardando mensajes en borradores que jamás enviaré. Quizás este sea uno más, pero al menos aquí sale al mar.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*42
+      },
+      {
+        text: "Amo los atardeceres en mi ciudad, aunque el tráfico esté del nabo. A veces creo que podría escribir un libro solo con lo que pienso mientras manejo.",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*19
+      },
+      {
+        text: "Echo de menos las noches de terraceo con mis colegas, pero toca sobrevivir al curro otro día más. España y sus contradicciones.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*110
+      },
+      {
+        text: "Hoy la lluvia me hizo pensar en viejos recuerdos. Es impresionante cómo los olores pueden hacerte viajar en el tiempo.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*55
+      },
+      {
+        text: "Hoy fue el típico día en que todo sale al revés, pero igual, aquí ando, escribiendo esto como terapia anónima.",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*7
+      },
+      // Simulaciones largas (hasta 500 caracteres)
+      {
+        text: "A veces siento que me paso la vida esperando algo que no sé si va a llegar, pero igual sigo, porque de eso se trata, ¿no? De ir avanzando, aunque sea a ciegas, aunque nadie te aplauda, aunque a veces ni vos mismo sepas el porqué. Me gustaría pensar que alguien, en algún lugar, entiende esto. Y si no, bueno, al menos lo escribí acá y ya está.",
+        country: "AR",
+        user: "anon-argentino",
+        ts: Date.now() - 1000*60*60*90
+      },
+      {
+        text: "Hoy vi a una pareja mayor darse la mano en la plaza y me llenó de esperanza, porque en un mundo en el que todo parece tan fugaz, tan de usar y tirar, ver a dos personas que todavía se eligen después de años me hace creer que algo de magia queda. Ojalá todos tengamos a alguien con quien compartir silencios y también risas.",
+        country: "ES",
+        user: "anon-españa",
+        ts: Date.now() - 1000*60*60*130
+      },
+      {
+        text: "No sé si escribir esto sirve de algo, pero me siento menos solo sabiendo que puede que alguien lea esto, que tal vez ni siquiera hable mi idioma, pero que en algún rincón del mundo, por un segundo, nuestras vidas se crucen a través de un pensamiento perdido en el mar digital.",
+        country: "CO",
+        user: "anon-col",
+        ts: Date.now() - 1000*60*60*5
+      },
+      {
+        text: "Hoy no tengo nada profundo que decir, solo vine a desahogarme un rato. Si llegaste hasta acá, ojalá tengas un día mejor que el mío, aunque sea por poquito. 😅",
+        country: "MX",
+        user: "anon-mex",
+        ts: Date.now() - 1000*60*60*2
+      }
+    ];
+    // ---- FIN SIMULACIONES ----
 
   </script>
 </body>
