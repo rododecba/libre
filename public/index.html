@@ -64,8 +64,8 @@
   </header>
 
   <nav class="w-full max-w-xl flex justify-around mb-6 text-sm relative">
-    <button onclick="showTab('write')" class="hover:underline">Escribir</button>
     <button onclick="showTab('feed')" class="hover:underline">Pensamientos globales</button>
+    <button onclick="showTab('write')" class="hover:underline">Escribir</button>
     <button onclick="showTab('mine')" class="hover:underline relative">
       Mis pensamientos
       <span id="mineTabNotification" class="badge-notif hidden">¡Nuevo!</span>
@@ -74,17 +74,22 @@
     <button onclick="showTab('about')" class="hover:underline">Acerca de</button>
   </nav>
 
-  <section id="feed" class="w-full max-w-xl mb-8 hidden">
-    <div class="rounded-2xl bg-purple-100 border border-purple-300 p-6 shadow-md relative">
+  <section id="feed" class="w-full max-w-xl mb-8">
+    <div class="rounded-2xl bg-blue-100 border border-blue-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
         <span class="text-3xl mr-2">🌍</span>
-        <h2 class="text-2xl font-semibold text-purple-800">Pensamientos de todo el mundo</h2>
+        <h2 class="text-2xl font-semibold text-blue-800">Pensamientos de todo el mundo</h2>
       </div>
-      <div id="map"></div>
-      <div id="countryRanking" class="mb-4"></div>
+      <details class="mb-4">
+        <summary class="font-medium cursor-pointer text-blue-800">Ver mapa y ranking de países</summary>
+        <div class="mt-2">
+          <div id="map"></div>
+          <div id="countryRanking" class="mb-4"></div>
+        </div>
+      </details>
       <!-- NUEVO: Estadísticas Anónimas -->
       <div id="estadisticasAnonimas" class="estadisticas-anonimas"></div>
-      <button id="randomBottleBtn" class="mb-4 px-4 py-2 rounded-lg bg-purple-500 text-white shadow-md hover:bg-purple-600 transition">Modo Botella al Mar (Random)</button>
+      <button id="randomBottleBtn" class="mb-4 px-4 py-2 rounded-lg bg-blue-500 text-white shadow-md hover:bg-blue-600 transition">Modo Botella al Mar (Random)</button>
       <div id="randomThought" class="p-4 bg-white rounded-lg shadow-sm mb-4 hidden"></div>
       <div id="globalThoughts" class="space-y-4"></div>
       <div id="globalPagination" class="pagination"></div>
@@ -170,7 +175,7 @@
     </div>
   </section>
 
-  <section id="write" class="w-full max-w-xl mb-6">
+  <section id="write" class="w-full max-w-xl mb-6 hidden">
     <textarea id="textarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400" rows="4" maxlength="500"></textarea>
     <button id="sendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-blue-400 text-white hover:bg-blue-600 shadow-md hover:shadow-xl transition">Enviar pensamiento</button>
   </section>
@@ -609,9 +614,9 @@
       document.querySelectorAll('.caja-respuesta').forEach(el => { el.classList.add('hidden'); el.innerHTML = ''; });
       caja.classList.remove('hidden');
       caja.innerHTML = `
-        <textarea class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm"
+        <textarea class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
           rows="2" maxlength="300" placeholder="Escribe tu respuesta..."></textarea>
-        <button class="mt-2 px-4 py-1 rounded-lg bg-purple-500 text-white text-sm font-medium shadow hover:bg-purple-600 transition enviarRespuestaBtn">
+        <button class="mt-2 px-4 py-1 rounded-lg bg-blue-500 text-white text-sm font-medium shadow hover:bg-blue-600 transition enviarRespuestaBtn">
           Enviar respuesta
         </button>
       `;
@@ -732,7 +737,7 @@
           countryCounts[c] = (countryCounts[c] || 0) + 1;
         });
         const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
-        let html = '<div class="mb-2 font-semibold text-purple-800">Ranking de países más activos:</div>';
+        let html = '<div class="mb-2 font-semibold text-blue-800">Ranking de países más activos:</div>';
         html += '<ul class="list-disc pl-4">';
         sorted.slice(0, 5).forEach(([country, count]) => {
           html += `<li><span class="font-bold">${countryNames[country] || country}</span>: ${count}</li>`;
