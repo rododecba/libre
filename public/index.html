@@ -50,6 +50,39 @@
       .estadisticas-anonimas { font-size: 0.97rem; }
     }
   </style>
+  
+  <!-- IMPORTANTE: Definir showTab al principio para que esté disponible globalmente -->
+  <script>
+    // Definir showTab como una función global para que esté disponible inmediatamente
+    function showTab(tabId) {
+      const sections = ['write', 'feed', 'mine', 'capsule', 'about'];
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      const active = document.getElementById(tabId);
+      if (active) active.classList.remove('hidden');
+      
+      // Solo llamar a estas funciones si están definidas (serán definidas más tarde en el script principal)
+      if(tabId=='feed' && window.loadGlobalCount) { 
+        window.loadGlobalCount(); 
+        window.loadGlobalThoughts(window.globalPage); 
+        window.loadCountryRanking(); 
+        window.loadMap(); 
+        window.loadEstadisticasAnonimas(); 
+      }
+      if(tabId=='mine' && window.loadMyThoughts) { 
+        window.loadMyThoughts(window.myPage); 
+        window.markRepliesAsSeen(); 
+      }
+      if(tabId=='capsule' && window.loadMyCapsules) { 
+        window.loadMyCapsules(); 
+      }
+      if(tabId=='write' && window.onShowWriteTab) { 
+        window.onShowWriteTab(); 
+      }
+    }
+  </script>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col items-center p-4">
   <header class="mb-6 text-center w-full max-w-xl">
@@ -64,14 +97,14 @@
   </header>
 
   <nav class="w-full max-w-xl flex justify-around mb-6 text-sm relative">
-    <button onclick="showTab('write')" class="hover:underline">Escribir</button>
-    <button onclick="showTab('feed')" class="hover:underline">Pensamientos globales</button>
-    <button onclick="showTab('mine')" class="hover:underline relative">
+    <button id="btn-write" class="hover:underline">Escribir</button>
+    <button id="btn-feed" class="hover:underline">Pensamientos globales</button>
+    <button id="btn-mine" class="hover:underline relative">
       Mis pensamientos
       <span id="mineTabNotification" class="badge-notif hidden">¡Nuevo!</span>
     </button>
-    <button onclick="showTab('capsule')" class="hover:underline">Cápsula del tiempo</button>
-    <button onclick="showTab('about')" class="hover:underline">Acerca de</button>
+    <button id="btn-capsule" class="hover:underline">Cápsula del tiempo</button>
+    <button id="btn-about" class="hover:underline">Acerca de</button>
   </nav>
 
   <section id="feed" class="w-full max-w-xl mb-8 hidden">
@@ -98,8 +131,8 @@
         <h2 class="text-2xl font-semibold text-green-800">Historial de mensajes</h2>
       </div>
       <div class="flex mb-3">
-        <button onclick="exportAnonId()" class="px-3 py-1 rounded bg-gray-300 mr-2 text-sm">Exportar ID</button>
-        <button onclick="importAnonId()" class="px-3 py-1 rounded bg-gray-300 text-sm">Importar ID</button>
+        <button id="export-anon-btn" class="px-3 py-1 rounded bg-gray-300 mr-2 text-sm">Exportar ID</button>
+        <button id="import-anon-btn" class="px-3 py-1 rounded bg-gray-300 text-sm">Importar ID</button>
       </div>
       <div class="mb-4 text-xs text-green-900 opacity-60">Para mantener tu historial aunque borres caché o cambies de dispositivo, exporta tu ID y guárdalo en un lugar seguro. Sólo tú lo conoces.</div>
       <div id="myThoughts" class="space-y-4">
@@ -227,6 +260,11 @@
       "A veces lo más importante es soltar."
     ];
 
+    window.onShowWriteTab = function() {
+      mostrarFraseInspiradoraEnTextarea();
+      document.getElementById('textarea').focus();
+    }
+
     function mostrarFraseInspiradoraEnTextarea() {
       const frase = FRASES_INSPIRADORAS[Math.floor(Math.random() * FRASES_INSPIRADORAS.length)];
       const textarea = document.getElementById('textarea');
@@ -234,10 +272,6 @@
     }
 
     mostrarFraseInspiradoraEnTextarea();
-    function onShowWriteTab() {
-      mostrarFraseInspiradoraEnTextarea();
-      document.getElementById('textarea').focus();
-    }
 
     // ---- FORMATO FECHA ----
     function formatearFecha(ts) {
@@ -310,12 +344,12 @@
     }
 
     // ---- EXPORTAR/IMPORTAR IDENTIFICADOR ANÓNIMO ----
-    function exportAnonId() {
+    window.exportAnonId = function() {
       const id = getAnonUserId();
       window.prompt("Este es tu identificador anónimo. Cópialo y guárdalo en un lugar seguro para restaurar tu historial cuando quieras:", id);
     }
 
-    function importAnonId() {
+    window.importAnonId = function() {
       const newId = window.prompt("Pega aquí tu identificador anónimo guardado anteriormente:");
       if (newId && /^anon-[a-z0-9]{15}$/.test(newId)) {
         localStorage.setItem("libre_anon_id", newId);
@@ -325,6 +359,10 @@
         alert("El identificador no es válido.");
       }
     }
+
+    // Conectar los botones de exportar/importar con las funciones
+    document.getElementById('export-anon-btn').addEventListener('click', exportAnonId);
+    document.getElementById('import-anon-btn').addEventListener('click', importAnonId);
 
     // ---- DETECTAR PAÍS ----
     let userCountry = "Desconocido";
@@ -341,52 +379,12 @@
     }
     detectCountry();
 
-    // ---- MODO "BOTELLA AL MAR" ALEATORIO ----
-    document.getElementById('randomBottleBtn').onclick = async function() {
-      const randomThoughtEl = document.getElementById('randomThought');
-      if (!randomThoughtEl) return;
-      randomThoughtEl.classList.add('hidden');
-      try {
-        const snapshot = await db.collection("thoughts").get();
-        const docs = snapshot.docs;
-        if (docs.length === 0) {
-          // Usar simulados en caso de que no haya reales
-          const simulados = window.frasesSimuladasEjemplo || [];
-          if (simulados.length === 0) {
-            randomThoughtEl.textContent = "No hay pensamientos aún.";
-            randomThoughtEl.classList.remove('hidden');
-            return;
-          }
-          const idx = Math.floor(Math.random() * simulados.length);
-          const data = simulados[idx];
-          randomThoughtEl.innerHTML =
-            `<div class="flex items-center space-x-2 mb-2">
-              <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
-            </div>
-            <p class="font-medium">${data.text}</p>
-            <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
-          randomThoughtEl.classList.remove('hidden');
-          return;
-        }
-        const idx = Math.floor(Math.random() * docs.length);
-        const data = docs[idx].data();
-        randomThoughtEl.innerHTML =
-          `<div class="flex items-center space-x-2 mb-2">
-            <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
-          </div>
-          <p class="font-medium">${data.text}</p>
-          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
-        randomThoughtEl.classList.remove('hidden');
-      } catch (e) {
-        randomThoughtEl.textContent = "Error al cargar pensamiento aleatorio.";
-        randomThoughtEl.classList.remove('hidden');
-      }
-    };
-
     // ---- PAGINACIÓN ----
-    const PAGE_SIZE = 10;
-    let globalPage = 1, globalMaxPages = 1;
-    let myPage = 1, myMaxPages = 1;
+    window.PAGE_SIZE = 10;
+    window.globalPage = 1;
+    window.globalMaxPages = 1;
+    window.myPage = 1;
+    window.myMaxPages = 1;
 
     // ---- SISTEMA DE NOTIFICACIONES BÁSICO ----
     function getLastSeenReplyTimestamp(thoughtId) {
@@ -395,7 +393,7 @@
     function setLastSeenReplyTimestamp(thoughtId, ts) {
       localStorage.setItem("libre_last_seen_reply_" + thoughtId, String(ts));
     }
-    async function checkNewReplies() {
+    window.checkNewReplies = async function() {
       try {
         const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).get();
         let hasNewReply = false;
@@ -418,8 +416,9 @@
         // Silenciar errores
       }
     }
+    
     // Marca como visto al entrar a "Mis pensamientos"
-    async function markRepliesAsSeen() {
+    window.markRepliesAsSeen = async function() {
       try {
         const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).get();
         for (const doc of snapshot.docs) {
@@ -436,7 +435,7 @@
     }
 
     // ---- ESCRIBIR PENSAMIENTO ----
-    document.getElementById('sendBtn').onclick = async function() {
+    document.getElementById('sendBtn').addEventListener('click', async function() {
       if (!countryReady) {
         alert("Cargando país, por favor espera un momento e intenta de nuevo.");
         return;
@@ -468,7 +467,7 @@
       } catch (e) {
         alert("Error al guardar el pensamiento. Intenta de nuevo.");
       }
-    };
+    });
 
     // ---- RESPONDER UN PENSAMIENTO ----
     async function enviarRespuesta(thoughtId, replyText, respuestasDiv, btn, textarea) {
@@ -544,7 +543,7 @@
     }
 
     // ---- GLOBAL THOUGHTS ----
-    async function loadGlobalThoughts(page = 1) {
+    window.loadGlobalThoughts = async function(page = 1) {
       const globalThoughts = document.getElementById('globalThoughts');
       const globalPagination = document.getElementById('globalPagination');
       if (!globalThoughts) return;
@@ -663,6 +662,48 @@
       }
     }
 
+    // ---- MODO "BOTELLA AL MAR" ALEATORIO ----
+    document.getElementById('randomBottleBtn').addEventListener('click', async function() {
+      const randomThoughtEl = document.getElementById('randomThought');
+      if (!randomThoughtEl) return;
+      randomThoughtEl.classList.add('hidden');
+      try {
+        const snapshot = await db.collection("thoughts").get();
+        const docs = snapshot.docs;
+        if (docs.length === 0) {
+          // Usar simulados en caso de que no haya reales
+          const simulados = window.frasesSimuladasEjemplo || [];
+          if (simulados.length === 0) {
+            randomThoughtEl.textContent = "No hay pensamientos aún.";
+            randomThoughtEl.classList.remove('hidden');
+            return;
+          }
+          const idx = Math.floor(Math.random() * simulados.length);
+          const data = simulados[idx];
+          randomThoughtEl.innerHTML =
+            `<div class="flex items-center space-x-2 mb-2">
+              <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
+            </div>
+            <p class="font-medium">${data.text}</p>
+            <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
+          randomThoughtEl.classList.remove('hidden');
+          return;
+        }
+        const idx = Math.floor(Math.random() * docs.length);
+        const data = docs[idx].data();
+        randomThoughtEl.innerHTML =
+          `<div class="flex items-center space-x-2 mb-2">
+            <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
+          </div>
+          <p class="font-medium">${data.text}</p>
+          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
+        randomThoughtEl.classList.remove('hidden');
+      } catch (e) {
+        randomThoughtEl.textContent = "Error al cargar pensamiento aleatorio.";
+        randomThoughtEl.classList.remove('hidden');
+      }
+    });
+
     // ---- MOSTRAR/OCULTAR CAJA DE RESPUESTA ----
     window.mostrarCajaRespuesta = function(thoughtId, btn) {
       const card = btn.closest('.p-4');
@@ -746,7 +787,7 @@
     }
 
     // ---- MI HISTORIAL, CON ECO GLOBAL ----
-    async function loadMyThoughts(page = 1) {
+    window.loadMyThoughts = async function(page = 1) {
       const myThoughts = document.getElementById('myThoughts');
       const myPagination = document.getElementById('myPagination');
       if (!myThoughts) return;
@@ -809,7 +850,7 @@
     }
 
     // ---- GLOBAL COUNT ----
-    async function loadGlobalCount() {
+    window.loadGlobalCount = async function() {
       try {
         const snapshot = await db.collection("thoughts").get();
         // Si no hay pensamientos reales, usar simulados
@@ -825,7 +866,7 @@
     }
 
     // ---- RANKING DE PAÍSES ----
-    async function loadCountryRanking() {
+    window.loadCountryRanking = async function() {
       try {
         const snapshot = await db.collection("thoughts").get();
         let countryCounts = {};
@@ -858,7 +899,7 @@
     }
 
     // ---- ESTADÍSTICAS ANÓNIMAS ----
-    async function loadEstadisticasAnonimas() {
+    window.loadEstadisticasAnonimas = async function() {
       const el = document.getElementById('estadisticasAnonimas');
       if (!el) return;
       el.innerHTML = '<div class="titulo">Cargando estadísticas...</div>';
@@ -913,7 +954,7 @@
     // ---- MAPA DE PENSAMIENTOS ----
     let map;
     let countryMarkers = {};
-    async function loadMap() {
+    window.loadMap = async function() {
       const countryCoords = {
         AR: {lat: -34, lng: -64},
         ES: {lat: 40, lng: -3},
@@ -970,7 +1011,7 @@
     }
 
     // ---- CAPSULA DEL TIEMPO ----
-    document.getElementById('capsuleBtn').onclick = async function() {
+    document.getElementById('capsuleBtn').addEventListener('click', async function() {
       const date = document.getElementById('capsuleDate').value;
       const time = document.getElementById('capsuleTime').value;
       const msg = document.getElementById('capsuleMessage').value.trim();
@@ -1002,10 +1043,10 @@
       } catch (e) {
         alert("Error al guardar la cápsula. Intenta de nuevo.");
       }
-    };
+    });
 
     // ---- Mostrar cápsulas desbloqueadas ----
-    async function loadMyCapsules() {
+    window.loadMyCapsules = async function() {
       const list = document.getElementById('capsulesList');
       if (!list) return;
       list.innerHTML = '';
@@ -1034,62 +1075,4 @@
           list.innerHTML = '<div class="text-blue-900 text-sm opacity-70">No hay cápsulas desbloqueadas aún.</div>';
         }
       } catch (e) {
-        list.innerHTML = '<div class="text-red-700 text-sm">Error al cargar tus cápsulas.</div>';
-      }
-    }
-
-    // ---- TABS ----
-    function showTab(tabId) {
-      const sections = ['write', 'feed', 'mine', 'capsule', 'about'];
-      sections.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-      });
-      const active = document.getElementById(tabId);
-      if (active) active.classList.remove('hidden');
-      if(tabId=='feed') { loadGlobalCount(); loadGlobalThoughts(globalPage); loadCountryRanking(); loadMap(); loadEstadisticasAnonimas(); }
-      if(tabId=='mine') { loadMyThoughts(myPage); markRepliesAsSeen(); }
-      if(tabId=='capsule') { loadMyCapsules(); }
-      if(tabId=='write') { onShowWriteTab(); }
-    }
-
-    // ---- LOGO ANIMACIÓN Y CARGA INICIAL ----
-    window.onload = function() {
-      const textLogo = document.getElementById('textLogo');
-      const imgLogo = document.getElementById('logolibre');
-      if (textLogo && imgLogo) {
-        textLogo.classList.remove('logo-hidden');
-        textLogo.classList.add('logo-shown');
-        imgLogo.classList.remove('visible');
-        setTimeout(() => {
-          textLogo.classList.remove('logo-shown');
-          textLogo.classList.add('logo-hidden');
-        }, 2000);
-        setTimeout(() => {
-          imgLogo.classList.add('visible');
-        }, 3500);
-      }
-      // Carga inicial
-      loadGlobalCount();
-      loadGlobalThoughts(globalPage);
-      loadCountryRanking();
-      loadMap();
-      loadEstadisticasAnonimas();
-      // Chequear notificaciones de respuestas
-      setTimeout(checkNewReplies, 1500);
-      
-      // Mostrar la pestaña de escritura por defecto
-      showTab('write');
-    };
-
-    // Auto-check de notificaciones cada 40s
-    setInterval(() => { checkNewReplies(); }, 40000);
-
-    // ---- PENSAMIENTOS SIMULADOS ----
-    // Puedes modificar, agregar o quitar frases a gusto
-    window.frasesSimuladasEjemplo = [
-      {
-        text: "Che, ¿alguien más tiene días en los que el mate no alcanza para levantar el ánimo? 😂 Hoy fue uno de esos. Pero igual, mañana será otro día.",
-        country: "AR",
-        user: "anon-argentino",
-        ts: Date.now() - 1000
+        list.innerHTML = '<div class="text-red-
