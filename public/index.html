@@ -23,6 +23,7 @@
     .reply-box { background: #fafafa; border-radius: 1rem; padding: 0.75rem; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
     .reply-btn { font-size: 0.8rem; color: #6d28d9; background: none; border: none; cursor: pointer; transition: color 0.2s; }
     .reply-btn:hover { color: #4b2995; text-decoration: underline; }
+    .reply-btn:disabled { color: #9ca3af; cursor: not-allowed; text-decoration: none; }
     .reply-separator { border-bottom: 1px dashed #e5e7eb; margin: 0.5rem 0; }
     .eco-block { margin-bottom: 0.35rem; }
     .eco-block span { font-weight: 600; }
@@ -443,6 +444,12 @@
       textarea.disabled = true;
       try {
         const thoughtDoc = await db.collection("thoughts").doc(thoughtId).get();
+        if (!thoughtDoc.exists) {
+          alert("Error: No se puede responder a un pensamiento que no existe en la base de datos.");
+          btn.disabled = false;
+          textarea.disabled = false;
+          return;
+        }
         const thoughtData = thoughtDoc.data();
         if (thoughtData.user === getAnonUserId()) {
           alert("No puedes responder a tu propio pensamiento.");
@@ -468,6 +475,7 @@
 
     // ---- MOSTRAR RESPUESTAS DE UN PENSAMIENTO ----
     async function mostrarRespuestas(thoughtId, respuestasDiv) {
+      if (thoughtId.startsWith('simulada_')) return; // No cargar respuestas para simulaciones
       respuestasDiv.innerHTML = '';
       try {
         const snapshot = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "asc").get();
@@ -580,11 +588,7 @@
           <p class="font-medium">${data.text}</p>
           <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
           <div class="mt-2">
-            ${
-              data.user !== getAnonUserId()
-              ? `<button class="reply-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>`
-              : `<span class="text-xs text-gray-400">No puedes responder a tu propio pensamiento</span>`
-            }
+            <button class="reply-btn" disabled title="Las respuestas se activan cuando hay pensamientos reales.">💬 Responder</button>
           </div>
           <div class="respuestas mt-2"></div>
           <div class="caja-respuesta mt-2 hidden"></div>
