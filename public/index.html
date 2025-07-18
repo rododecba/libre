@@ -25,8 +25,6 @@
     .reply-btn:hover { color: #4b2995; text-decoration: underline; }
     .reply-btn:disabled { color: #9ca3af; cursor: not-allowed; text-decoration: none; }
     .reply-separator { border-bottom: 1px dashed #e5e7eb; margin: 0.5rem 0; }
-    .eco-block { margin-bottom: 0.35rem; }
-    .eco-block span { font-weight: 600; }
     .frase-inspiradora { color: #6D28D9; font-weight: 500; font-style: italic; margin-bottom: 0.5rem; display: block; transition: color 0.3s; min-height: 1.5rem;}
     .estadisticas-anonimas { margin-top: 1.5rem; background: #F3F0FF; border-radius: 0.75rem; padding: 1rem; }
     .estadisticas-anonimas .titulo { font-weight: 600; color: #6D28D9; margin-bottom: 0.2rem; }
@@ -251,41 +249,15 @@
 
     // ---- DICCIONARIO PAÍSES ----
     const countryNames = {
-      AR: "Argentina",
-      ES: "España",
-      MX: "México",
-      US: "Estados Unidos",
-      BR: "Brasil",
-      CL: "Chile",
-      CO: "Colombia",
-      PE: "Perú",
-      VE: "Venezuela",
-      UY: "Uruguay",
-      PY: "Paraguay",
-      BO: "Bolivia",
-      EC: "Ecuador",
-      CR: "Costa Rica",
-      PA: "Panamá",
-      GT: "Guatemala",
-      HN: "Honduras",
-      NI: "Nicaragua",
-      SV: "El Salvador",
-      DO: "República Dominicana",
-      CU: "Cuba",
-      PR: "Puerto Rico",
-      CA: "Canadá",
-      FR: "Francia",
-      IT: "Italia",
-      DE: "Alemania",
-      GB: "Reino Unido",
-      PT: "Portugal",
-      JP: "Japón",
-      KR: "Corea del Sur",
-      IN: "India",
-      CN: "China",
-      RU: "Rusia",
-      AU: "Australia",
-      "Desconocido": "Desconocido"
+      AR: "Argentina", ES: "España", MX: "México", US: "Estados Unidos",
+      BR: "Brasil", CL: "Chile", CO: "Colombia", PE: "Perú", VE: "Venezuela",
+      UY: "Uruguay", PY: "Paraguay", BO: "Bolivia", EC: "Ecuador",
+      CR: "Costa Rica", PA: "Panamá", GT: "Guatemala", HN: "Honduras",
+      NI: "Nicaragua", SV: "El Salvador", DO: "República Dominicana",
+      CU: "Cuba", PR: "Puerto Rico", CA: "Canadá", FR: "Francia",
+      IT: "Italia", DE: "Alemania", GB: "Reino Unido", PT: "Portugal",
+      JP: "Japón", KR: "Corea del Sur", IN: "India", CN: "China",
+      RU: "Rusia", AU: "Australia", "Desconocido": "Desconocido"
     };
 
     // ---- CONFIGURACIÓN DE FIREBASE ----
@@ -358,13 +330,25 @@
         }
         const idx = Math.floor(Math.random() * docs.length);
         const data = docs[idx].data();
-        randomThoughtEl.innerHTML =
-          `<div class="flex items-center space-x-2 mb-2">
-            <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
-          </div>
-          <p class="font-medium text-justify">${data.text}</p>
-          <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
+        
+        // --- SECURE TEXT RENDERING ---
+        randomThoughtEl.innerHTML = ''; // Clear previous content
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'flex items-center space-x-2 mb-2';
+        headerDiv.innerHTML = `<span class="text-xs font-medium">${countryNames[data.country] || data.country || "🌐"}</span>`;
+        
+        const p = document.createElement('p');
+        p.className = 'font-medium text-justify';
+        p.textContent = data.text; // Use .textContent to prevent XSS
+        
+        const dateDiv = document.createElement('div');
+        dateDiv.className = 'text-[0.7rem] text-gray-400 mt-1';
+        dateDiv.textContent = formatearFecha(data.ts);
+        
+        randomThoughtEl.append(headerDiv, p, dateDiv);
         randomThoughtEl.classList.remove('hidden');
+        // --- END SECURE TEXT RENDERING ---
+
       } catch (e) {
         console.error("Error loading random thought:", e);
         randomThoughtEl.textContent = "Error al cargar pensamiento aleatorio.";
@@ -396,6 +380,7 @@
             const lastSeen = getLastSeenReplyTimestamp(thoughtId);
             if (latestReply.ts > lastSeen) {
               hasNewReply = true;
+              break; 
             }
           }
         }
@@ -407,7 +392,6 @@
         console.error("Error checking new replies:", e);
       }
     }
-    // Marca como visto al entrar a "Mis pensamientos"
     async function markRepliesAsSeen() {
       try {
         const snapshot = await db.collection("thoughts").where("user", "==", getAnonUserId()).get();
@@ -504,18 +488,24 @@
       respuestasDiv.innerHTML = '';
       try {
         const snapshot = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "asc").get();
-        if (snapshot.empty) {
-          respuestasDiv.innerHTML = '';
-          return;
-        }
+        if (snapshot.empty) return;
+
         snapshot.forEach(doc => {
           const data = doc.data();
           const replyCard = document.createElement('div');
           replyCard.className = 'reply-box';
-          replyCard.innerHTML = `
-            <div><span class="font-medium">${data.text}</span></div>
-            <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
-          `;
+          
+          const textDiv = document.createElement('div');
+          const span = document.createElement('span');
+          span.className = 'font-medium';
+          span.textContent = data.text; // Secure rendering
+          textDiv.appendChild(span);
+
+          const dateDiv = document.createElement('div');
+          dateDiv.className = 'text-[0.7rem] text-gray-400 mt-1';
+          dateDiv.textContent = formatearFecha(data.ts);
+          
+          replyCard.append(textDiv, dateDiv);
           respuestasDiv.appendChild(replyCard);
         });
       } catch(e) {
@@ -541,7 +531,7 @@
         thoughtsSnap.forEach(doc => allItems.push({ id: doc.id, data: doc.data(), type: 'thought' }));
         capsulesSnap.forEach(doc => allItems.push({ id: doc.id, data: doc.data(), type: 'capsule' }));
 
-        allItems.sort((a, b) => b.data.ts - a.data.ts);
+        allItems.sort((a, b) => (b.data.openAt || b.data.ts) - (a.data.openAt || a.data.ts));
 
         if (allItems.length === 0) {
             globalThoughts.innerHTML = '<p class="text-sm font-medium text-blue-900 opacity-75">Aún no hay pensamientos. ¡Sé el primero en lanzar uno al mundo!</p>';
@@ -567,26 +557,38 @@
 
           const card = document.createElement('div');
           card.className = 'p-4 bg-white rounded-lg shadow-sm';
-          card.innerHTML = `
-            <div class="flex items-center space-x-2 mb-2">
-              <span class="text-xs font-medium">${countryNames[data.country] || "🌐"} ${headerIcon}</span>
-            </div>
-            <p class="font-medium text-justify">${data.text}</p>
-            <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
-            <div class="mt-2">
-              ${
-                data.user !== getAnonUserId() && !isCapsule
-                ? `<button class="reply-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>`
-                : `<span class="text-xs text-gray-400">${isCapsule ? 'Mensaje de una cápsula del tiempo' : 'Es tu propio pensamiento'}</span>`
-              }
-            </div>
-            <div class="respuestas mt-2"></div>
-            <div class="caja-respuesta mt-2 hidden"></div>
-          `;
+          
+          // --- SECURE RENDERING ---
+          const headerDiv = document.createElement('div');
+          headerDiv.className = 'flex items-center space-x-2 mb-2';
+          headerDiv.innerHTML = `<span class="text-xs font-medium">${countryNames[data.country] || data.country || "🌐"} ${headerIcon}</span>`;
+          
+          const p = document.createElement('p');
+          p.className = 'font-medium text-justify';
+          p.textContent = data.text; // Secure
+          
+          const dateDiv = document.createElement('div');
+          dateDiv.className = 'text-[0.7rem] text-gray-400 mt-1';
+          dateDiv.textContent = formatearFecha(data.openAt || data.ts);
+
+          const interactionDiv = document.createElement('div');
+          interactionDiv.className = 'mt-2';
+          if (data.user !== getAnonUserId() && !isCapsule) {
+            interactionDiv.innerHTML = `<button class="reply-btn" onclick="mostrarCajaRespuesta('${thoughtId}', this)">💬 Responder</button>`;
+          } else {
+            interactionDiv.innerHTML = `<span class="text-xs text-gray-400">${isCapsule ? 'Mensaje de una cápsula del tiempo' : 'Es tu propio pensamiento'}</span>`;
+          }
+
+          const respuestasDiv = document.createElement('div');
+          respuestasDiv.className = 'respuestas mt-2';
+          const cajaRespuestaDiv = document.createElement('div');
+          cajaRespuestaDiv.className = 'caja-respuesta mt-2 hidden';
+
+          card.append(headerDiv, p, dateDiv, interactionDiv, respuestasDiv, cajaRespuestaDiv);
           globalThoughts.appendChild(card);
+          // --- END SECURE RENDERING ---
 
           if (!isCapsule) {
-            const respuestasDiv = card.querySelector('.respuestas');
             mostrarRespuestas(thoughtId, respuestasDiv);
           }
         }
@@ -634,8 +636,7 @@
 
     // ---- FUNCION GUARDAR ECO LECTURA ----
     async function registrarEco(docId, type = 'thought') {
-      if (!countryReady) return;
-      if (type !== 'thought') return;
+      if (!countryReady || type !== 'thought') return;
       try {
         const ecoRef = db.collection("thoughts").doc(docId).collection("eco").doc(userCountry);
         await db.runTransaction(async (tx) => {
@@ -643,15 +644,15 @@
           if (!doc.exists) {
             tx.set(ecoRef, { count: 1 });
           } else {
-            tx.update(ecoRef, { count: doc.data().count + 1 });
+            tx.update(ecoRef, { count: firebase.firestore.FieldValue.increment(1) });
           }
         });
       } catch (e) {
-        console.error("Error registering eco:", e);
+        // Silently fail is ok here, not critical
       }
     }
 
-    // ---- MI HISTORIAL, CON ECO GLOBAL ----
+    // ---- MI HISTORIAL (SIMPLIFICADO) ----
     async function loadMyThoughts(page = 1) {
       const myThoughts = document.getElementById('myThoughts');
       const myPagination = document.getElementById('myPagination');
@@ -671,35 +672,18 @@
           const items = docs.slice(start, start + PAGE_SIZE);
           for (const doc of items) {
             const data = doc.data();
-            const thoughtId = doc.id;
             const card = document.createElement('div');
             card.className = 'p-4 bg-white rounded-lg shadow-sm';
+            
+            const p = document.createElement('p');
+            p.className = 'font-medium text-justify';
+            p.textContent = data.text; // Secure
 
-            let ecosHtml = '';
-            try {
-              const ecosSnap = await db.collection("thoughts").doc(thoughtId).collection("eco").get();
-              if (ecosSnap.empty) {
-                ecosHtml = `<div class="text-xs text-gray-400">Sin ecos aún</div>`;
-              } else {
-                ecosHtml = '';
-                ecosSnap.forEach(ecodoc => {
-                  const country = ecodoc.id;
-                  const count = ecodoc.data().count;
-                  ecosHtml += `<div class="eco-block text-xs font-medium text-indigo-700">
-                    ∞ ${countryNames[country] || country} <span>(${count})</span>
-                  </div>`;
-                });
-              }
-            } catch (e) {
-              console.error("Error loading ecos:", e);
-              ecosHtml = `<div class="text-xs text-red-500">Error al cargar ecos</div>`;
-            }
-
-            card.innerHTML = `
-              ${ecosHtml}
-              <p class="font-medium text-justify">${data.text}</p>
-              <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
-            `;
+            const dateDiv = document.createElement('div');
+            dateDiv.className = 'text-[0.7rem] text-gray-400 mt-1';
+            dateDiv.textContent = formatearFecha(data.ts);
+            
+            card.append(p, dateDiv);
             myThoughts.appendChild(card);
           }
         }
@@ -783,7 +767,7 @@
         el.innerHTML = `
           <div class="titulo">📊 Estadísticas anónimas</div>
           <div class="dato">Pensamientos escritos <strong>hoy</strong>: <strong>${pensamientosHoy}</strong></div>
-          <div class="dato">Países diferentes la última semana: <strong>${Array.from(paisesSemana).map(c => countryNames[c]||c).join(', ') || "0"}</strong></div>
+          <div class="dato">Países diferentes la última semana: <strong>${paisesSemana.size}</strong></div>
           <div class="dato">Récord de pensamientos en un día: <strong>${recordDia.cantidad}</strong> (${recordDia.fecha ? recordDia.fecha : "-"})</div>
         `;
       } catch (e) {
@@ -794,7 +778,6 @@
 
     // ---- MAPA DE PENSAMIENTOS ----
     let map;
-    let countryMarkers = {};
     async function loadMap() {
       const countryCoords = {
         AR: {lat: -34, lng: -64}, ES: {lat: 40, lng: -3}, MX: {lat: 23, lng: -102},
@@ -820,14 +803,12 @@
         });
 
         for (let [country, count] of Object.entries(countryCounts)) {
-          let coords = countryCoords[country];
-          if (!coords) coords = countryCoords["Desconocido"];
+          let coords = countryCoords[country] || countryCoords["Desconocido"];
           const marker = L.circleMarker([coords.lat, coords.lng], {
             radius: Math.max(8, Math.min(20, count)),
             color: "#6D28D9", fillColor: "#C4B5FD", fillOpacity: 0.6
           }).addTo(map);
           marker.bindPopup(`<b>${countryNames[country] || country}</b>: ${count} pensamientos`);
-          countryMarkers[country] = marker;
         }
       } catch (e) {
         console.error("Error loading map:", e);
@@ -895,13 +876,20 @@
               </div>
             `;
           } else {
-            openedHtml = `
-              <div class="p-4 bg-white rounded-lg shadow-md">
-                <div class="mb-2 text-blue-700 font-bold text-sm">Cápsula abierta el ${formatearFecha(data.openAt)}</div>
-                <p class="font-medium text-justify">${data.text}</p>
-                <div class="text-[0.7rem] text-gray-400 mt-1">Programada el ${formatearFecha(data.ts)}</div>
-              </div>
-            ` + openedHtml;
+            // Secure rendering for opened capsules
+            const card = document.createElement('div');
+            card.className = 'p-4 bg-white rounded-lg shadow-md';
+            const header = document.createElement('div');
+            header.className = 'mb-2 text-blue-700 font-bold text-sm';
+            header.textContent = `Cápsula abierta el ${formatearFecha(data.openAt)}`;
+            const p = document.createElement('p');
+            p.className = 'font-medium text-justify';
+            p.textContent = data.text;
+            const footer = document.createElement('div');
+            footer.className = 'text-[0.7rem] text-gray-400 mt-1';
+            footer.textContent = `Programada el ${formatearFecha(data.ts)}`;
+            card.append(header, p, footer);
+            openedHtml = card.outerHTML + openedHtml;
           }
         });
 
