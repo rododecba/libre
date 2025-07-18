@@ -362,7 +362,7 @@
           `<div class="flex items-center space-x-2 mb-2">
             <span class="text-xs font-medium">${countryNames[data.country] || "🌐"}</span>
           </div>
-          <p class="font-medium">${data.text}</p>
+          <p class="font-medium text-justify">${data.text}</p>
           <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>`;
         randomThoughtEl.classList.remove('hidden');
       } catch (e) {
@@ -532,18 +532,15 @@
       globalThoughts.innerHTML = '';
       try {
         const now = Date.now();
-        // 1. Obtener ambos tipos de documentos
         const thoughtsPromise = db.collection("thoughts").get();
         const capsulesPromise = db.collection("capsules").where("openAt", "<=", now).get();
         
         const [thoughtsSnap, capsulesSnap] = await Promise.all([thoughtsPromise, capsulesPromise]);
 
-        // 2. Mapear y combinar en una sola lista
         let allItems = [];
         thoughtsSnap.forEach(doc => allItems.push({ id: doc.id, data: doc.data(), type: 'thought' }));
         capsulesSnap.forEach(doc => allItems.push({ id: doc.id, data: doc.data(), type: 'capsule' }));
 
-        // 3. Ordenar por timestamp
         allItems.sort((a, b) => b.data.ts - a.data.ts);
 
         if (allItems.length === 0) {
@@ -551,7 +548,6 @@
             return;
         }
 
-        // 4. Paginación sobre la lista combinada
         globalMaxPages = Math.max(1, Math.ceil(allItems.length / PAGE_SIZE));
         page = Math.max(1, Math.min(page, globalMaxPages));
         globalPage = page;
@@ -559,7 +555,6 @@
         const start = (page - 1) * PAGE_SIZE;
         const pagedItems = allItems.slice(start, start + PAGE_SIZE);
 
-        // 5. Renderizar los items
         for (let item of pagedItems) {
           const { id: thoughtId, data, type } = item;
 
@@ -568,7 +563,7 @@
           }
           
           const isCapsule = type === 'capsule';
-          const headerIcon = isCapsule ? '🕰️' : ''; // Icono para la cápsula
+          const headerIcon = isCapsule ? '🕰️' : '';
 
           const card = document.createElement('div');
           card.className = 'p-4 bg-white rounded-lg shadow-sm';
@@ -576,7 +571,7 @@
             <div class="flex items-center space-x-2 mb-2">
               <span class="text-xs font-medium">${countryNames[data.country] || "🌐"} ${headerIcon}</span>
             </div>
-            <p class="font-medium">${data.text}</p>
+            <p class="font-medium text-justify">${data.text}</p>
             <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
             <div class="mt-2">
               ${
@@ -640,7 +635,6 @@
     // ---- FUNCION GUARDAR ECO LECTURA ----
     async function registrarEco(docId, type = 'thought') {
       if (!countryReady) return;
-      // Los ecos solo aplican a pensamientos, no a cápsulas.
       if (type !== 'thought') return;
       try {
         const ecoRef = db.collection("thoughts").doc(docId).collection("eco").doc(userCountry);
@@ -703,7 +697,7 @@
 
             card.innerHTML = `
               ${ecosHtml}
-              <p class="font-medium">${data.text}</p>
+              <p class="font-medium text-justify">${data.text}</p>
               <div class="text-[0.7rem] text-gray-400 mt-1">${formatearFecha(data.ts)}</div>
             `;
             myThoughts.appendChild(card);
@@ -904,7 +898,7 @@
             openedHtml = `
               <div class="p-4 bg-white rounded-lg shadow-md">
                 <div class="mb-2 text-blue-700 font-bold text-sm">Cápsula abierta el ${formatearFecha(data.openAt)}</div>
-                <p class="font-medium">${data.text}</p>
+                <p class="font-medium text-justify">${data.text}</p>
                 <div class="text-[0.7rem] text-gray-400 mt-1">Programada el ${formatearFecha(data.ts)}</div>
               </div>
             ` + openedHtml;
