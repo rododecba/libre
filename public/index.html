@@ -667,7 +667,7 @@
                   const country = ecodoc.id;
                   const count = ecodoc.data().count;
                   ecosHtml += `<div class="eco-block text-xs font-medium text-indigo-700">
-                    ${countryNames[country] || country} <span>(${count})</span>
+                    ∞ ${countryNames[country] || country} <span>(${count})</span>
                   </div>`;
                 });
               }
@@ -687,7 +687,7 @@
           myPagination.innerHTML = `
             <button onclick="loadMyThoughts(${myPage-1})" ${myPage<=1?'disabled':''}>Anterior</button>
             <span>Página ${myPage} de ${myMaxPages}</span>
-            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=globalMaxPages?'disabled':''}>Siguiente</button>
+            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=myMaxPages?'disabled':''}>Siguiente</button>
           `;
         }
       } catch (e) {
