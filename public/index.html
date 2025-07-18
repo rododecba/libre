@@ -44,6 +44,13 @@
       box-shadow: 0 0 4px #ef4444aa;
     }
     .revelation-answer { border-left: 3px solid #a78bfa; padding-left: 1rem; margin-top: 1rem; }
+    .title-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+    }
     @keyframes pulse-and-rotate {
       0% { transform: scale(1) rotate(0deg); }
       5% { transform: scale(1.2) rotate(-15deg); }
@@ -91,7 +98,9 @@
     <div class="rounded-2xl bg-blue-100 border border-blue-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
         <h2 class="text-2xl font-semibold text-blue-800 flex items-center">
-            <span id="randomThoughtGlobe" title="Ver un pensamiento aleatorio del mundo" class="text-3xl mr-2">🌍</span>
+            <span class="title-icon mr-2">
+              <span id="randomThoughtGlobe" title="Ver un pensamiento aleatorio del mundo" class="text-3xl">🌍</span>
+            </span>
             Pensamientos de todo el mundo
         </h2>
       </div>
@@ -120,7 +129,7 @@
   <section id="revelacion" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-purple-100 border border-purple-300 p-6 shadow-md relative">
         <div class="flex items-center mb-4">
-            <span class="text-3xl mr-2">🌌</span>
+            <span class="title-icon mr-2"><span class="text-3xl">🌌</span></span>
             <h2 class="text-2xl font-semibold text-purple-800">Revelación Diaria</h2>
         </div>
         <p class="text-sm text-purple-900 mb-4">Cada día, una nueva pregunta. Responde a ciegas y vuelve mañana para ver las respuestas anónimas de todo el mundo.</p>
@@ -154,7 +163,7 @@
   <section id="mine" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-green-100 border border-green-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
-        <span class="text-3xl mr-2">📜</span>
+        <span class="title-icon mr-2"><span class="text-3xl">📜</span></span>
         <h2 class="text-2xl font-semibold text-green-800">Historial de mensajes</h2>
       </div>
       <div class="flex mb-3">
@@ -172,7 +181,7 @@
   <section id="capsule" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-blue-100 border border-blue-300 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
-        <span class="text-3xl mr-2">🚀</span>
+        <span class="title-icon mr-2"><span class="text-3xl">🚀</span></span>
         <h2 class="text-2xl font-semibold text-blue-800">Cápsula del tiempo</h2>
       </div>
       <p class="mt-1 text-sm font-medium text-blue-900 mb-4">Un eco de tus pensamientos, viajando silenciosamente hacia un rincón lejano del mañana.</p>
@@ -189,7 +198,7 @@
   <section id="about" class="w-full max-w-xl mb-8 hidden">
     <div class="rounded-2xl bg-yellow-50 border border-yellow-200 p-6 shadow-md relative">
       <div class="flex items-center mb-4">
-        <span class="text-3xl mr-2">ℹ️</span>
+        <span class="title-icon mr-2"><span class="text-3xl">ℹ️</span></span>
         <h2 class="text-2xl font-semibold text-black-400">Acerca de & Preguntas Frecuentes</h2>
       </div>
       <details class="mb-2">
