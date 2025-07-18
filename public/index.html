@@ -687,7 +687,7 @@
           myPagination.innerHTML = `
             <button onclick="loadMyThoughts(${myPage-1})" ${myPage<=1?'disabled':''}>Anterior</button>
             <span>Página ${myPage} de ${myMaxPages}</span>
-            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=myMaxPages?'disabled':''}>Siguiente</button>
+            <button onclick="loadMyThoughts(${myPage+1})" ${myPage>=globalMaxPages?'disabled':''}>Siguiente</button>
           `;
         }
       } catch (e) {
@@ -852,7 +852,7 @@
       }
     };
 
-    // ---- Mostrar cápsulas desbloqueadas ----
+    // ---- Cargar y mostrar cápsulas (PENDIENTES y ABIERTAS) ----
     async function loadMyCapsules() {
       const list = document.getElementById('capsulesList');
       if (!list) return;
@@ -861,30 +861,56 @@
         const now = Date.now();
         const snapshot = await db.collection("capsules")
           .where("user", "==", getAnonUserId())
-          .orderBy("openAt", "desc")
+          .orderBy("openAt", "asc") // Ordenamos ascendente para ver las próximas a abrirse primero
           .get();
-        let count = 0;
+
+        let pendingHtml = '';
+        let openedHtml = '';
+
         snapshot.forEach(doc => {
           const data = doc.data();
-          if (data.openAt <= now) {
-            const card = document.createElement('div');
-            card.className = 'p-4 bg-white rounded-lg shadow-md';
-            card.innerHTML = `
-              <div class="mb-2 text-blue-700 font-bold text-sm">Cápsula abierta el ${formatearFecha(data.openAt)}</div>
-              <p class="font-medium">${data.text}</p>
-              <div class="text-[0.7rem] text-gray-400 mt-1">Programada el ${formatearFecha(data.ts)}</div>
+          if (data.openAt > now) {
+            // Cápsula pendiente (futura)
+            pendingHtml += `
+              <div class="p-4 bg-gray-100 rounded-lg shadow-sm border border-dashed border-gray-300">
+                <div class="flex items-center text-blue-800 font-bold text-sm">
+                  <span class="mr-2">🔒</span>
+                  <span>Cápsula programada para abrirse el ${formatearFecha(data.openAt)}</span>
+                </div>
+                <div class="text-[0.7rem] text-gray-500 mt-1">Creada el ${formatearFecha(data.ts)}</div>
+              </div>
             `;
-            list.appendChild(card);
-            count++;
+          } else {
+            // Cápsula abierta (pasada)
+            openedHtml = `
+              <div class="p-4 bg-white rounded-lg shadow-md">
+                <div class="mb-2 text-blue-700 font-bold text-sm">Cápsula abierta el ${formatearFecha(data.openAt)}</div>
+                <p class="font-medium">${data.text}</p>
+                <div class="text-[0.7rem] text-gray-400 mt-1">Programada el ${formatearFecha(data.ts)}</div>
+              </div>
+            ` + openedHtml; // Se añade al principio para que las más recientes aparezcan primero
           }
         });
-        if (count === 0) {
-          list.innerHTML = '<div class="text-blue-900 text-sm opacity-70">No hay cápsulas desbloqueadas aún.</div>';
+
+        let finalHtml = '';
+        if (pendingHtml) {
+          finalHtml += `<h3 class="text-lg font-semibold text-blue-900 mb-3">Pendientes</h3><div class="space-y-4">${pendingHtml}</div>`;
         }
+        if (openedHtml) {
+          finalHtml += `<h3 class="text-lg font-semibold text-blue-900 mt-6 mb-3">Abiertas</h3><div class="space-y-4">${openedHtml}</div>`;
+        }
+
+        if (finalHtml) {
+          list.innerHTML = finalHtml;
+        } else {
+          list.innerHTML = '<div class="text-blue-900 text-sm opacity-70">No has programado ninguna cápsula aún.</div>';
+        }
+
       } catch (e) {
         list.innerHTML = '<div class="text-red-700 text-sm">Error al cargar tus cápsulas.</div>';
       }
     }
+
 
     // ---- TABS ----
     function showTab(tabId) {
