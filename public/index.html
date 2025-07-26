@@ -56,26 +56,17 @@
     .floating-banner { position: fixed; bottom: 0; left: 0; right: 0; background: #1f2937; color: white; padding: 1rem; text-align: center; z-index: 50; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); transform: translateY(100%); transition: transform 0.3s ease-in-out; }
     .floating-banner.show { transform: translateY(0); }
     
-    /* ---- ESTILOS MINIMALISTAS PARA EL SELECTOR DE IDIOMA ---- */
-    .lang-selector a {
-        margin: 0 0.5rem;
-        text-decoration: none;
-        color: #6b7280; /* Gris para el idioma inactivo */
-        font-weight: normal;
-        transition: color 0.2s;
-    }
-    .lang-selector a:hover {
-        color: #111827; /* Más oscuro al pasar el ratón */
-        text-decoration: underline;
-    }
-    .lang-selector a.active {
-        color: #4f46e5; /* Color índigo para el idioma activo */
-        font-weight: bold;
-        cursor: default;
-    }
-    .lang-selector a.active:hover {
-        text-decoration: none; /* Evitar subrayado en el idioma activo */
-    }
+    .lang-selector a { margin: 0 0.5rem; text-decoration: none; color: #6b7280; font-weight: normal; transition: color 0.2s; }
+    .lang-selector a:hover { color: #111827; text-decoration: underline; }
+    .lang-selector a.active { color: #4f46e5; font-weight: bold; cursor: default; }
+    .lang-selector a.active:hover { text-decoration: none; }
+    
+    /* Estilos para contador de caracteres y botón de emoji */
+    .char-counter { position: absolute; bottom: 0.5rem; right: 0.75rem; font-size: 0.75rem; color: #9ca3af; z-index: 5; }
+    .emoji-btn { position: absolute; top: 0.75rem; right: 0.75rem; font-size: 1.25rem; background: none; border: none; cursor: pointer; z-index: 10; padding: 0; line-height: 1; opacity: 0.7; transition: opacity 0.2s; }
+    .emoji-btn:hover { opacity: 1; }
+    textarea { padding-right: 2.75rem !important; padding-bottom: 1.75rem !important; }
+    .caja-respuesta textarea { padding-right: 2.75rem !important; }
 
     @media (max-width: 640px) { .estadisticas-anonimas, .stats-box { font-size: 0.97rem; } }
   </style>
@@ -114,16 +105,27 @@
               <span data-translate-key="feed.title">Pensamientos de todo el mundo</span>
           </h2>
         </div>
-        <details class="mb-6">
-          <summary class="font-medium cursor-pointer text-blue-800" data-translate-key="feed.details_summary">Ver mapa, ranking y estadísticas</summary>
-          <div class="mt-2">
-            <div id="map"></div>
-            <div id="countryRanking" class="mb-4"></div>
-            <div id="estadisticasAnonimas" class="estadisticas-anonimas" style="display: none;"></div>
-          </div>
-        </details>
+        <div class="flex items-center justify-between mb-4 text-sm">
+            <details>
+                <summary class="font-medium cursor-pointer text-blue-800" data-translate-key="feed.details_summary">Ver mapa, ranking y estadísticas</summary>
+                <div class="mt-2">
+                    <div id="map"></div>
+                    <div id="countryRanking" class="mb-4"></div>
+                    <div id="estadisticasAnonimas" class="estadisticas-anonimas" style="display: none;"></div>
+                </div>
+            </details>
+            <div class="flex items-center">
+                <label for="lang-filter-checkbox" class="mr-2 font-medium text-blue-800" data-translate-key="feed.lang_filter_label">Solo mi idioma</label>
+                <input type="checkbox" id="lang-filter-checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+            </div>
+        </div>
+        
         <div id="write" class="w-full mb-6">
-          <textarea id="textarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" rows="4" maxlength="500" data-translate-key-placeholder="feed.textarea_placeholder"></textarea>
+          <div class="relative">
+            <textarea id="textarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" rows="4" maxlength="500" data-translate-key-placeholder="feed.textarea_placeholder"></textarea>
+            <button class="emoji-btn">😀</button>
+            <div id="char-counter-main" class="char-counter">500</div>
+          </div>
           <button id="sendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-xl transition" data-translate-key="feed.send_button">Enviar pensamiento</button>
         </div>
         <div id="randomThought" class="p-4 bg-white rounded-lg shadow-sm mb-4 hidden"></div>
@@ -143,8 +145,12 @@
               <h3 class="font-semibold text-lg text-purple-800 mb-2" data-translate-key="revelation.todays_question">Pregunta de Hoy:</h3>
               <p id="revelacionQuestion" class="font-medium text-lg mb-4 p-4 bg-purple-50 rounded-lg"></p>
               <div id="revelacionInputArea">
+                <div class="relative">
                   <textarea id="revelacionTextarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400" rows="4" maxlength="500" data-translate-key-placeholder="revelation.textarea_placeholder"></textarea>
-                  <button id="revelacionSendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-purple-500 text-white hover:bg-purple-600 shadow-md transition" data-translate-key="revelation.send_button">Enviar respuesta</button>
+                  <button class="emoji-btn">😀</button>
+                  <div id="char-counter-revelation" class="char-counter">500</div>
+                </div>
+                <button id="revelacionSendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-purple-500 text-white hover:bg-purple-600 shadow-md transition" data-translate-key="revelation.send_button">Enviar respuesta</button>
               </div>
               <div id="revelacionThanks" class="hidden p-4 bg-purple-200 rounded-lg text-center font-medium text-purple-900">
                   <p data-translate-key="revelation.thanks_message">Gracias por tu contribución.</p>
@@ -190,7 +196,11 @@
           <h2 class="text-2xl font-semibold text-blue-800" data-translate-key="capsule.title">Cápsula del tiempo</h2>
         </div>
         <p class="mt-1 text-sm font-medium text-blue-900 mb-4" data-translate-key="capsule.subtitle">Un eco de tus pensamientos, viajando silenciosamente hacia un rincón lejano del mañana.</p>
-        <textarea id="capsuleMessage" class="w-full mt-2 p-4 rounded-xl shadow-inner bg-white border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300" rows="4" maxlength="500" data-translate-key-placeholder="capsule.textarea_placeholder"></textarea>
+        <div class="relative">
+            <textarea id="capsuleMessage" class="w-full mt-2 p-4 rounded-xl shadow-inner bg-white border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300" rows="4" maxlength="500" data-translate-key-placeholder="capsule.textarea_placeholder"></textarea>
+            <button class="emoji-btn">😀</button>
+            <div id="char-counter-capsule" class="char-counter">500</div>
+        </div>
         <div class="flex space-x-2 mt-3">
           <input type="date" id="capsuleDate" class="p-2 rounded-lg bg-white border border-blue-300 focus:outline-none">
           <input type="time" id="capsuleTime" class="p-2 rounded-lg bg-white border border-blue-300 focus:outline-none">
@@ -285,6 +295,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@latest/dist/index.min.js"></script>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="badwords.js"></script>
   <script src="translations.js"></script>

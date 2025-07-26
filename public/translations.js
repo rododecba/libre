@@ -13,6 +13,7 @@ const translations = {
     'feed.title': 'Pensamientos de todo el mundo',
     'feed.title_tooltip': 'Ver un pensamiento aleatorio del mundo',
     'feed.details_summary': 'Ver mapa, ranking y estadísticas',
+    'feed.lang_filter_label': 'Solo mi idioma',
     'feed.ranking_title': 'Ranking de países más activos:',
     'feed.stats_title': '📊 Estadísticas anónimas',
     'feed.stats_today': 'Pensamientos escritos <strong>hoy</strong>:',
@@ -83,6 +84,7 @@ const translations = {
     'lang_banner.button_en': 'English',
     // Empty states
     'empty.no_thoughts': 'Aún no hay pensamientos. ¡Sé el primero!',
+    'empty.no_thoughts_filtered': 'No hay pensamientos en tu idioma. ¡Intenta verlos todos!',
     'empty.no_revelation_answers': 'Nadie respondió a la pregunta de ayer. ¡Asegúrate de responder hoy!',
     'empty.my_thoughts': 'No has escrito aún...',
     'empty.my_capsules': 'No has programado ninguna cápsula aún.',
@@ -160,6 +162,7 @@ const translations = {
     'feed.title': 'Thoughts from around the world',
     'feed.title_tooltip': 'See a random thought from the world',
     'feed.details_summary': 'View map, ranking, and statistics',
+    'feed.lang_filter_label': 'My language only',
     'feed.ranking_title': 'Ranking of most active countries:',
     'feed.stats_title': '📊 Anonymous Statistics',
     'feed.stats_today': 'Thoughts written <strong>today</strong>:',
@@ -230,6 +233,7 @@ const translations = {
     'lang_banner.button_en': 'English',
     // Empty states
     'empty.no_thoughts': 'No thoughts yet. Be the first!',
+    'empty.no_thoughts_filtered': 'No thoughts in your language yet. Try viewing them all!',
     'empty.no_revelation_answers': 'Nobody answered yesterday\'s question. Be sure to answer today!',
     'empty.my_thoughts': 'You haven\'t written anything yet...',
     'empty.my_capsules': 'You haven\'t scheduled any capsules yet.',

@@ -99,6 +99,8 @@ function initializeApp() {
     setupLanguage();
     setupAgeGate();
     setupLangBannerButtons();
+    setupDraftsAndCounters();
+    setupLanguageFilter();
     showTab('feed');
     setTimeout(checkNewReplies, 1500);
     setInterval(() => { checkNewReplies(); }, 40000);
@@ -131,8 +133,82 @@ function mostrarFraseInspiradoraEnTextarea() {
     const frases = translations[currentLang]['inspirational_phrases'];
     const frase = frases[Math.floor(Math.random() * frases.length)]; 
     const textarea = document.getElementById('textarea'); 
-    if (textarea) {
+    if (textarea && textarea.value.trim() === '') {
         textarea.placeholder = frase;
+    }
+}
+
+// ---- EMOJIS, BORRADOR AUTOMÁTICO Y CONTADOR DE CARACTERES ----
+function setupEmojiPicker(trigger, textarea) {
+    if (!trigger || !textarea) return;
+    const picker = new EmojiButton.EmojiButton({
+        position: 'bottom-start',
+        theme: 'auto',
+        autoHide: true,
+        emojiSize: '1.5rem',
+        emojisPerRow: 8,
+        rows: 6,
+        showSearch: false
+    });
+
+    picker.on('emoji', selection => {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0, start) + selection.emoji + textarea.value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + selection.emoji.length;
+        textarea.focus();
+        textarea.dispatchEvent(new Event('input'));
+    });
+
+    trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        picker.togglePicker(trigger);
+    });
+}
+
+function setupDraftsAndCounters() {
+    const textareas = [
+        { id: 'textarea', counterId: 'char-counter-main' },
+        { id: 'revelacionTextarea', counterId: 'char-counter-revelation' },
+        { id: 'capsuleMessage', counterId: 'char-counter-capsule' }
+    ];
+
+    textareas.forEach(item => {
+        const textarea = document.getElementById(item.id);
+        const counter = document.getElementById(item.counterId);
+        const draftKey = `draft_${item.id}`;
+        const emojiBtn = textarea.parentElement.querySelector('.emoji-btn');
+
+        if (textarea && counter) {
+            const savedDraft = localStorage.getItem(draftKey);
+            if (savedDraft) textarea.value = savedDraft;
+            
+            const updateCounter = () => {
+                counter.textContent = textarea.maxLength - textarea.value.length;
+            };
+
+            textarea.addEventListener('input', () => {
+                localStorage.setItem(draftKey, textarea.value);
+                updateCounter();
+            });
+            
+            updateCounter();
+            setupEmojiPicker(emojiBtn, textarea);
+        }
+    });
+}
+
+function clearDraft(textareaId) {
+    localStorage.removeItem(`draft_${textareaId}`);
+}
+
+// ---- FILTRO DE IDIOMA ----
+function setupLanguageFilter() {
+    const checkbox = document.getElementById('lang-filter-checkbox');
+    if (checkbox) {
+        checkbox.addEventListener('change', () => {
+            loadGlobalThoughts(1);
+        });
     }
 }
 
@@ -147,7 +223,7 @@ function getQuestionForDate(date) {
 }
 function startCountdown() { if (revelationCountdownInterval) clearInterval(revelationCountdownInterval); const countdownEl = document.getElementById('revelacionCountdown'); if (!countdownEl) return; revelationCountdownInterval = setInterval(() => { const now = new Date(); const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)); const diff = tomorrow - now; if (diff <= 0) { countdownEl.textContent = "¡Revelado!"; clearInterval(revelationCountdownInterval); setTimeout(() => location.reload(), 1000); return; } const hours = Math.floor((diff / (1000 * 60 * 60)) % 24); const minutes = Math.floor((diff / 1000 / 60) % 60); const seconds = Math.floor((diff / 1000) % 60); countdownEl.textContent = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0'); }, 1000); }
 async function loadRevelacionDiaria() { const todayStr = getTodaysDateStr(); const question = getQuestionForDate(new Date()); document.getElementById('revelacionQuestion').textContent = question; const hasAnsweredToday = localStorage.getItem('libre_revelacion_answered') === todayStr; if (hasAnsweredToday) { document.getElementById('revelacionInputArea').classList.add('hidden'); document.getElementById('revelacionThanks').classList.remove('hidden'); startCountdown(); } else { document.getElementById('revelacionInputArea').classList.remove('hidden'); document.getElementById('revelacionThanks').classList.add('hidden'); if (revelationCountdownInterval) clearInterval(revelationCountdownInterval); } }
-document.getElementById('revelacionSendBtn').onclick = async function() { const textarea = document.getElementById('revelacionTextarea'); const text = textarea.value.trim(); if (!text) return; if (window.contienePalabraOfensiva(text)) return; if (!countryReady) { showNotification("js.notification.country_wait", "info"); return; } this.disabled = true; const todayStr = getTodaysDateStr(); try { await db.collection('revelations').doc(todayStr).collection('responses').add({ text: text, ts: Date.now(), country: userCountry, user: getAnonUserId() }); localStorage.setItem('libre_revelacion_answered', todayStr); textarea.value = ''; loadRevelacionDiaria(); } catch (e) { console.error("Error saving revelation answer:", e); showNotification("revelation.send_error", "error"); } finally { this.disabled = false; } };
+document.getElementById('revelacionSendBtn').onclick = async function() { const textarea = document.getElementById('revelacionTextarea'); const text = textarea.value.trim(); if (!text) return; if (window.contienePalabraOfensiva(text)) return; if (!countryReady) { showNotification("js.notification.country_wait", "info"); return; } this.disabled = true; const todayStr = getTodaysDateStr(); try { await db.collection('revelations').doc(todayStr).collection('responses').add({ text: text, ts: Date.now(), country: userCountry, user: getAnonUserId(), lang: currentLang }); localStorage.setItem('libre_revelacion_answered', todayStr); textarea.value = ''; clearDraft('revelacionTextarea'); textarea.dispatchEvent(new Event('input')); loadRevelacionDiaria(); } catch (e) { console.error("Error saving revelation answer:", e); showNotification("revelation.send_error", "error"); } finally { this.disabled = false; } };
 async function showYesterdaysRevelation() {
   const container = document.getElementById('revelacionAyerContainer');
   const questionEl = document.getElementById('revelacionAyerQuestion');
@@ -233,8 +309,10 @@ document.getElementById('sendBtn').onclick = async function() {
   
   try {
     this.disabled = true;
-    await db.collection("thoughts").add({ text: txt, ts: Date.now(), country: userCountry, user: getAnonUserId() });
+    await db.collection("thoughts").add({ text: txt, ts: Date.now(), country: userCountry, user: getAnonUserId(), lang: currentLang });
     textarea.value = '';
+    clearDraft('textarea');
+    textarea.dispatchEvent(new Event('input'));
     mostrarFraseInspiradoraEnTextarea();
     showNotification("js.notification.thought_sent", "success");
     refreshAllData();
@@ -254,29 +332,21 @@ async function reportThought(thoughtId, buttonElement) {
     buttonElement.textContent = translations[currentLang]['js.notification.reporting'];
 
     const userId = getAnonUserId();
-    const todayStr = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    const todayStr = new Date().toISOString().split('T')[0];
     const counterDocId = `${userId}_${todayStr}`;
     const counterRef = db.collection('report_counters').doc(counterDocId);
     const thoughtRef = db.collection('thoughts').doc(thoughtId);
-    const reportRef = thoughtRef.collection('reports').doc(userId); // Usar ID de usuario para evitar reportes duplicados
+    const reportRef = thoughtRef.collection('reports').doc(userId);
 
     try {
         await db.runTransaction(async (transaction) => {
             const counterDoc = await transaction.get(counterRef);
             const reportDoc = await transaction.get(reportRef);
 
-            // 1. Evitar que un usuario reporte el mismo pensamiento varias veces
-            if (reportDoc.exists) {
-                throw new Error("already_reported");
-            }
-
-            // 2. Comprobar el límite diario de reportes
+            if (reportDoc.exists) { throw new Error("already_reported"); }
             const currentCount = counterDoc.exists ? counterDoc.data().count : 0;
-            if (currentCount >= 3) {
-                throw new Error("limit_exceeded");
-            }
+            if (currentCount >= 3) { throw new Error("limit_exceeded"); }
 
-            // 3. Si todo está en orden, procesar el reporte y actualizar el contador
             transaction.set(reportRef, { timestamp: Date.now() });
             if (counterDoc.exists) {
                 transaction.update(counterRef, { count: firebase.firestore.FieldValue.increment(1) });
@@ -285,25 +355,16 @@ async function reportThought(thoughtId, buttonElement) {
             }
         });
 
-        // Si la transacción tiene éxito
         showNotification("js.notification.report_success", "success");
         buttonElement.textContent = translations[currentLang]['feed.reported_button'];
 
     } catch (error) {
-        // Manejar los errores específicos de la transacción
-        if (error.message === "limit_exceeded") {
-            showNotification("js.notification.report_limit_exceeded", "error");
-        } else if (error.message === "already_reported") {
-            showNotification("js.notification.report_already_reported", "info");
-        } else {
-            console.error("Error reporting thought:", error);
-            showNotification("js.notification.report_error", "error");
-        }
+        if (error.message === "limit_exceeded") { showNotification("js.notification.report_limit_exceeded", "error");
+        } else if (error.message === "already_reported") { showNotification("js.notification.report_already_reported", "info");
+        } else { console.error("Error reporting thought:", error); showNotification("js.notification.report_error", "error"); }
         
-        // Restaurar el botón a su estado original si el reporte falló
         buttonElement.disabled = false;
         buttonElement.textContent = translations[currentLang]['feed.action_report'];
-        // Si el usuario ya lo había reportado, mantener el estado "Reportado"
         if (error.message === "already_reported") {
             buttonElement.textContent = translations[currentLang]['feed.reported_button'];
             buttonElement.disabled = true;
@@ -362,6 +423,7 @@ async function refreshAllData() {
 function loadGlobalThoughts(page = 1, showSkeleton = false) {
   const globalThoughts = document.getElementById('globalThoughts');
   const globalPagination = document.getElementById('globalPagination');
+  const langFilterCheckbox = document.getElementById('lang-filter-checkbox');
   if (!globalThoughts) return;
 
   if (showSkeleton) {
@@ -370,18 +432,27 @@ function loadGlobalThoughts(page = 1, showSkeleton = false) {
     return;
   }
   
-  if (allThoughtsAndCapsules.length === 0) {
-      globalThoughts.innerHTML = `<p class="empty-state">${translations[currentLang]['empty.no_thoughts']}</p>`;
+  let itemsToDisplay = allThoughtsAndCapsules;
+  if (langFilterCheckbox && langFilterCheckbox.checked) {
+      itemsToDisplay = allThoughtsAndCapsules.filter(item => {
+          return item.type === 'capsule' || (item.data.lang === currentLang);
+      });
+  }
+
+  if (itemsToDisplay.length === 0) {
+      const messageKey = (langFilterCheckbox && langFilterCheckbox.checked) ? 'empty.no_thoughts_filtered' : 'empty.no_thoughts';
+      globalThoughts.innerHTML = `<p class="empty-state">${translations[currentLang][messageKey]}</p>`;
       globalPagination.innerHTML = '';
       return;
   }
 
   globalThoughts.innerHTML = '';
-  globalMaxPages = Math.max(1, Math.ceil(allThoughtsAndCapsules.length / PAGE_SIZE));
+  globalMaxPages = Math.max(1, Math.ceil(itemsToDisplay.length / PAGE_SIZE));
   page = Math.max(1, Math.min(page, globalMaxPages));
   globalPage = page;
   const start = (page - 1) * PAGE_SIZE;
-  const pagedItems = allThoughtsAndCapsules.slice(start, start + PAGE_SIZE);
+  const pagedItems = itemsToDisplay.slice(start, start + PAGE_SIZE);
+
   for (let item of pagedItems) {
     const { id: thoughtId, data, type } = item;
     if (data.user !== getAnonUserId()) { registrarEco(thoughtId, type); }
@@ -440,7 +511,7 @@ function loadGlobalThoughts(page = 1, showSkeleton = false) {
   }
 }
 
-window.mostrarCajaRespuesta = function(thoughtId, btn) { const card = btn.closest('.p-4'); const caja = card.querySelector('.caja-respuesta'); if (!caja.classList.contains('hidden')) { caja.classList.add('hidden'); caja.innerHTML = ''; return; } document.querySelectorAll('.caja-respuesta').forEach(el => { el.classList.add('hidden'); el.innerHTML = ''; }); caja.classList.remove('hidden'); const placeholder = translations[currentLang]['feed.reply_placeholder']; const buttonText = translations[currentLang]['feed.send_reply_button']; caja.innerHTML = `<textarea class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" rows="2" maxlength="300" placeholder="${placeholder}"></textarea><button class="mt-2 px-4 py-1 rounded-lg bg-blue-500 text-white text-sm font-medium shadow hover:bg-blue-600 transition enviarRespuestaBtn">${buttonText}</button>`; const textarea = caja.querySelector('textarea'); const enviarBtn = caja.querySelector('.enviarRespuestaBtn'); const respuestasDiv = card.querySelector('.respuestas'); enviarBtn.onclick = async function() { await enviarRespuesta(thoughtId, textarea.value, respuestasDiv, enviarBtn, textarea); caja.classList.add('hidden'); caja.innerHTML = ''; }; };
+window.mostrarCajaRespuesta = function(thoughtId, btn) { const card = btn.closest('.p-4'); const caja = card.querySelector('.caja-respuesta'); if (!caja.classList.contains('hidden')) { caja.classList.add('hidden'); caja.innerHTML = ''; return; } document.querySelectorAll('.caja-respuesta').forEach(el => { el.classList.add('hidden'); el.innerHTML = ''; }); caja.classList.remove('hidden'); const placeholder = translations[currentLang]['feed.reply_placeholder']; const buttonText = translations[currentLang]['feed.send_reply_button']; const maxLength = 300; caja.innerHTML = `<div class="relative"><textarea class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" rows="2" maxlength="${maxLength}" placeholder="${placeholder}"></textarea><button class="emoji-btn">😀</button><div class="char-counter">${maxLength}</div></div><button class="mt-2 px-4 py-1 rounded-lg bg-blue-500 text-white text-sm font-medium shadow hover:bg-blue-600 transition enviarRespuestaBtn">${buttonText}</button>`; const textarea = caja.querySelector('textarea'); const counter = caja.querySelector('.char-counter'); const emojiBtn = caja.querySelector('.emoji-btn'); const enviarBtn = caja.querySelector('.enviarRespuestaBtn'); const respuestasDiv = card.querySelector('.respuestas'); textarea.addEventListener('input', () => { counter.textContent = maxLength - textarea.value.length; }); setupEmojiPicker(emojiBtn, textarea); enviarBtn.onclick = async function() { await enviarRespuesta(thoughtId, textarea.value, respuestasDiv, enviarBtn, textarea); caja.classList.add('hidden'); caja.innerHTML = ''; }; };
 async function registrarEco(docId, type = 'thought') { if (!countryReady || type !== 'thought') return; try { const ecoRef = db.collection("thoughts").doc(docId).collection("eco").doc(userCountry); await db.runTransaction(async (tx) => { const doc = await tx.get(ecoRef); if (!doc.exists) { tx.set(ecoRef, { count: 1 }); } else { tx.update(ecoRef, { count: firebase.firestore.FieldValue.increment(1) }); } }); } catch (e) { /* Silently fail */ } }
 
 async function loadMyThoughts(page = 1) {
@@ -650,9 +721,12 @@ document.getElementById('capsuleBtn').onclick = async function() {
     const openAt = openAtDate.getTime();
     try {
         this.disabled = true;
-        await db.collection("capsules").add({ text: msg, openAt, ts: Date.now(), country: userCountry, user: getAnonUserId() });
+        await db.collection("capsules").add({ text: msg, openAt, ts: Date.now(), country: userCountry, user: getAnonUserId(), lang: currentLang });
         showNotification('js.notification.capsule_scheduled', 'success', 3000, ` ${date} @ ${time}`);
-        document.getElementById('capsuleMessage').value = '';
+        const capsuleTextarea = document.getElementById('capsuleMessage');
+        capsuleTextarea.value = '';
+        clearDraft('capsuleMessage');
+        capsuleTextarea.dispatchEvent(new Event('input'));
         document.getElementById('capsuleDate').value = '';
         document.getElementById('capsuleTime').value = '';
         loadMyCapsules();
