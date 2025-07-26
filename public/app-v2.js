@@ -100,7 +100,7 @@ function initializeApp() {
     setupAgeGate();
     setupLangBannerButtons();
     setupLanguageFilter();
-    showTab('feed'); // Mostrar la primera pestaña
+    showTab('feed');
     setTimeout(checkNewReplies, 1500);
     setInterval(() => { checkNewReplies(); }, 40000);
 }
@@ -139,31 +139,25 @@ function mostrarFraseInspiradoraEnTextarea() {
 
 // ---- EMOJIS, BORRADOR AUTOMÁTICO Y CONTADOR DE CARACTERES ----
 function setupEmojiPicker(trigger, textarea) {
-    if (!trigger || !textarea || !window.EmojiButton) return;
+    if (!trigger || !textarea || !window.EmojiButton) {
+        console.log("Emoji picker no se pudo inicializar. Botón, textarea o librería no encontrados.");
+        return;
+    }
     if (trigger.dataset.emojiPickerInitialized) return;
 
-    const picker = new window.EmojiButton({
-        position: 'bottom-start',
-        theme: 'auto',
-        autoHide: true,
-        emojiSize: '1.5rem',
-        emojisPerRow: 8,
-        rows: 6,
-        showSearch: false
-    });
+    const picker = new window.EmojiButton();
 
-    picker.on('emoji', selection => {
+    picker.on('emoji', emoji => {
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        textarea.value = textarea.value.substring(0, start) + selection.emoji + textarea.value.substring(end);
-        textarea.selectionStart = textarea.selectionEnd = start + selection.emoji.length;
+        textarea.value = textarea.value.substring(0, start) + emoji + textarea.value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
         textarea.focus();
         textarea.dispatchEvent(new Event('input'));
     });
 
-    trigger.addEventListener('click', (e) => {
-        e.preventDefault();
-        picker.togglePicker(trigger);
+    trigger.addEventListener('click', () => {
+        picker.pickerVisible ? picker.hidePicker() : picker.showPicker(trigger);
     });
 
     trigger.dataset.emojiPickerInitialized = 'true';
@@ -831,17 +825,16 @@ function createRevelationSkeleton(count = 1) {
 }
 
 // ---- INICIO DE LA APLICACIÓN ----
-// En lugar de llamar a DOMContentLoaded, creamos un iniciador que espera a la librería de emojis.
-function waitForEmojiButtonAndInit() {
-    if (window.EmojiButton) {
-        // La librería está lista, iniciamos la app.
+function waitForAppDependencies() {
+    if (window.EmojiButton && window.L && window.axios && window.firebase) {
+        // Todas las librerías están listas.
         detectCountry();
         initializeApp();
     } else {
-        // La librería no está lista, esperamos 100ms y volvemos a comprobar.
-        setTimeout(waitForEmojiButtonAndInit, 100);
+        // Una o más librerías no están listas, esperamos 100ms y volvemos a comprobar.
+        setTimeout(waitForAppDependencies, 100);
     }
 }
 
-// Empezamos el proceso de espera.
-waitForEmojiButtonAndInit();
+// Espera a que el HTML esté listo, luego empieza a comprobar si las librerías están cargadas.
+document.addEventListener('DOMContentLoaded', waitForAppDependencies);
