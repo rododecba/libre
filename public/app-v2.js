@@ -1,8 +1,10 @@
+console.log("--- Cargando app-v2.js (Versión de Diagnóstico) ---");
+
 // ---- VARIABLES GLOBALES Y CONFIGURACIÓN ----
 let revelationCountdownInterval;
 const userLang = navigator.language.slice(0, 2) || 'es';
 let currentLang = 'es'; // Idioma por defecto
-const countryNames = { AR: "Argentina", ES: "España", MX: "México", US: "Estados Unidos", BR: "Brasil", CL: "Chile", CO: "Colombia", PE: "Perú", VE: "Venezuela", UY: "Uruguay", PY: "Paraguay", BO: "Bolivia", EC: "Ecuador", CR: "Costa Rica", PA: "Panamá", GT: "Guatemala", HN: "Honduras", NI: "Nicaragua", SV: "El Salvador", DO: "República Dominicana", CU: "Cuba", PR: "Puerto Rico", CA: "Canadá", FR: "Francia", IT: "Italia", DE: "Alemania", GB: "Reino Unido", PT: "Portugal", JP: "Japón", KR: "Corea del Sur", IN: "India", CN: "China", RU: "Rusia", AU: "Australia", "Desconocido": "Desconocido" };
+const countryNames = countryNamesES; // Usando la lista de countries.js
 const PAGE_SIZE = 10;
 let globalPage = 1, globalMaxPages = 1;
 let myPage = 1, myMaxPages = 1;
@@ -84,6 +86,7 @@ function showNotification(messageKey, type = 'info', duration = 3000, context = 
 
 // ---- FUNCIÓN DE INICIALIZACIÓN DE LA APP ----
 function initializeApp() {
+    console.log("Paso 3: initializeApp() se está ejecutando.");
     const textLogo = document.getElementById('textLogo');
     const imgLogo = document.getElementById('logolibre');
     if (textLogo && imgLogo) {
@@ -139,28 +142,45 @@ function mostrarFraseInspiradoraEnTextarea() {
 
 // ---- EMOJIS, BORRADOR AUTOMÁTICO Y CONTADOR DE CARACTERES ----
 function setupEmojiPicker(trigger, textarea) {
-    if (!trigger || !textarea || !window.EmojiButton) {
-        console.log("Emoji picker no se pudo inicializar. Botón, textarea o librería no encontrados.");
+    console.log(`Paso 5: Intentando configurar emoji picker para el textarea:`, textarea.id);
+
+    if (!trigger || !textarea) {
+        console.error("Error en setupEmojiPicker: El botón (trigger) o el textarea no se encontraron.");
         return;
     }
-    if (trigger.dataset.emojiPickerInitialized) return;
+    if (trigger.dataset.emojiPickerInitialized) {
+        console.log("Este botón ya tiene un emoji picker inicializado. Omitiendo.");
+        return;
+    }
 
-    const picker = new window.EmojiButton();
+    try {
+        const picker = new window.EmojiButton();
 
-    picker.on('emoji', emoji => {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        textarea.value = textarea.value.substring(0, start) + emoji + textarea.value.substring(end);
-        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
-        textarea.focus();
-        textarea.dispatchEvent(new Event('input'));
-    });
+        picker.on('emoji', emoji => {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            textarea.value = textarea.value.substring(0, start) + emoji + textarea.value.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+            textarea.focus();
+            textarea.dispatchEvent(new Event('input'));
+        });
 
-    trigger.addEventListener('click', () => {
-        picker.pickerVisible ? picker.hidePicker() : picker.showPicker(trigger);
-    });
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log(`Paso 6: ¡CLIC! Se hizo clic en el botón de emoji para ${textarea.id}.`);
+            try {
+                picker.pickerVisible ? picker.hidePicker() : picker.showPicker(trigger);
+                console.log("Comando para mostrar/ocultar picker ejecutado con éxito.");
+            } catch (err) {
+                console.error("¡ERROR DENTRO DEL CLIC! Falló al intentar mostrar/ocultar el picker:", err);
+            }
+        });
 
-    trigger.dataset.emojiPickerInitialized = 'true';
+        trigger.dataset.emojiPickerInitialized = 'true';
+        console.log(`Emoji picker para ${textarea.id} configurado con éxito.`);
+    } catch (error) {
+        console.error(`¡ERROR FATAL! Falló al crear 'new EmojiButton()' para ${textarea.id}:`, error);
+    }
 }
 
 function setupTextareaFeatures(textareaId, counterId) {
@@ -207,6 +227,7 @@ function setupLanguageFilter() {
     }
 }
 
+// ... (EL RESTO DEL CÓDIGO ES EXACTAMENTE IGUAL) ...
 // ---- REVELACIÓN DIARIA ----
 function getDayOfYear(date) { const start = new Date(date.getFullYear(), 0, 0); const diff = date - start; const oneDay = 1000 * 60 * 60 * 24; return Math.floor(diff / oneDay); }
 function getTodaysDateStr() { const now = new Date(); return now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0') + '-' + String(now.getUTCDate()).padStart(2, '0'); }
@@ -257,7 +278,6 @@ async function showYesterdaysRevelation() {
     respuestasEl.innerHTML = '<p class="empty-state text-red-700">Error loading responses.</p>';
   }
 }
-
 // ---- FORMATO FECHA ----
 function formatearFecha(ts) { 
     if (!ts || typeof ts !== 'number') return "Invalid Date";
@@ -267,18 +287,14 @@ function formatearFecha(ts) {
     const horaStr = fecha.toLocaleTimeString(currentLang, { hour: '2-digit', minute: '2-digit' }); 
     return `${fechaStr}, ${horaStr}`; 
 }
-
 // ---- GENERADOR ANÓNIMO Y EXPORT/IMPORT ----
 function getAnonUserId() { let id = localStorage.getItem("libre_anon_id"); if (!id) { id = "anon-" + Math.random().toString(36).slice(2, 17); localStorage.setItem("libre_anon_id", id); } return id; }
 function exportAnonId() { const id = getAnonUserId(); window.prompt(translations[currentLang]['js.prompt.export_id'], id); }
 function importAnonId() { const newId = window.prompt(translations[currentLang]['js.prompt.import_id']); if (newId && /^anon-[a-z0-9]{15}$/.test(newId)) { localStorage.setItem("libre_anon_id", newId); loadMyThoughts(); showNotification("js.notification.id_restored", "success"); } else if (newId) { showNotification("js.notification.id_invalid", "error"); } }
-
 // ---- DETECTAR PAÍS ----
 async function detectCountry() { try { const res = await axios.get("https://ipinfo.io/json?token=ec664cefb36ece"); userCountry = res.data.country || "Desconocido"; } catch (e) { console.error("Error detecting country:", e); userCountry = "Desconocido"; } finally { countryReady = true; } }
-
 // ---- MODO "BOTELLA AL MAR" ALEATORIO ----
 document.getElementById('randomThoughtGlobe').onclick = async function() { const randomThoughtEl = document.getElementById('randomThought'); if (!randomThoughtEl) return; randomThoughtEl.classList.add('hidden'); try { const snapshot = await db.collection("thoughts").get(); const docs = snapshot.docs; if (docs.length === 0) { randomThoughtEl.textContent = "No hay pensamientos aún."; randomThoughtEl.classList.remove('hidden'); return; } const idx = Math.floor(Math.random() * docs.length); const data = docs[idx].data(); randomThoughtEl.innerHTML = ''; const headerDiv = document.createElement('div'); headerDiv.className = 'flex items-center space-x-2 mb-2'; headerDiv.innerHTML = `<span class="text-xs font-medium">${countryNames[data.country] || data.country || "🌐"}</span>`; const p = document.createElement('p'); p.className = 'font-medium text-justify'; p.textContent = data.text; const dateDiv = document.createElement('div'); dateDiv.className = 'text-[0.7rem] text-gray-400 mt-1'; dateDiv.textContent = formatearFecha(data.ts); randomThoughtEl.append(headerDiv, p, dateDiv); randomThoughtEl.classList.remove('hidden'); } catch (e) { console.error("Error loading random thought:", e); randomThoughtEl.textContent = "Error al cargar pensamiento aleatorio."; randomThoughtEl.classList.remove('hidden'); } };
-
 // ---- SISTEMA DE NOTIFICACIONES ----
 function getLastSeenReplyTimestamp(thoughtId) { return Number(localStorage.getItem("libre_last_seen_reply_" + thoughtId) || 0); }
 function setLastSeenReplyTimestamp(thoughtId, ts) { localStorage.setItem("libre_last_seen_reply_" + thoughtId, String(ts)); }
@@ -294,7 +310,6 @@ async function markRepliesAsSeen(myThoughts) {
     const notifEl = document.getElementById("mineTabNotification");
     if(notifEl) notifEl.classList.add("hidden");
 }
-
 // ---- ESCRIBIR PENSAMIENTO ----
 document.getElementById('sendBtn').onclick = async function() {
   if (!countryReady) { showNotification("js.notification.country_wait", "info"); return; }
@@ -316,7 +331,6 @@ document.getElementById('sendBtn').onclick = async function() {
     this.disabled = false;
   }
 };
-
 // ---- REPORTAR PENSAMIENTOS (VERSIÓN MODIFICADA CON LÍMITE DIARIO) ----
 async function reportThought(thoughtId, buttonElement) {
     if (!confirm(translations[currentLang]['js.notification.report_confirm'])) return;
@@ -364,12 +378,10 @@ async function reportThought(thoughtId, buttonElement) {
         }
     }
 }
-
 // ---- ACCIONES DE PENSAMIENTO (RESPONDER, TRADUCIR, REPORTAR) ----
 function handleTranslateClick(text) { if (confirm(translations[currentLang]['js.notification.translate_confirm'])) { const encodedText = encodeURIComponent(text); const url = `https://translate.google.com/?sl=auto&tl=${currentLang}&text=${encodedText}&op=translate`; window.open(url, '_blank', 'noopener,noreferrer'); } }
 async function enviarRespuesta(thoughtId, replyText, respuestasDiv, btn, textarea) { if (!replyText.trim()) return; if (window.contienePalabraOfensiva(replyText)) { showNotification('js.notification.offensive_word', 'error'); return; } btn.disabled = true; textarea.disabled = true; try { const thoughtDoc = await db.collection("thoughts").doc(thoughtId).get(); if (!thoughtDoc.exists) { showNotification("js.notification.reply_error_generic", "error"); return; } if (thoughtDoc.data().user === getAnonUserId()) { showNotification("js.notification.reply_error_own", "info"); return; } await db.collection("thoughts").doc(thoughtId).collection("replies").add({ text: replyText.trim(), ts: Date.now(), user: getAnonUserId() }); textarea.value = ''; await mostrarRespuestas(thoughtId, respuestasDiv); setTimeout(checkNewReplies, 1000); } catch(e) { console.error("Error saving reply:", e); showNotification('js.notification.reply_error_generic', "error"); } finally { btn.disabled = false; textarea.disabled = false; } }
 async function mostrarRespuestas(thoughtId, respuestasDiv) { respuestasDiv.innerHTML = ''; try { const snapshot = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "asc").get(); if (snapshot.empty) return; snapshot.forEach(doc => { const data = doc.data(); const replyCard = document.createElement('div'); replyCard.className = 'reply-box'; const textDiv = document.createElement('div'); const span = document.createElement('span'); span.className = 'font-medium'; span.textContent = data.text; textDiv.appendChild(span); const dateDiv = document.createElement('div'); dateDiv.className = 'text-[0.7rem] text-gray-400 mt-1'; dateDiv.textContent = formatearFecha(data.ts); replyCard.append(textDiv, dateDiv); respuestasDiv.appendChild(replyCard); }); } catch(e) { console.error("Error loading replies:", e); respuestasDiv.innerHTML = '<div class="text-[0.7rem] text-red-500">Error al cargar respuestas.</div>'; } }
-
 // ---- ESTRUCTURA DE CARGA DE DATOS ----
 async function fetchData() {
     try {
@@ -400,7 +412,6 @@ async function fetchData() {
         allThoughtsAndCapsules = [];
     }
 }
-
 async function refreshAllData() {
     loadGlobalThoughts(globalPage, true);
     await fetchData();
@@ -411,7 +422,6 @@ async function refreshAllData() {
     loadMap();
     setTimeout(checkNewReplies, 2000);
 }
-
 // ---- FUNCIONES DE CARGA ----
 function loadGlobalThoughts(page = 1, showSkeleton = false) {
   const globalThoughts = document.getElementById('globalThoughts');
@@ -503,10 +513,8 @@ function loadGlobalThoughts(page = 1, showSkeleton = false) {
       globalPagination.innerHTML = `<button onclick="loadGlobalThoughts(${globalPage-1})" ${globalPage<=1?'disabled':''}>${prev}</button><span>${page_str} ${globalPage} ${of_str} ${globalMaxPages}</span><button onclick="loadGlobalThoughts(${globalPage+1})" ${globalPage>=globalMaxPages?'disabled':''}>${next}</button>`;
   }
 }
-
 window.mostrarCajaRespuesta = function(thoughtId, btn) { const card = btn.closest('.p-4'); const caja = card.querySelector('.caja-respuesta'); if (!caja.classList.contains('hidden')) { caja.classList.add('hidden'); caja.innerHTML = ''; return; } document.querySelectorAll('.caja-respuesta').forEach(el => { el.classList.add('hidden'); el.innerHTML = ''; }); caja.classList.remove('hidden'); const placeholder = translations[currentLang]['feed.reply_placeholder']; const buttonText = translations[currentLang]['feed.send_reply_button']; const maxLength = 300; caja.innerHTML = `<div class="relative"><textarea class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" rows="2" maxlength="${maxLength}" placeholder="${placeholder}"></textarea><button class="emoji-btn">😀</button><div class="char-counter">${maxLength}</div></div><button class="mt-2 px-4 py-1 rounded-lg bg-blue-500 text-white text-sm font-medium shadow hover:bg-blue-600 transition enviarRespuestaBtn">${buttonText}</button>`; const textarea = caja.querySelector('textarea'); const counter = caja.querySelector('.char-counter'); const emojiBtn = caja.querySelector('.emoji-btn'); const enviarBtn = caja.querySelector('.enviarRespuestaBtn'); const respuestasDiv = card.querySelector('.respuestas'); textarea.addEventListener('input', () => { counter.textContent = maxLength - textarea.value.length; }); setupEmojiPicker(emojiBtn, textarea); enviarBtn.onclick = async function() { await enviarRespuesta(thoughtId, textarea.value, respuestasDiv, enviarBtn, textarea); caja.classList.add('hidden'); caja.innerHTML = ''; }; };
 async function registrarEco(docId, type = 'thought') { if (!countryReady || type !== 'thought') return; try { const ecoRef = db.collection("thoughts").doc(docId).collection("eco").doc(userCountry); await db.runTransaction(async (tx) => { const doc = await tx.get(ecoRef); if (!doc.exists) { tx.set(ecoRef, { count: 1 }); } else { tx.update(ecoRef, { count: firebase.firestore.FieldValue.increment(1) }); } }); } catch (e) { /* Silently fail */ } }
-
 async function loadMyThoughts(page = 1) {
     const myThoughtsDiv = document.getElementById('myThoughts');
     const myPagination = document.getElementById('myPagination');
@@ -615,7 +623,6 @@ async function loadMyThoughts(page = 1) {
         personalStatsDiv.innerHTML = '';
     }
 }
-
 function loadGlobalCount() { document.getElementById('globalCountNum').textContent = allThoughtsAndCapsules.filter(item => item.type === 'thought').length; }
 function loadCountryRanking() { const el = document.getElementById('countryRanking'); if (!el) return; const countryCounts = {}; allThoughtsAndCapsules.forEach(({data}) => { if(data.country) { const c = data.country || "Desconocido"; countryCounts[c] = (countryCounts[c] || 0) + 1; } }); const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]); let html = `<div class="mb-2 font-semibold text-blue-800">${translations[currentLang]['feed.ranking_title']}</div><ul class="list-disc pl-4">`; sorted.slice(0, 5).forEach(([country, count]) => { html += `<li><span class="font-bold">${countryNames[country] || country}</span>: ${count}</li>`; }); html += '</ul>'; el.innerHTML = html; }
 function loadEstadisticasAnonimas() {
@@ -650,7 +657,6 @@ function loadEstadisticasAnonimas() {
                     <div class="dato">${translations[currentLang]['feed.stats_week_countries']} <strong>${paisesSemana.size}</strong></div>
                     <div class="dato">${translations[currentLang]['feed.stats_record']} <strong>${recordDia}</strong></div>`;
 }
-
 function loadMap() {
   const countryCoords = {
     AR: {lat: -34, lng: -64}, ES: {lat: 40, lng: -3}, MX: {lat: 23, lng: -102}, US: {lat: 37, lng: -95},
@@ -680,7 +686,6 @@ function loadMap() {
     marker.bindPopup(`<b>${countryNames[country] || country}</b>: ${count} pensamientos`);
   }
 }
-
 // ---- CÁPSULA DEL TIEMPO ----
 function setupCapsuleInputs() {
     const dateInput = document.getElementById('capsuleDate');
@@ -728,10 +733,10 @@ document.getElementById('capsuleBtn').onclick = async function() {
     }
 };
 async function loadMyCapsules() { const list = document.getElementById('capsulesList'); if (!list) return; list.innerHTML = ''; try { const now = Date.now(); const snapshot = await db.collection("capsules").where("user", "==", getAnonUserId()).orderBy("openAt", "asc").get(); let pendingHtml = ''; let openedHtml = ''; snapshot.forEach(doc => { const data = doc.data(); const createdOn = `${translations[currentLang]['capsule.created_on']} ${formatearFecha(data.ts)}`; const scheduledOn = `${translations[currentLang]['capsule.scheduled_on']} ${formatearFecha(data.ts)}`; if (data.openAt > now) { const scheduledToOpen = `${translations[currentLang]['capsule.scheduled_to_open']} ${formatearFecha(data.openAt)}`; pendingHtml += `<div class="p-4 bg-gray-100 rounded-lg shadow-sm border border-dashed border-gray-300"><div class="flex items-center text-blue-800 font-bold text-sm"><span class="mr-2">🔒</span><span>${scheduledToOpen}</span></div><div class="text-[0.7rem] text-gray-500 mt-1">${createdOn}</div></div>`; } else { const openedOn = `${translations[currentLang]['capsule.opened_on']} ${formatearFecha(data.openAt)}`; const card = document.createElement('div'); card.className = 'p-4 bg-white rounded-lg shadow-md'; const header = document.createElement('div'); header.className = 'mb-2 text-blue-700 font-bold text-sm'; header.textContent = openedOn; const p = document.createElement('p'); p.className = 'font-medium text-justify'; p.textContent = data.text; const footer = document.createElement('div'); footer.className = 'text-[0.7rem] text-gray-400 mt-1'; footer.textContent = scheduledOn; card.append(header, p, footer); openedHtml = card.outerHTML + openedHtml; } }); let finalHtml = ''; if (pendingHtml) { finalHtml += `<h3 class="text-lg font-semibold text-blue-900 mb-3">${translations[currentLang]['capsule.pending_title']}</h3><div class="space-y-4">${pendingHtml}</div>`; } if (openedHtml) { finalHtml += `<h3 class="text-lg font-semibold text-blue-900 mt-6 mb-3">${translations[currentLang]['capsule.opened_title']}</h3><div class="space-y-4">${openedHtml}</div>`; } if (finalHtml) { list.innerHTML = finalHtml; } else { list.innerHTML = `<p class="empty-state">${translations[currentLang]['empty.my_capsules']}</p>`; } } catch (e) { console.error("Error loading my capsules:", e); list.innerHTML = '<p class="empty-state text-red-700">Error loading your capsules.</p>'; } }
-
 // ---- NAVEGACIÓN POR TABS ----
 const TABS = ['feed', 'mine', 'capsule', 'about', 'revelacion'];
 function showTab(tabId) {
+  console.log(`Paso 4: Mostrando pestaña: ${tabId}`);
   TABS.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
   const active = document.getElementById(tabId);
   if (active) active.classList.remove('hidden');
@@ -766,7 +771,6 @@ function showLegalSection(sectionId) {
         }
     }, 100);
 }
-
 // ---- GENERADORES DE ESQUELETOS DE CARGA ----
 function createThoughtSkeleton(count = 1) {
     let html = '';
@@ -826,15 +830,23 @@ function createRevelationSkeleton(count = 1) {
 
 // ---- INICIO DE LA APLICACIÓN ----
 function waitForAppDependencies() {
-    if (window.EmojiButton && window.L && window.axios && window.firebase) {
-        // Todas las librerías están listas.
+    console.log("Paso 2: waitForAppDependencies() comprobando librerías...");
+    const emojiReady = !!window.EmojiButton;
+    const leafletReady = !!window.L;
+    const axiosReady = !!window.axios;
+    const firebaseReady = !!window.firebase;
+
+    if (emojiReady && leafletReady && axiosReady && firebaseReady) {
+        console.log("¡ÉXITO! Todas las librerías están listas. Iniciando la aplicación.");
         detectCountry();
         initializeApp();
     } else {
-        // Una o más librerías no están listas, esperamos 100ms y volvemos a comprobar.
+        console.warn("Faltan librerías. Volviendo a comprobar en 100ms. Estado:", { emojiReady, leafletReady, axiosReady, firebaseReady });
         setTimeout(waitForAppDependencies, 100);
     }
 }
 
-// Espera a que el HTML esté listo, luego empieza a comprobar si las librerías están cargadas.
-document.addEventListener('DOMContentLoaded', waitForAppDependencies);
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("Paso 1: DOMContentLoaded disparado. Empezando a esperar por las librerías.");
+    waitForAppDependencies();
+});
