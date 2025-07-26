@@ -139,40 +139,34 @@ function mostrarFraseInspiradoraEnTextarea() {
 
 // ---- EMOJIS, BORRADOR AUTOMÁTICO Y CONTADOR DE CARACTERES ----
 function setupEmojiPicker(trigger, textarea) {
-    if (!trigger || !textarea) return;
-    // Evitar reinicializar si ya existe
+    if (!trigger || !textarea || !window.EmojiButton) return;
     if (trigger.dataset.emojiPickerInitialized) return;
 
-    try {
-        const picker = new EmojiButton.EmojiButton({
-            position: 'bottom-start',
-            theme: 'auto',
-            autoHide: true,
-            emojiSize: '1.5rem',
-            emojisPerRow: 8,
-            rows: 6,
-            showSearch: false
-        });
+    const picker = new window.EmojiButton({
+        position: 'bottom-start',
+        theme: 'auto',
+        autoHide: true,
+        emojiSize: '1.5rem',
+        emojisPerRow: 8,
+        rows: 6,
+        showSearch: false
+    });
 
-        picker.on('emoji', selection => {
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            textarea.value = textarea.value.substring(0, start) + selection.emoji + textarea.value.substring(end);
-            textarea.selectionStart = textarea.selectionEnd = start + selection.emoji.length;
-            textarea.focus();
-            textarea.dispatchEvent(new Event('input'));
-        });
+    picker.on('emoji', selection => {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0, start) + selection.emoji + textarea.value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + selection.emoji.length;
+        textarea.focus();
+        textarea.dispatchEvent(new Event('input'));
+    });
 
-        trigger.addEventListener('click', (e) => {
-            e.preventDefault();
-            picker.togglePicker(trigger);
-        });
+    trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        picker.togglePicker(trigger);
+    });
 
-        // Marcar como inicializado para no volver a hacerlo
-        trigger.dataset.emojiPickerInitialized = 'true';
-    } catch (e) {
-        console.error("Error al inicializar EmojiButton. Asegúrate de que la librería se ha cargado correctamente.", e);
-    }
+    trigger.dataset.emojiPickerInitialized = 'true';
 }
 
 function setupTextareaFeatures(textareaId, counterId) {
@@ -183,22 +177,18 @@ function setupTextareaFeatures(textareaId, counterId) {
     const draftKey = `draft_${textareaId}`;
     const emojiBtn = textarea.parentElement.querySelector('.emoji-btn');
 
-    // Cargar borrador guardado
     const savedDraft = localStorage.getItem(draftKey);
     if (savedDraft) textarea.value = savedDraft;
 
-    // Función para actualizar el contador
     const updateCounter = () => {
         counter.textContent = textarea.maxLength - textarea.value.length;
     };
 
-    // Event listener para guardar borrador y actualizar contador
     textarea.addEventListener('input', () => {
         localStorage.setItem(draftKey, textarea.value);
         updateCounter();
     });
 
-    // Inicializar contador y emoji picker
     updateCounter();
     setupEmojiPicker(emojiBtn, textarea);
 }
@@ -209,7 +199,7 @@ function clearDraft(textareaId) {
     const textarea = document.getElementById(textareaId);
     if (textarea) {
         textarea.value = '';
-        textarea.dispatchEvent(new Event('input')); // Para que el contador se actualice a 500
+        textarea.dispatchEvent(new Event('input'));
     }
 }
 
@@ -754,7 +744,6 @@ function showTab(tabId) {
   
   if (revelationCountdownInterval) clearInterval(revelationCountdownInterval);
   
-  // Inicializar las funcionalidades de cada pestaña cuando se muestra
   if(tabId === 'feed') { 
     setupTextareaFeatures('textarea', 'char-counter-main');
     refreshAllData();
@@ -842,7 +831,17 @@ function createRevelationSkeleton(count = 1) {
 }
 
 // ---- INICIO DE LA APLICACIÓN ----
-document.addEventListener('DOMContentLoaded', () => {
-    detectCountry();
-    initializeApp();
-});
+// En lugar de llamar a DOMContentLoaded, creamos un iniciador que espera a la librería de emojis.
+function waitForEmojiButtonAndInit() {
+    if (window.EmojiButton) {
+        // La librería está lista, iniciamos la app.
+        detectCountry();
+        initializeApp();
+    } else {
+        // La librería no está lista, esperamos 100ms y volvemos a comprobar.
+        setTimeout(waitForEmojiButtonAndInit, 100);
+    }
+}
+
+// Empezamos el proceso de espera.
+waitForEmojiButtonAndInit();
