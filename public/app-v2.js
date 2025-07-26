@@ -99,9 +99,8 @@ function initializeApp() {
     setupLanguage();
     setupAgeGate();
     setupLangBannerButtons();
-    setupDraftsAndCounters();
     setupLanguageFilter();
-    showTab('feed');
+    showTab('feed'); // Mostrar la primera pestaña
     setTimeout(checkNewReplies, 1500);
     setInterval(() => { checkNewReplies(); }, 40000);
 }
@@ -141,65 +140,77 @@ function mostrarFraseInspiradoraEnTextarea() {
 // ---- EMOJIS, BORRADOR AUTOMÁTICO Y CONTADOR DE CARACTERES ----
 function setupEmojiPicker(trigger, textarea) {
     if (!trigger || !textarea) return;
-    const picker = new EmojiButton.EmojiButton({
-        position: 'bottom-start',
-        theme: 'auto',
-        autoHide: true,
-        emojiSize: '1.5rem',
-        emojisPerRow: 8,
-        rows: 6,
-        showSearch: false
-    });
+    // Evitar reinicializar si ya existe
+    if (trigger.dataset.emojiPickerInitialized) return;
 
-    picker.on('emoji', selection => {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        textarea.value = textarea.value.substring(0, start) + selection.emoji + textarea.value.substring(end);
-        textarea.selectionStart = textarea.selectionEnd = start + selection.emoji.length;
-        textarea.focus();
-        textarea.dispatchEvent(new Event('input'));
-    });
+    try {
+        const picker = new EmojiButton.EmojiButton({
+            position: 'bottom-start',
+            theme: 'auto',
+            autoHide: true,
+            emojiSize: '1.5rem',
+            emojisPerRow: 8,
+            rows: 6,
+            showSearch: false
+        });
 
-    trigger.addEventListener('click', (e) => {
-        e.preventDefault();
-        picker.togglePicker(trigger);
-    });
+        picker.on('emoji', selection => {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            textarea.value = textarea.value.substring(0, start) + selection.emoji + textarea.value.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + selection.emoji.length;
+            textarea.focus();
+            textarea.dispatchEvent(new Event('input'));
+        });
+
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            picker.togglePicker(trigger);
+        });
+
+        // Marcar como inicializado para no volver a hacerlo
+        trigger.dataset.emojiPickerInitialized = 'true';
+    } catch (e) {
+        console.error("Error al inicializar EmojiButton. Asegúrate de que la librería se ha cargado correctamente.", e);
+    }
 }
 
-function setupDraftsAndCounters() {
-    const textareas = [
-        { id: 'textarea', counterId: 'char-counter-main' },
-        { id: 'revelacionTextarea', counterId: 'char-counter-revelation' },
-        { id: 'capsuleMessage', counterId: 'char-counter-capsule' }
-    ];
+function setupTextareaFeatures(textareaId, counterId) {
+    const textarea = document.getElementById(textareaId);
+    const counter = document.getElementById(counterId);
+    if (!textarea || !counter) return;
 
-    textareas.forEach(item => {
-        const textarea = document.getElementById(item.id);
-        const counter = document.getElementById(item.counterId);
-        const draftKey = `draft_${item.id}`;
-        const emojiBtn = textarea.parentElement.querySelector('.emoji-btn');
+    const draftKey = `draft_${textareaId}`;
+    const emojiBtn = textarea.parentElement.querySelector('.emoji-btn');
 
-        if (textarea && counter) {
-            const savedDraft = localStorage.getItem(draftKey);
-            if (savedDraft) textarea.value = savedDraft;
-            
-            const updateCounter = () => {
-                counter.textContent = textarea.maxLength - textarea.value.length;
-            };
+    // Cargar borrador guardado
+    const savedDraft = localStorage.getItem(draftKey);
+    if (savedDraft) textarea.value = savedDraft;
 
-            textarea.addEventListener('input', () => {
-                localStorage.setItem(draftKey, textarea.value);
-                updateCounter();
-            });
-            
-            updateCounter();
-            setupEmojiPicker(emojiBtn, textarea);
-        }
+    // Función para actualizar el contador
+    const updateCounter = () => {
+        counter.textContent = textarea.maxLength - textarea.value.length;
+    };
+
+    // Event listener para guardar borrador y actualizar contador
+    textarea.addEventListener('input', () => {
+        localStorage.setItem(draftKey, textarea.value);
+        updateCounter();
     });
+
+    // Inicializar contador y emoji picker
+    updateCounter();
+    setupEmojiPicker(emojiBtn, textarea);
 }
+
 
 function clearDraft(textareaId) {
     localStorage.removeItem(`draft_${textareaId}`);
+    const textarea = document.getElementById(textareaId);
+    if (textarea) {
+        textarea.value = '';
+        textarea.dispatchEvent(new Event('input')); // Para que el contador se actualice a 500
+    }
 }
 
 // ---- FILTRO DE IDIOMA ----
@@ -223,7 +234,7 @@ function getQuestionForDate(date) {
 }
 function startCountdown() { if (revelationCountdownInterval) clearInterval(revelationCountdownInterval); const countdownEl = document.getElementById('revelacionCountdown'); if (!countdownEl) return; revelationCountdownInterval = setInterval(() => { const now = new Date(); const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)); const diff = tomorrow - now; if (diff <= 0) { countdownEl.textContent = "¡Revelado!"; clearInterval(revelationCountdownInterval); setTimeout(() => location.reload(), 1000); return; } const hours = Math.floor((diff / (1000 * 60 * 60)) % 24); const minutes = Math.floor((diff / 1000 / 60) % 60); const seconds = Math.floor((diff / 1000) % 60); countdownEl.textContent = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0'); }, 1000); }
 async function loadRevelacionDiaria() { const todayStr = getTodaysDateStr(); const question = getQuestionForDate(new Date()); document.getElementById('revelacionQuestion').textContent = question; const hasAnsweredToday = localStorage.getItem('libre_revelacion_answered') === todayStr; if (hasAnsweredToday) { document.getElementById('revelacionInputArea').classList.add('hidden'); document.getElementById('revelacionThanks').classList.remove('hidden'); startCountdown(); } else { document.getElementById('revelacionInputArea').classList.remove('hidden'); document.getElementById('revelacionThanks').classList.add('hidden'); if (revelationCountdownInterval) clearInterval(revelationCountdownInterval); } }
-document.getElementById('revelacionSendBtn').onclick = async function() { const textarea = document.getElementById('revelacionTextarea'); const text = textarea.value.trim(); if (!text) return; if (window.contienePalabraOfensiva(text)) return; if (!countryReady) { showNotification("js.notification.country_wait", "info"); return; } this.disabled = true; const todayStr = getTodaysDateStr(); try { await db.collection('revelations').doc(todayStr).collection('responses').add({ text: text, ts: Date.now(), country: userCountry, user: getAnonUserId(), lang: currentLang }); localStorage.setItem('libre_revelacion_answered', todayStr); textarea.value = ''; clearDraft('revelacionTextarea'); textarea.dispatchEvent(new Event('input')); loadRevelacionDiaria(); } catch (e) { console.error("Error saving revelation answer:", e); showNotification("revelation.send_error", "error"); } finally { this.disabled = false; } };
+document.getElementById('revelacionSendBtn').onclick = async function() { const textarea = document.getElementById('revelacionTextarea'); const text = textarea.value.trim(); if (!text) return; if (window.contienePalabraOfensiva(text)) return; if (!countryReady) { showNotification("js.notification.country_wait", "info"); return; } this.disabled = true; const todayStr = getTodaysDateStr(); try { await db.collection('revelations').doc(todayStr).collection('responses').add({ text: text, ts: Date.now(), country: userCountry, user: getAnonUserId(), lang: currentLang }); localStorage.setItem('libre_revelacion_answered', todayStr); clearDraft('revelacionTextarea'); loadRevelacionDiaria(); } catch (e) { console.error("Error saving revelation answer:", e); showNotification("revelation.send_error", "error"); } finally { this.disabled = false; } };
 async function showYesterdaysRevelation() {
   const container = document.getElementById('revelacionAyerContainer');
   const questionEl = document.getElementById('revelacionAyerQuestion');
@@ -310,9 +321,7 @@ document.getElementById('sendBtn').onclick = async function() {
   try {
     this.disabled = true;
     await db.collection("thoughts").add({ text: txt, ts: Date.now(), country: userCountry, user: getAnonUserId(), lang: currentLang });
-    textarea.value = '';
     clearDraft('textarea');
-    textarea.dispatchEvent(new Event('input'));
     mostrarFraseInspiradoraEnTextarea();
     showNotification("js.notification.thought_sent", "success");
     refreshAllData();
@@ -723,10 +732,7 @@ document.getElementById('capsuleBtn').onclick = async function() {
         this.disabled = true;
         await db.collection("capsules").add({ text: msg, openAt, ts: Date.now(), country: userCountry, user: getAnonUserId(), lang: currentLang });
         showNotification('js.notification.capsule_scheduled', 'success', 3000, ` ${date} @ ${time}`);
-        const capsuleTextarea = document.getElementById('capsuleMessage');
-        capsuleTextarea.value = '';
         clearDraft('capsuleMessage');
-        capsuleTextarea.dispatchEvent(new Event('input'));
         document.getElementById('capsuleDate').value = '';
         document.getElementById('capsuleTime').value = '';
         loadMyCapsules();
@@ -748,13 +754,24 @@ function showTab(tabId) {
   
   if (revelationCountdownInterval) clearInterval(revelationCountdownInterval);
   
+  // Inicializar las funcionalidades de cada pestaña cuando se muestra
   if(tabId === 'feed') { 
+    setupTextareaFeatures('textarea', 'char-counter-main');
     refreshAllData();
     mostrarFraseInspiradoraEnTextarea();
   }
-  else if(tabId === 'mine') { loadMyThoughts(myPage); }
-  else if(tabId === 'capsule') { setupCapsuleInputs(); loadMyCapsules(); }
-  else if(tabId === 'revelacion') { loadRevelacionDiaria(); }
+  else if(tabId === 'mine') { 
+    loadMyThoughts(myPage); 
+  }
+  else if(tabId === 'capsule') { 
+    setupTextareaFeatures('capsuleMessage', 'char-counter-capsule');
+    setupCapsuleInputs(); 
+    loadMyCapsules(); 
+  }
+  else if(tabId === 'revelacion') { 
+    setupTextareaFeatures('revelacionTextarea', 'char-counter-revelation');
+    loadRevelacionDiaria(); 
+  }
 }
 
 function showLegalSection(sectionId) {
