@@ -9,6 +9,7 @@ let userCountry = "Desconocido";
 let countryReady = false;
 let allThoughtsAndCapsules = [];
 let map;
+let tutorialActive = false;
 
 // ---- CONFIGURACIÓN DE FIREBASE ----
 const firebaseConfig = {
@@ -140,8 +141,6 @@ function initializeApp() {
         setTimeout(() => { imgLogo.classList.add('visible'); }, 3500);
     }
     setupLanguage();
-    setupAgeGate();
-    setupLangBannerButtons();
     
     // Configurar textareas estáticos
     setupTextareaFeatures(document.getElementById('textarea'), document.getElementById('charCounterMain'), 'libre_draft_main');
@@ -151,15 +150,20 @@ function initializeApp() {
     showTab('feed');
     setTimeout(checkNewReplies, 1500);
     setInterval(() => { checkNewReplies(); }, 40000);
+    setupAgeGate(); // Mover al final para que el tutorial se inicie después
 }
 
-// ---- BANNERS (EDAD E IDIOMA) ----
+// ---- BANNERS Y TUTORIAL ----
 function setupAgeGate() {
     const ageGateBanner = document.getElementById('ageGateBanner');
     const ageGateAccept = document.getElementById('ageGateAccept');
     
     if (localStorage.getItem('libre_age_gate_accepted') === 'true') {
         ageGateBanner.classList.remove('show');
+        // Iniciar tutorial si no se ha completado
+        if (localStorage.getItem('libre_tutorial_completed') !== 'true') {
+            setTimeout(startTutorial, 500);
+        }
     } else {
         setTimeout(() => ageGateBanner.classList.add('show'), 200);
     }
@@ -167,12 +171,145 @@ function setupAgeGate() {
     ageGateAccept.onclick = () => {
         localStorage.setItem('libre_age_gate_accepted', 'true');
         ageGateBanner.classList.remove('show');
+        // Iniciar tutorial después de aceptar
+        if (localStorage.getItem('libre_tutorial_completed') !== 'true') {
+            setTimeout(startTutorial, 500);
+        }
     };
 }
 
 function setupLangBannerButtons() {
     document.getElementById('langBannerEs').onclick = () => setLanguage('es');
     document.getElementById('langBannerEn').onclick = () => setLanguage('en');
+}
+
+// ---- LÓGICA DEL TUTORIAL ----
+const TUTORIAL_STEPS = [
+    { elementId: 'write', titleKey: 'tutorial.step_1_title', textKey: 'tutorial.step_1_text', position: 'bottom' },
+    { elementId: 'globalThoughts', titleKey: 'tutorial.step_2_title', textKey: 'tutorial.step_2_text', position: 'top' },
+    { elementId: 'randomThoughtGlobe', titleKey: 'tutorial.step_3_title', textKey: 'tutorial.step_3_text', position: 'right' },
+    { elementId: 'mainNav', navTarget: 'mine', titleKey: 'tutorial.step_4_title', textKey: 'tutorial.step_4_text', position: 'bottom' },
+    { elementId: 'mainNav', navTarget: 'revelacion', titleKey: 'tutorial.step_5_title', textKey: 'tutorial.step_5_text', position: 'bottom' }
+];
+let currentTutorialStep = 0;
+
+function startTutorial() {
+    if (tutorialActive) return;
+    tutorialActive = true;
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'tutorial-overlay';
+    overlay.id = 'tutorialOverlay';
+    
+    const textbox = document.createElement('div');
+    textbox.className = 'tutorial-textbox';
+    textbox.id = 'tutorialTextbox';
+    
+    document.body.appendChild(overlay);
+    document.body.appendChild(textbox);
+    
+    showTutorialStep(currentTutorialStep);
+}
+
+function showTutorialStep(index) {
+    // Limpiar el resaltado anterior
+    const highlighted = document.querySelector('.tutorial-highlight');
+    if (highlighted) highlighted.classList.remove('tutorial-highlight');
+
+    const step = TUTORIAL_STEPS[index];
+    let targetElement = document.getElementById(step.elementId);
+
+    // Si el paso implica cambiar de pestaña
+    if (step.navTarget) {
+        showTab(step.navTarget);
+        // La navegación por pestañas puede tener elementos que se cargan de forma asíncrona, damos un pequeño margen
+        setTimeout(() => {
+            targetElement = document.getElementById(step.elementId);
+            positionTutorial(targetElement, step);
+        }, 100);
+    } else {
+        showTab('feed'); // Asegurarse de que estamos en la pestaña correcta para los primeros pasos
+        positionTutorial(targetElement, step);
+    }
+}
+
+function positionTutorial(targetElement, step) {
+    if (!targetElement) {
+        endTutorial(false); // Terminar si no se encuentra un elemento
+        return;
+    }
+    targetElement.classList.add('tutorial-highlight');
+    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    const textbox = document.getElementById('tutorialTextbox');
+    const trans = translations[currentLang].tutorial;
+    
+    textbox.innerHTML = `
+        <h3>${trans[step.titleKey]}</h3>
+        <p>${trans[step.textKey]}</p>
+        <div class="tutorial-footer">
+            <span class="tutorial-step-counter">${currentTutorialStep + 1} / ${TUTORIAL_STEPS.length}</span>
+            <div>
+                <button class="tutorial-skip-btn">${trans.skip_button}</button>
+                <button class="tutorial-next-btn">${(currentTutorialStep === TUTORIAL_STEPS.length - 1) ? trans.done_button : trans.next_button}</button>
+            </div>
+        </div>
+    `;
+
+    textbox.querySelector('.tutorial-skip-btn').onclick = () => endTutorial(true);
+    textbox.querySelector('.tutorial-next-btn').onclick = () => {
+        if (currentTutorialStep < TUTORIAL_STEPS.length - 1) {
+            currentTutorialStep++;
+            showTutorialStep(currentTutorialStep);
+        } else {
+            endTutorial(true);
+        }
+    };
+
+    const targetRect = targetElement.getBoundingClientRect();
+    const boxRect = textbox.getBoundingClientRect();
+
+    let top, left;
+    switch(step.position) {
+        case 'bottom':
+            top = targetRect.bottom + 10;
+            left = targetRect.left + (targetRect.width / 2) - (boxRect.width / 2);
+            break;
+        case 'top':
+            top = targetRect.top - boxRect.height - 10;
+            left = targetRect.left + (targetRect.width / 2) - (boxRect.width / 2);
+            break;
+        case 'right':
+            top = targetRect.top + (targetRect.height / 2) - (boxRect.height / 2);
+            left = targetRect.right + 10;
+            break;
+        default: // bottom como default
+            top = targetRect.bottom + 10;
+            left = targetRect.left + (targetRect.width / 2) - (boxRect.width / 2);
+    }
+    
+    // Ajustar si se sale de la pantalla
+    left = Math.max(10, Math.min(left, window.innerWidth - boxRect.width - 10));
+    top = Math.max(10, Math.min(top, window.innerHeight - boxRect.height - 10));
+
+    textbox.style.top = `${top}px`;
+    textbox.style.left = `${left}px`;
+}
+
+function endTutorial(markAsCompleted) {
+    tutorialActive = false;
+    const overlay = document.getElementById('tutorialOverlay');
+    const textbox = document.getElementById('tutorialTextbox');
+    const highlighted = document.querySelector('.tutorial-highlight');
+
+    if (overlay) overlay.remove();
+    if (textbox) textbox.remove();
+    if (highlighted) highlighted.classList.remove('tutorial-highlight');
+    
+    if (markAsCompleted) {
+        localStorage.setItem('libre_tutorial_completed', 'true');
+    }
+    showTab('feed'); // Volver a la pestaña principal al terminar
 }
 
 // ---- FRASES INSPIRADORAS ----
@@ -764,6 +901,7 @@ async function loadMyCapsules() { const list = document.getElementById('capsules
 // ---- NAVEGACIÓN POR TABS ----
 const TABS = ['feed', 'mine', 'capsule', 'about', 'revelacion'];
 function showTab(tabId) {
+  if (tutorialActive) return; // Bloquear navegación durante el tutorial
   TABS.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
   const active = document.getElementById(tabId);
   if (active) active.classList.remove('hidden');
