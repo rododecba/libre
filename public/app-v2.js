@@ -66,6 +66,45 @@ function setLanguage(lang) {
     }
 }
 
+// ---- LÓGICA DE LA VENTANA MODAL LEGAL ----
+function showLegalModal(section) {
+    const overlay = document.getElementById('legal-modal-overlay');
+    const titleEl = document.getElementById('legal-modal-title');
+    const bodyEl = document.getElementById('legal-modal-body');
+
+    const titleKey = `about.${section}.title`;
+    const contentKey = `about.${section}.content_html`;
+
+    titleEl.innerHTML = translations[currentLang][titleKey] || '';
+    bodyEl.innerHTML = translations[currentLang][contentKey] || '';
+
+    overlay.classList.add('visible');
+    document.body.classList.add('modal-active');
+}
+
+function setupLegalModal() {
+    const overlay = document.getElementById('legal-modal-overlay');
+    const closeBtn = document.getElementById('legal-modal-close-btn');
+
+    function closeModal() {
+        overlay.classList.remove('visible');
+        document.body.classList.remove('modal-active');
+    }
+
+    closeBtn.onclick = closeModal;
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            closeModal();
+        }
+    };
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('visible')) {
+            closeModal();
+        }
+    });
+}
+
+
 // ---- LÓGICA DE LA PANTALLA DE BIENVENIDA ----
 function setupWelcomeScreen() {
     const overlay = document.getElementById('welcome-overlay');
@@ -114,10 +153,8 @@ function setupWelcomeScreen() {
         };
     });
     
-    // Pre-seleccionar idioma
     const activeLangBtn = document.querySelector(`#welcome-lang-selector button[data-lang="${currentLang}"]`);
     if(activeLangBtn) activeLangBtn.click();
-
 
     ageGateButton.onclick = () => {
         localStorage.setItem('libre_age_gate_accepted', 'true');
@@ -130,7 +167,7 @@ function setupWelcomeScreen() {
     slides.forEach((_, i) => {
         const dot = document.createElement('div');
         dot.className = 'welcome-dot';
-        if (i > 0) dot.style.display = 'none'; // Ocultar puntos al inicio
+        if (i > 0) dot.style.display = 'none';
         dot.setAttribute('role', 'button');
         dot.setAttribute('aria-label', `Ir a la diapositiva ${i + 1}`);
         dot.onclick = () => goToSlide(i);
@@ -192,12 +229,11 @@ function setupWelcomeScreen() {
         overlay.addEventListener('transitionend', () => overlay.remove());
         clearInterval(welcomeInterval);
         
-        // INICIALIZAR LA APP AHORA QUE LA BIENVENIDA TERMINÓ
         detectCountry();
         initializeApp();
     };
 
-    updateUI(); // Inicializa el estado visual
+    updateUI();
 }
 
 // ---- SISTEMA DE NOTIFICACIONES ----
@@ -250,7 +286,6 @@ function initializeApp() {
         setTimeout(() => { imgLogo.classList.add('visible'); }, 3500);
     }
     
-    // Refrescar traducciones por si acaso
     applyTranslations();
     
     setupTextareaFeatures(document.getElementById('textarea'), document.getElementById('charCounterMain'), 'libre_draft_main');
@@ -839,8 +874,6 @@ function showTab(tabId) {
 }
 
 function showLegalSection(sectionId) {
-    // Si la bienvenida está activa, no hacemos nada para evitar conflictos.
-    if(document.body.classList.contains('welcome-active')) return;
     showTab('about');
     setTimeout(() => {
         const element = document.getElementById(sectionId);
@@ -909,8 +942,7 @@ function createRevelationSkeleton(count = 1) {
 
 // ---- INICIO DE LA APLICACIÓN ----
 document.addEventListener('DOMContentLoaded', () => {
-    // La inicialización de la app se mueve al final de la bienvenida
-    // o se ejecuta aquí si la bienvenida ya fue completada.
+    setupLegalModal();
     setupWelcomeScreen();
 
     if (localStorage.getItem('libre_welcome_seen') === 'true') {

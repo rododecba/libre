@@ -5,7 +5,10 @@ const translations = {
     'welcome.slide1.text': 'Primero, elige tu idioma y confirma que tienes la edad para unirte a nuestra comunidad.',
     'welcome.slide1.age_gate_button_disabled': 'Elige un idioma primero',
     'welcome.slide1.age_gate_button': 'Confirmo que tengo +16 años',
-    'welcome.slide1.terms_notice': 'Al continuar, aceptas nuestros Términos y Política de Privacidad.',
+    'welcome.slide1.terms_notice_pt1': 'Al continuar, aceptas nuestros',
+    'welcome.slide1.terms_link': 'Términos',
+    'welcome.slide1.terms_notice_pt2': 'y',
+    'welcome.slide1.privacy_link': 'Política de Privacidad',
     'welcome.slide2.title': 'Pensamientos Globales: Botellas al Mar',
     'welcome.slide2.text': 'Lanza tus ideas al mundo de forma anónima. Como un mensaje en una botella, no sabes quién lo leerá, solo que llegará a algún rincón del planeta.',
     'welcome.slide3.title': 'Revelación Diaria: Un Misterio Compartido',
@@ -96,33 +99,33 @@ const translations = {
     'about.why_libre.item5': '<b>Sin historial, sin reputación:</b> Cada mensaje es un instante aislado, sin contexto previo ni futuro.',
     'about.why_libre.item6': '<b>Cero algoritmos, cero manipulación:</b> No hay feeds personalizados, ni trending topics. Todo es azar.',
     'about.terms.title': 'Términos de Servicio',
-    'about.terms.p1': 'Al utilizar LIBRE (el "Servicio"), aceptas cumplir con estos Términos de Servicio. El acceso y uso del Servicio están condicionados a tu aceptación y cumplimiento de estos términos.',
-    'about.terms.item1.title': '<strong>Requisito de Edad:</strong>',
-    'about.terms.item1.text': 'Debes tener al menos 16 años para utilizar este Servicio. Al acceder o utilizar LIBRE, declaras y garantizas que cumples con este requisito de edad. No recopilamos deliberadamente información de personas menores de 16 años.',
-    'about.terms.item2.title': '<strong>Contenido del Usuario:</strong>',
-    'about.terms.item2.text': 'Eres el único responsable del contenido que publicas. Al publicar contenido, garantizas que tienes derecho a hacerlo y que no infringe ninguna ley ni los derechos de terceros. No publiques contenido que sea ilegal, ofensivo, amenazante, difamatorio, que incite al odio o que viole cualquier ley o regulación.',
-    'about.terms.item3.title': '<strong>Conducta del Usuario:</strong>',
-    'about.terms.item3.text': 'Aceptas no utilizar el Servicio para ningún propósito ilegal o no autorizado. El acoso, el spam y cualquier forma de abuso están estrictamente prohibidos.',
-    'about.terms.item4.title': '<strong>Moderación de Contenido:</strong>',
-    'about.terms.item4.text': 'Nos reservamos el derecho, pero no la obligación, de monitorear y eliminar contenido que, a nuestra entera discreción, viole estos términos o sea inapropiado. El sistema de reportes por parte de la comunidad es una herramienta clave para mantener la plataforma segura.',
-    'about.terms.item5.title': '<strong>Limitación de Responsabilidad:</strong>',
-    'about.terms.item5.text': 'El Servicio se proporciona "tal cual", sin garantías de ningún tipo. No seremos responsables de ningún daño directo o indirecto que surja de tu uso del Servicio.',
+    'about.terms.content_html': `<p>Al utilizar LIBRE (el "Servicio"), aceptas cumplir con estos Términos de Servicio. El acceso y uso del Servicio están condicionados a tu aceptación y cumplimiento de estos términos.</p>
+        <ul class="list-disc pl-5">
+            <li><strong>Requisito de Edad:</strong> Debes tener al menos 16 años para utilizar este Servicio. Al acceder o utilizar LIBRE, declaras y garantizas que cumples con este requisito de edad. No recopilamos deliberadamente información de personas menores de 16 años.</li>
+            <li><strong>Contenido del Usuario:</strong> Eres el único responsable del contenido que publicas. Al publicar contenido, garantizas que tienes derecho a hacerlo y que no infringe ninguna ley ni los derechos de terceros. No publiques contenido que sea ilegal, ofensivo, amenazante, difamatorio, que incite al odio o que viole cualquier ley o regulación.</li>
+            <li><strong>Conducta del Usuario:</strong> Aceptas no utilizar el Servicio para ningún propósito ilegal o no autorizado. El acoso, el spam y cualquier forma de abuso están estrictamente prohibidos.</li>
+            <li><strong>Moderación de Contenido:</strong> Nos reservamos el derecho, pero no la obligación, de monitorear y eliminar contenido que, a nuestra entera discreción, viole estos términos o sea inapropiado. El sistema de reportes por parte de la comunidad es una herramienta clave para mantener la plataforma segura.</li>
+            <li><strong>Limitación de Responsabilidad:</strong> El Servicio se proporciona "tal cual", sin garantías de ningún tipo. No seremos responsables de ningún daño directo o indirecto que surja de tu uso del Servicio.</li>
+        </ul>`,
     'about.privacy.title': 'Política de Privacidad',
-    'about.privacy.p1': 'Tu privacidad es el pilar fundamental de LIBRE. Esta política explica qué información se recopila y cómo se utiliza para mantener el anonimato.',
-    'about.privacy.item1.title': '<strong>Anonimato:</strong>',
-    'about.privacy.item1.text': 'El Servicio está diseñado para ser radicalmente anónimo. No se te solicita ni se almacena ninguna información de identificación personal (nombre, correo electrónico, etc.).',
-    'about.privacy.item2.title': 'Datos Recopilados:',
-    'about.privacy.item2.subitem1.title': 'Identificador Anónimo:',
-    'about.privacy.item2.subitem1.text': 'Al usar el servicio, se genera un identificador único y anónimo (ej: `anon-xxxxxx`) que se guarda en el almacenamiento local (`localStorage`) de tu navegador. Este ID te permite ver tu historial de mensajes, pero no está vinculado a tu identidad real. Si borras los datos de tu navegador, este ID se perderá a menos que lo hayas exportado.',
-    'about.privacy.item2.subitem2.title': 'País:',
-    'about.privacy.item2.subitem2.text': 'Para fines estadísticos y para mostrar la procedencia de los mensajes en el mapa, detectamos tu país a través de tu dirección IP. La dirección IP en sí misma **no se almacena en ningún momento**. Solo se guarda el código del país (ej: "ES" para España) junto con el mensaje.',
-    'about.privacy.item3.title': 'Uso de Almacenamiento Local (`localStorage`):',
-    'about.privacy.item3.text': 'Utilizamos el almacenamiento local de tu navegador para:',
-    'about.privacy.item3.subitem1': 'Guardar tu identificador anónimo.',
-    'about.privacy.item3.subitem2': 'Recordar si has aceptado el aviso de edad y visto la bienvenida.',
-    'about.privacy.item3.subitem3': 'Registrar los últimos mensajes respondidos para el sistema de notificaciones.',
-    'about.privacy.item4.title': 'No Compartimos Datos:',
-    'about.privacy.item4.text': 'Dado que no recopilamos datos personales, no hay nada que compartir o vender a terceros.',
+    'about.privacy.content_html': `<p>Tu privacidad es el pilar fundamental de LIBRE. Esta política explica qué información se recopila y cómo se utiliza para mantener el anonimato.</p>
+          <ul class="list-disc pl-5">
+              <li><strong>Anonimato:</strong> El Servicio está diseñado para ser radicalmente anónimo. No se te solicita ni se almacena ninguna información de identificación personal (nombre, correo electrónico, etc.).</li>
+              <li><strong>Datos Recopilados:</strong>
+                  <ul class="list-disc pl-5 mt-2">
+                      <li><strong>Identificador Anónimo:</strong> Al usar el servicio, se genera un identificador único y anónimo (ej: \`anon-xxxxxx\`) que se guarda en el almacenamiento local (\`localStorage\`) de tu navegador. Este ID te permite ver tu historial de mensajes, pero no está vinculado a tu identidad real. Si borras los datos de tu navegador, este ID se perderá a menos que lo hayas exportado.</li>
+                      <li><strong>País:</strong> Para fines estadísticos y para mostrar la procedencia de los mensajes en el mapa, detectamos tu país a través de tu dirección IP. La dirección IP en sí misma **no se almacena en ningún momento**. Solo se guarda el código del país (ej: "ES" para España) junto con el mensaje.</li>
+                  </ul>
+              </li>
+              <li class="mt-2"><strong>Uso de Almacenamiento Local (\`localStorage\`):</strong> Utilizamos el almacenamiento local de tu navegador para:
+                  <ul class="list-disc pl-5 mt-2">
+                      <li>Guardar tu identificador anónimo.</li>
+                      <li>Recordar si has aceptado el aviso de edad y visto la bienvenida.</li>
+                      <li>Registrar los últimos mensajes respondidos para el sistema de notificaciones.</li>
+                  </ul>
+              </li>
+              <li class="mt-2"><strong>No Compartimos Datos:</strong> Dado que no recopilamos datos personales, no hay nada que compartir o vender a terceros.</li>
+          </ul>`,
     
     // Footer & Legal
     'footer.support_text': 'Si te gusta Libre, apóyanos en Ko-fi:',
@@ -173,7 +176,10 @@ const translations = {
     'welcome.slide1.text': 'First, choose your language and confirm you are old enough to join our community.',
     'welcome.slide1.age_gate_button_disabled': 'Choose a language first',
     'welcome.slide1.age_gate_button': 'I confirm I am 16+',
-    'welcome.slide1.terms_notice': 'By continuing, you agree to our Terms and Privacy Policy.',
+    'welcome.slide1.terms_notice_pt1': 'By continuing, you agree to our',
+    'welcome.slide1.terms_link': 'Terms',
+    'welcome.slide1.terms_notice_pt2': 'and',
+    'welcome.slide1.privacy_link': 'Privacy Policy',
     'welcome.slide2.title': 'Global Thoughts: Bottles in the Sea',
     'welcome.slide2.text': 'Launch your ideas into the world anonymously. Like a message in a bottle, you don\'t know who will read it, only that it will reach some corner of the planet.',
     'welcome.slide3.title': 'Daily Revelation: A Shared Mystery',
@@ -264,33 +270,33 @@ const translations = {
     'about.why_libre.item5': '<b>No History, No Reputation:</b> Each message is an isolated moment, without previous or future context.',
     'about.why_libre.item6': '<b>Zero Algorithms, Zero Manipulation:</b> No personalized feeds, no trending topics. Everything is random.',
     'about.terms.title': 'Terms of Service',
-    'about.terms.p1': 'By using LIBRE (the "Service"), you agree to comply with these Terms of Service. Access to and use of the Service is conditioned upon your acceptance of and compliance with these terms.',
-    'about.terms.item1.title': '<strong>Age Requirement:</strong>',
-    'about.terms.item1.text': 'You must be at least 16 years old to use this Service. By accessing or using LIBRE, you represent and warrant that you meet this age requirement. We do not knowingly collect information from individuals under 16.',
-    'about.terms.item2.title': '<strong>User Content:</strong>',
-    'about.terms.item2.text': 'You are solely responsible for the content you post. By posting content, you warrant that you have the right to do so and that it does not infringe any law or the rights of third parties. Do not post content that is illegal, offensive, threatening, defamatory, incites hatred, or violates any law or regulation.',
-    'about.terms.item3.title': '<strong>User Conduct:</strong>',
-    'about.terms.item3.text': 'You agree not to use the Service for any illegal or unauthorized purpose. Harassment, spam, and any form of abuse are strictly prohibited.',
-    'about.terms.item4.title': '<strong>Content Moderation:</strong>',
-    'about.terms.item4.text': 'We reserve the right, but not the obligation, to monitor and remove content that, in our sole discretion, violates these terms or is otherwise inappropriate. The community reporting system is a key tool for keeping the platform safe.',
-    'about.terms.item5.title': '<strong>Limitation of Liability:</strong>',
-    'about.terms.item5.text': 'The Service is provided "as is", without warranties of any kind. We will not be liable for any direct or indirect damages arising from your use of the Service.',
+    'about.terms.content_html': `<p>By using LIBRE (the "Service"), you agree to comply with these Terms of Service. Access to and use of the Service is conditioned upon your acceptance of and compliance with these terms.</p>
+        <ul class="list-disc pl-5">
+            <li><strong>Age Requirement:</strong> You must be at least 16 years old to use this Service. By accessing or using LIBRE, you represent and warrant that you meet this age requirement. We do not knowingly collect information from individuals under 16.</li>
+            <li><strong>User Content:</strong> You are solely responsible for the content you post. By posting content, you warrant that you have the right to do so and that it does not infringe any law or the rights of third parties. Do not post content that is illegal, offensive, threatening, defamatory, incites hatred, or violates any law or regulation.</li>
+            <li><strong>User Conduct:</strong> You agree not to use the Service for any illegal or unauthorized purpose. Harassment, spam, and any form of abuse are strictly prohibited.</li>
+            <li><strong>Content Moderation:</strong> We reserve the right, but not the obligation, to monitor and remove content that, in our sole discretion, violates these terms or is otherwise inappropriate. The community reporting system is a key tool for keeping the platform safe.</li>
+            <li><strong>Limitation of Liability:</strong> The Service is provided "as is", without warranties of any kind. We will not be liable for any direct or indirect damages arising from your use of the Service.</li>
+        </ul>`,
     'about.privacy.title': 'Privacy Policy',
-    'about.privacy.p1': 'Your privacy is the cornerstone of LIBRE. This policy explains what information is collected and how it is used to maintain anonymity.',
-    'about.privacy.item1.title': '<strong>Anonymity:</strong>',
-    'about.privacy.item1.text': 'The Service is designed to be radically anonymous. You are not asked for, nor is any personally identifiable information (name, email, etc.) stored.',
-    'about.privacy.item2.title': 'Data Collected:',
-    'about.privacy.item2.subitem1.title': 'Anonymous Identifier:',
-    'about.privacy.item2.subitem1.text': 'When you use the service, a unique and anonymous identifier (e.g., `anon-xxxxxx`) is generated and saved in your browser\'s local storage (`localStorage`). This ID allows you to see your message history but is not linked to your real identity. If you clear your browser data, this ID will be lost unless you have exported it.',
-    'about.privacy.item2.subitem2.title': 'Country:',
-    'about.privacy.item2.subitem2.text': 'For statistical purposes and to show the origin of messages on the map, we detect your country via your IP address. The IP address itself **is not stored at any time**. Only the country code (e.g., "US" for the United States) is saved with the message.',
-    'about.privacy.item3.title': 'Use of Local Storage (`localStorage`):',
-    'about.privacy.item3.text': 'We use your browser\'s local storage to:',
-    'about.privacy.item3.subitem1': 'Save your anonymous identifier.',
-    'about.privacy.item3.subitem2': 'Remember if you have accepted the age notice and seen the welcome screen.',
-    'about.privacy.item3.subitem3': 'Register the last replied-to messages for the notification system.',
-    'about.privacy.item4.title': 'No Data Sharing:',
-    'about.privacy.item4.text': 'Since we do not collect personal data, there is nothing to share or sell to third parties.',
+    'about.privacy.content_html': `<p>Your privacy is the cornerstone of LIBRE. This policy explains what information is collected and how it is used to maintain anonymity.</p>
+          <ul class="list-disc pl-5">
+              <li><strong>Anonymity:</strong> The Service is designed to be radically anonymous. You are not asked for, nor is any personally identifiable information (name, email, etc.) stored.</li>
+              <li><strong>Data Collected:</strong>
+                  <ul class="list-disc pl-5 mt-2">
+                      <li><strong>Anonymous Identifier:</strong> When you use the service, a unique and anonymous identifier (e.g., \`anon-xxxxxx\`) is generated and saved in your browser's local storage (\`localStorage\`). This ID allows you to see your message history but is not linked to your real identity. If you clear your browser data, this ID will be lost unless you have exported it.</li>
+                      <li><strong>Country:</strong> For statistical purposes and to show the origin of messages on the map, we detect your country via your IP address. The IP address itself **is not stored at any time**. Only the country code (e.g., "US" for the United States) is saved with the message.</li>
+                  </ul>
+              </li>
+              <li class="mt-2"><strong>Use of Local Storage (\`localStorage\`):</strong> We use your browser's local storage to:
+                  <ul class="list-disc pl-5 mt-2">
+                      <li>Save your anonymous identifier.</li>
+                      <li>Remember if you have accepted the age notice and seen the welcome screen.</li>
+                      <li>Register the last replied-to messages for the notification system.</li>
+                  </ul>
+              </li>
+              <li class="mt-2"><strong>No Data Sharing:</strong> Since we do not collect personal data, there is nothing to share or sell to third parties.</li>
+          </ul>`,
 
     // Footer & Legal
     'footer.support_text': 'If you like Libre, support us on Ko-fi:',
