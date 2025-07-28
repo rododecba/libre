@@ -89,6 +89,33 @@ function showNotification(messageKey, type = 'info', duration = 3000, context = 
     }, duration);
 }
 
+// ---- FUNCIONALIDAD DE TEXTAREAS (BORRADOR AUTOMÁTICO Y CONTADOR) ----
+function setupTextareaFeatures(textarea, counterElement, storageKey) {
+    if (!textarea || !counterElement) return;
+    const maxLength = textarea.getAttribute('maxlength');
+
+    // 1. Cargar borrador desde localStorage
+    const savedDraft = localStorage.getItem(storageKey);
+    if (savedDraft) {
+        textarea.value = savedDraft;
+    }
+
+    // 2. Función para actualizar el contador
+    function updateCounter() {
+        const currentLength = textarea.value.length;
+        counterElement.textContent = `${currentLength} / ${maxLength}`;
+    }
+
+    // 3. Event listener para guardar borrador y actualizar contador
+    textarea.addEventListener('input', () => {
+        localStorage.setItem(storageKey, textarea.value);
+        updateCounter();
+    });
+
+    // 4. Inicializar el contador
+    updateCounter();
+}
+
 // ---- FUNCIÓN DE INICIALIZACIÓN DE LA APP ----
 function initializeApp() {
     const textLogo = document.getElementById('textLogo');
@@ -106,6 +133,12 @@ function initializeApp() {
     setupLanguage();
     setupAgeGate();
     setupLangBannerButtons();
+    
+    // Configurar textareas estáticos
+    setupTextareaFeatures(document.getElementById('textarea'), document.getElementById('charCounterMain'), 'libre_draft_main');
+    setupTextareaFeatures(document.getElementById('revelacionTextarea'), document.getElementById('charCounterRevelation'), 'libre_draft_revelation');
+    setupTextareaFeatures(document.getElementById('capsuleMessage'), document.getElementById('charCounterCapsule'), 'libre_draft_capsule');
+
     showTab('feed');
     setTimeout(checkNewReplies, 1500);
     setInterval(() => { checkNewReplies(); }, 40000);
@@ -154,7 +187,7 @@ function getQuestionForDate(date) {
 }
 function startCountdown() { if (revelationCountdownInterval) clearInterval(revelationCountdownInterval); const countdownEl = document.getElementById('revelacionCountdown'); if (!countdownEl) return; revelationCountdownInterval = setInterval(() => { const now = new Date(); const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)); const diff = tomorrow - now; if (diff <= 0) { countdownEl.textContent = "¡Revelado!"; clearInterval(revelationCountdownInterval); setTimeout(() => location.reload(), 1000); return; } const hours = Math.floor((diff / (1000 * 60 * 60)) % 24); const minutes = Math.floor((diff / 1000 / 60) % 60); const seconds = Math.floor((diff / 1000) % 60); countdownEl.textContent = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0'); }, 1000); }
 async function loadRevelacionDiaria() { const todayStr = getTodaysDateStr(); const question = getQuestionForDate(new Date()); document.getElementById('revelacionQuestion').textContent = question; const hasAnsweredToday = localStorage.getItem('libre_revelacion_answered') === todayStr; if (hasAnsweredToday) { document.getElementById('revelacionInputArea').classList.add('hidden'); document.getElementById('revelacionThanks').classList.remove('hidden'); startCountdown(); } else { document.getElementById('revelacionInputArea').classList.remove('hidden'); document.getElementById('revelacionThanks').classList.add('hidden'); if (revelationCountdownInterval) clearInterval(revelationCountdownInterval); } }
-document.getElementById('revelacionSendBtn').onclick = async function() { const textarea = document.getElementById('revelacionTextarea'); const text = textarea.value.trim(); if (!text) return; if (window.contienePalabraOfensiva(text)) return; if (!countryReady) { showNotification("js.notification.country_wait", "info"); return; } this.disabled = true; const todayStr = getTodaysDateStr(); try { await db.collection('revelations').doc(todayStr).collection('responses').add({ text: text, ts: Date.now(), country: userCountry, user: getAnonUserId() }); localStorage.setItem('libre_revelacion_answered', todayStr); textarea.value = ''; loadRevelacionDiaria(); } catch (e) { console.error("Error saving revelation answer:", e); showNotification("revelation.send_error", "error"); } finally { this.disabled = false; } };
+document.getElementById('revelacionSendBtn').onclick = async function() { const textarea = document.getElementById('revelacionTextarea'); const text = textarea.value.trim(); if (!text) return; if (window.contienePalabraOfensiva(text)) return; if (!countryReady) { showNotification("js.notification.country_wait", "info"); return; } this.disabled = true; const todayStr = getTodaysDateStr(); try { await db.collection('revelations').doc(todayStr).collection('responses').add({ text: text, ts: Date.now(), country: userCountry, user: getAnonUserId() }); localStorage.setItem('libre_revelacion_answered', todayStr); textarea.value = ''; localStorage.removeItem('libre_draft_revelation'); document.getElementById('charCounterRevelation').textContent = `0 / 500`; loadRevelacionDiaria(); } catch (e) { console.error("Error saving revelation answer:", e); showNotification("revelation.send_error", "error"); } finally { this.disabled = false; } };
 async function showYesterdaysRevelation() {
   const container = document.getElementById('revelacionAyerContainer');
   const questionEl = document.getElementById('revelacionAyerQuestion');
@@ -242,6 +275,8 @@ document.getElementById('sendBtn').onclick = async function() {
     this.disabled = true;
     await db.collection("thoughts").add({ text: txt, ts: Date.now(), country: userCountry, user: getAnonUserId() });
     textarea.value = '';
+    localStorage.removeItem('libre_draft_main');
+    document.getElementById('charCounterMain').textContent = `0 / 500`;
     mostrarFraseInspiradoraEnTextarea();
     showNotification("js.notification.thought_sent", "success");
     refreshAllData();
@@ -320,7 +355,7 @@ async function reportThought(thoughtId, buttonElement) {
 
 // ---- ACCIONES DE PENSAMIENTO (RESPONDER, TRADUCIR, REPORTAR) ----
 function handleTranslateClick(text) { if (confirm(translations[currentLang]['js.notification.translate_confirm'])) { const encodedText = encodeURIComponent(text); const url = `https://translate.google.com/?sl=auto&tl=${currentLang}&text=${encodedText}&op=translate`; window.open(url, '_blank', 'noopener,noreferrer'); } }
-async function enviarRespuesta(thoughtId, replyText, respuestasDiv, btn, textarea) { if (!replyText.trim()) return; if (window.contienePalabraOfensiva(replyText)) { showNotification('js.notification.offensive_word', 'error'); return; } btn.disabled = true; textarea.disabled = true; try { const thoughtDoc = await db.collection("thoughts").doc(thoughtId).get(); if (!thoughtDoc.exists) { showNotification("js.notification.reply_error_generic", "error"); return; } if (thoughtDoc.data().user === getAnonUserId()) { showNotification("js.notification.reply_error_own", "info"); return; } await db.collection("thoughts").doc(thoughtId).collection("replies").add({ text: replyText.trim(), ts: Date.now(), user: getAnonUserId() }); textarea.value = ''; await mostrarRespuestas(thoughtId, respuestasDiv); setTimeout(checkNewReplies, 1000); } catch(e) { console.error("Error saving reply:", e); showNotification('js.notification.reply_error_generic', "error"); } finally { btn.disabled = false; textarea.disabled = false; } }
+async function enviarRespuesta(thoughtId, replyText, respuestasDiv, btn, textarea, storageKey) { if (!replyText.trim()) return; if (window.contienePalabraOfensiva(replyText)) { showNotification('js.notification.offensive_word', 'error'); return; } btn.disabled = true; textarea.disabled = true; try { const thoughtDoc = await db.collection("thoughts").doc(thoughtId).get(); if (!thoughtDoc.exists) { showNotification("js.notification.reply_error_generic", "error"); return; } if (thoughtDoc.data().user === getAnonUserId()) { showNotification("js.notification.reply_error_own", "info"); return; } await db.collection("thoughts").doc(thoughtId).collection("replies").add({ text: replyText.trim(), ts: Date.now(), user: getAnonUserId() }); textarea.value = ''; localStorage.removeItem(storageKey); await mostrarRespuestas(thoughtId, respuestasDiv); setTimeout(checkNewReplies, 1000); } catch(e) { console.error("Error saving reply:", e); showNotification('js.notification.reply_error_generic', "error"); } finally { btn.disabled = false; textarea.disabled = false; } }
 async function mostrarRespuestas(thoughtId, respuestasDiv) { respuestasDiv.innerHTML = ''; try { const snapshot = await db.collection("thoughts").doc(thoughtId).collection("replies").orderBy("ts", "asc").get(); if (snapshot.empty) return; snapshot.forEach(doc => { const data = doc.data(); const replyCard = document.createElement('div'); replyCard.className = 'reply-box'; const textDiv = document.createElement('div'); const span = document.createElement('span'); span.className = 'font-medium'; span.textContent = data.text; textDiv.appendChild(span); const dateDiv = document.createElement('div'); dateDiv.className = 'text-[0.7rem] text-gray-400 mt-1'; dateDiv.textContent = formatearFecha(data.ts); replyCard.append(textDiv, dateDiv); respuestasDiv.appendChild(replyCard); }); } catch(e) { console.error("Error loading replies:", e); respuestasDiv.innerHTML = '<div class="text-[0.7rem] text-red-500">Error al cargar respuestas.</div>'; } }
 
 // ---- ESTRUCTURA DE CARGA DE DATOS ----
@@ -447,7 +482,50 @@ function loadGlobalThoughts(page = 1, showSkeleton = false) {
   }
 }
 
-window.mostrarCajaRespuesta = function(thoughtId, btn) { const card = btn.closest('.p-4'); const caja = card.querySelector('.caja-respuesta'); if (!caja.classList.contains('hidden')) { caja.classList.add('hidden'); caja.innerHTML = ''; return; } document.querySelectorAll('.caja-respuesta').forEach(el => { el.classList.add('hidden'); el.innerHTML = ''; }); caja.classList.remove('hidden'); const placeholder = translations[currentLang]['feed.reply_placeholder']; const buttonText = translations[currentLang]['feed.send_reply_button']; caja.innerHTML = `<textarea class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" rows="2" maxlength="300" placeholder="${placeholder}"></textarea><button class="mt-2 px-4 py-1 rounded-lg bg-blue-500 text-white text-sm font-medium shadow hover:bg-blue-600 transition enviarRespuestaBtn">${buttonText}</button>`; const textarea = caja.querySelector('textarea'); const enviarBtn = caja.querySelector('.enviarRespuestaBtn'); const respuestasDiv = card.querySelector('.respuestas'); enviarBtn.onclick = async function() { await enviarRespuesta(thoughtId, textarea.value, respuestasDiv, enviarBtn, textarea); caja.classList.add('hidden'); caja.innerHTML = ''; }; };
+window.mostrarCajaRespuesta = function(thoughtId, btn) {
+    const card = btn.closest('.p-4');
+    const caja = card.querySelector('.caja-respuesta');
+    if (!caja.classList.contains('hidden')) {
+        caja.classList.add('hidden');
+        caja.innerHTML = '';
+        return;
+    }
+    document.querySelectorAll('.caja-respuesta').forEach(el => {
+        el.classList.add('hidden');
+        el.innerHTML = '';
+    });
+    caja.classList.remove('hidden');
+    const placeholder = translations[currentLang]['feed.reply_placeholder'];
+    const buttonText = translations[currentLang]['feed.send_reply_button'];
+    
+    // Crear elementos
+    const textarea = document.createElement('textarea');
+    textarea.className = 'w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm';
+    textarea.rows = 2;
+    textarea.maxLength = 300;
+    textarea.placeholder = placeholder;
+
+    const charCounter = document.createElement('div');
+    charCounter.className = 'char-counter';
+
+    const enviarBtn = document.createElement('button');
+    enviarBtn.className = 'mt-2 px-4 py-1 rounded-lg bg-blue-500 text-white text-sm font-medium shadow hover:bg-blue-600 transition enviarRespuestaBtn';
+    enviarBtn.textContent = buttonText;
+
+    // Añadir al DOM
+    caja.append(textarea, charCounter, enviarBtn);
+
+    // Configurar funcionalidades
+    const storageKey = `libre_draft_reply_${thoughtId}`;
+    setupTextareaFeatures(textarea, charCounter, storageKey);
+
+    const respuestasDiv = card.querySelector('.respuestas');
+    enviarBtn.onclick = async function() {
+        await enviarRespuesta(thoughtId, textarea.value, respuestasDiv, enviarBtn, textarea, storageKey);
+        caja.classList.add('hidden');
+        caja.innerHTML = '';
+    };
+};
 async function registrarEco(docId, type = 'thought') { if (!countryReady || type !== 'thought') return; try { const ecoRef = db.collection("thoughts").doc(docId).collection("eco").doc(userCountry); await db.runTransaction(async (tx) => { const doc = await tx.get(ecoRef); if (!doc.exists) { tx.set(ecoRef, { count: 1 }); } else { tx.update(ecoRef, { count: firebase.firestore.FieldValue.increment(1) }); } }); } catch (e) { /* Silently fail */ } }
 
 async function loadMyThoughts(page = 1) {
@@ -651,6 +729,8 @@ document.getElementById('capsuleBtn').onclick = async function() {
         await db.collection("capsules").add({ text: msg, openAt, ts: Date.now(), country: userCountry, user: getAnonUserId() });
         showNotification('js.notification.capsule_scheduled', 'success', 3000, ` ${date} @ ${time}`);
         document.getElementById('capsuleMessage').value = '';
+        localStorage.removeItem('libre_draft_capsule');
+        document.getElementById('charCounterCapsule').textContent = `0 / 500`;
         document.getElementById('capsuleDate').value = '';
         document.getElementById('capsuleTime').value = '';
         loadMyCapsules();
