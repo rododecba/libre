@@ -59,17 +59,6 @@
     .char-counter { position: absolute; bottom: 8px; right: 10px; font-size: 0.8rem; font-weight: 500; color: #9ca3af; background-color: rgba(255, 255, 255, 0.7); padding: 1px 6px; border-radius: 4px; transition: color 0.3s; }
     .char-counter.warn { color: #f59e0b; }
     .char-counter.danger { color: #ef4444; }
-
-    /* ---- ESTILOS DEL TUTORIAL ---- */
-    .tutorial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10001; }
-    .tutorial-highlight { position: relative; z-index: 10002; box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.8), 0 0 20px rgba(66, 153, 225, 0.5); border-radius: 8px; transition: box-shadow 0.3s; }
-    .tutorial-textbox { position: absolute; z-index: 10003; background: white; color: #1f2937; padding: 1rem; border-radius: 0.5rem; max-width: 300px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-    .tutorial-textbox h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
-    .tutorial-textbox p { font-size: 0.9rem; margin-bottom: 1rem; }
-    .tutorial-footer { display: flex; justify-content: space-between; align-items: center; }
-    .tutorial-step-counter { font-size: 0.8rem; color: #6b7280; }
-    .tutorial-skip-btn { font-size: 0.8rem; color: #6b7280; background: none; border: none; cursor: pointer; text-decoration: underline; }
-    .tutorial-next-btn { background-color: #4f46e5; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 500; cursor: pointer; }
     
     /* ---- ESTILOS MINIMALISTAS PARA EL SELECTOR DE IDIOMA ---- */
     .lang-selector a {
@@ -93,11 +82,137 @@
     }
 
     @media (max-width: 640px) { .estadisticas-anonimas, .stats-box { font-size: 0.97rem; } }
+
+    /* ---- ESTILOS PANTALLA DE BIENVENIDA ---- */
+    #welcome-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(243, 244, 246, 0.95); /* bg-gray-100 con transparencia */
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+        transition: opacity 0.5s ease-out;
+    }
+    #welcome-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+    #welcome-container {
+        text-align: center;
+        max-width: 400px;
+        padding: 2rem;
+        position: relative;
+    }
+    .welcome-slide {
+        display: none;
+        animation: fadeIn 0.8s ease-in-out;
+    }
+    .welcome-slide.active {
+        display: block;
+    }
+    .welcome-icon {
+        font-size: 4rem;
+        line-height: 1;
+        margin-bottom: 1rem;
+        animation: icon-pop 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28) 0.2s;
+    }
+    .welcome-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937; /* text-gray-800 */
+        margin-bottom: 0.75rem;
+    }
+    .welcome-text {
+        font-size: 1rem;
+        color: #4b5563; /* text-gray-600 */
+        line-height: 1.6;
+    }
+    #welcome-start-btn {
+        margin-top: 2rem;
+        padding: 0.75rem 1.5rem;
+        background-color: #4f46e5; /* bg-indigo-600 */
+        color: white;
+        font-weight: 500;
+        border-radius: 9999px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.2s;
+        animation: fadeIn 1s 0.5s both; /* 'both' mantiene el estado final */
+    }
+    #welcome-start-btn:hover {
+        background-color: #4338ca; /* hover:bg-indigo-700 */
+        transform: scale(1.05);
+    }
+    #welcome-start-btn.hidden {
+        display: none;
+    }
+    #welcome-dots {
+        position: absolute;
+        bottom: -2rem;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+    .welcome-dot {
+        width: 10px;
+        height: 10px;
+        background-color: #d1d5db; /* bg-gray-300 */
+        border-radius: 50%;
+        transition: background-color 0.3s;
+    }
+    .welcome-dot.active {
+        background-color: #4f46e5; /* bg-indigo-600 */
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes icon-pop {
+        from { transform: scale(0.5); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col items-center p-4">
 
-  <div id="notification-area"></div>
+<div id="welcome-overlay" class="hidden">
+    <div id="welcome-container">
+        <div class="welcome-slide active">
+            <div class="welcome-icon">🌍</div>
+            <h2 class="welcome-title">Pensamientos Globales: Botellas al Mar</h2>
+            <p class="welcome-text">Lanza tus ideas al mundo de forma anónima. Como un mensaje en una botella, no sabes quién lo leerá, solo que llegará a algún rincón del planeta.</p>
+        </div>
+        <div class="welcome-slide">
+            <div class="welcome-icon">🌌</div>
+            <h2 class="welcome-title">Revelación Diaria: Un Misterio Compartido</h2>
+            <p class="welcome-text">Cada día, una nueva pregunta para todos. Responde a ciegas y vuelve mañana para descubrir un mosaico de respuestas sinceras de todo el mundo.</p>
+        </div>
+        <div class="welcome-slide">
+            <div class="welcome-icon">📜</div>
+            <h2 class="welcome-title">Mis Pensamientos: Tu Universo Personal</h2>
+            <p class="welcome-text">Aquí se guardan tus pensamientos y los ecos que generan. Lee las respuestas que otros usuarios anónimos han dejado a tus mensajes.</p>
+        </div>
+        <div class="welcome-slide">
+            <div class="welcome-icon">🚀</div>
+            <h2 class="welcome-title">Cápsula del Tiempo: Un Mensaje al Futuro</h2>
+            <p class="welcome-text">Escribe un mensaje para el mañana. Fija una fecha y tu pensamiento será liberado en ese preciso instante.</p>
+        </div>
+        <div class="welcome-slide">
+            <div class="welcome-icon">❤️</div>
+            <h2 class="welcome-title">Nuestros Valores: Un Espacio Realmente LIBRE</h2>
+            <p class="welcome-text">Aquí no hay 'me gusta', ni seguidores, ni algoritmos. Solo existe la libertad de expresarte con un anonimato radical y conectar de forma pura.</p>
+        </div>
+        <button id="welcome-start-btn" class="hidden">Comenzar a Explorar</button>
+        <div id="welcome-dots"></div>
+    </div>
+</div>
+<div id="notification-area"></div>
 
   <header class="mb-6 text-center w-full max-w-xl">
     <div id="logoContainer" class="relative h-16 mt-6 text-3xl font-semibold flex items-center justify-center">
@@ -110,7 +225,7 @@
     </div>
   </header>
 
-  <nav id="mainNav" class="w-full max-w-xl flex justify-around mb-6 text-sm relative">
+  <nav class="w-full max-w-xl flex justify-around mb-6 text-sm relative">
     <button onclick="showTab('feed')" class="hover:underline" data-translate-key="nav.global_thoughts">Pensamientos globales</button>
     <button onclick="showTab('revelacion')" class="hover:underline" data-translate-key="nav.daily_revelation">Revelación Diaria</button>
     <button onclick="showTab('mine')" class="hover:underline relative">
@@ -225,7 +340,6 @@
     </section>
 
     <section id="about" class="w-full max-w-2xl mx-auto mb-8 hidden legal-section">
-      <!-- El contenido de esta sección es estático y no se traducirá por ahora para mantener la simplicidad -->
       <div class="rounded-2xl bg-yellow-50 border border-yellow-200 p-6 sm:p-8 shadow-md relative">
         <h2 class="text-2xl font-semibold text-black mb-6 text-center">Información y Aspectos Legales</h2>
         <details open>
