@@ -147,7 +147,7 @@
         </button>
 
         <div class="welcome-slide active">
-            <div class="welcome-icon">👋</div>
+            <div class="welcome-icon font-semibold text-gray-800">LIBRE</div>
             <h2 class="welcome-title" data-translate-key="welcome.slide1.title"></h2>
             <p class="welcome-text" data-translate-key="welcome.slide1.text" style="margin-bottom: 1.5rem;"></p>
             <div id="welcome-lang-selector" class="flex justify-center space-x-4 mb-6">
@@ -185,7 +185,7 @@
             <p class="welcome-text" data-translate-key="welcome.slide6.text"></p>
         </div>
 
-        <button id="welcome-start-btn" class="hidden">Comenzar a ser LIBRE</button>
+        <button id="welcome-start-btn" class="hidden" data-translate-key="welcome.start_button"></button>
         <div id="welcome-dots"></div>
     </div>
 </div>
@@ -315,52 +315,54 @@
     </section>
 
     <section id="about" class="w-full max-w-2xl mx-auto mb-8 hidden legal-section">
-      <div class="rounded-2xl bg-yellow-50 border border-yellow-200 p-6 sm:p-8 shadow-md relative">
-        <h2 class="text-2xl font-semibold text-black mb-6 text-center">Información y Aspectos Legales</h2>
-        <details open>
-          <summary class="text-lg font-semibold cursor-pointer mb-2">¿Por qué Libre?</summary>
-          <ul class="list-disc pl-5 text-sm sm:text-base">
-            <li><b>Anonimato radical:</b> Nadie te sigue, nadie sabe quién eres. Tu identidad no importa, solo tu pensamiento.</li>
-            <li><b>Sin validación social:</b> No hay “me gusta”, ni seguidores, ni comentarios públicos que te condicionen.</li>
-            <li><b>Libertad de expresión pura:</b> Un espacio para soltar lo que llevas dentro, sin miedo a juicios ni presión social.</li>
-            <li><b>Conexión humana inesperada:</b> Tu mensaje puede llegar a cualquier persona, en cualquier país, en cualquier momento.</li>
-            <li><b>Sin historial, sin reputación:</b> Cada mensaje es un instante aislado, sin contexto previo ni futuro.</li>
-            <li><b>Cero algoritmos, cero manipulación:</b> No hay feeds personalizados, ni trending topics. Todo es azar.</li>
-          </ul>
-        </details>
-        <div id="terms" class="mt-6">
-          <h3 class="text-xl font-semibold mb-3">Términos de Servicio</h3>
-          <p>Al utilizar LIBRE (el "Servicio"), aceptas cumplir con estos Términos de Servicio. El acceso y uso del Servicio están condicionados a tu aceptación y cumplimiento de estos términos.</p>
-          <ul class="list-disc pl-5">
-              <li><strong>Requisito de Edad:</strong> Debes tener al menos 16 años para utilizar este Servicio. Al acceder o utilizar LIBRE, declaras y garantizas que cumples con este requisito de edad. No recopilamos deliberadamente información de personas menores de 16 años.</li>
-              <li><strong>Contenido del Usuario:</strong> Eres el único responsable del contenido que publicas. Al publicar contenido, garantizas que tienes derecho a hacerlo y que no infringe ninguna ley ni los derechos de terceros. No publiques contenido que sea ilegal, ofensivo, amenazante, difamatorio, que incite al odio o que viole cualquier ley o regulación.</li>
-              <li><strong>Conducta del Usuario:</strong> Aceptas no utilizar el Servicio para ningún propósito ilegal o no autorizado. El acoso, el spam y cualquier forma de abuso están estrictamente prohibidos.</li>
-              <li><strong>Moderación de Contenido:</strong> Nos reservamos el derecho, pero no la obligación, de monitorear y eliminar contenido que, a nuestra entera discreción, viole estos términos o sea inapropiado. El sistema de reportes por parte de la comunidad es una herramienta clave para mantener la plataforma segura.</li>
-              <li><strong>Limitación de Responsabilidad:</strong> El Servicio se proporciona "tal cual", sin garantías de ningún tipo. No seremos responsables de ningún daño directo o indirecto que surja de tu uso del Servicio.</li>
-          </ul>
+        <div class="rounded-2xl bg-yellow-50 border border-yellow-200 p-6 sm:p-8 shadow-md relative">
+            <h2 class="text-2xl font-semibold text-black mb-6 text-center" data-translate-key="about.title"></h2>
+            <details open>
+                <summary class="text-lg font-semibold cursor-pointer mb-2" data-translate-key="about.why_libre.title"></summary>
+                <ul class="list-disc pl-5 text-sm sm:text-base">
+                    <li data-translate-key="about.why_libre.item1"></li>
+                    <li data-translate-key="about.why_libre.item2"></li>
+                    <li data-translate-key="about.why_libre.item3"></li>
+                    <li data-translate-key="about.why_libre.item4"></li>
+                    <li data-translate-key="about.why_libre.item5"></li>
+                    <li data-translate-key="about.why_libre.item6"></li>
+                </ul>
+            </details>
+            <div id="terms" class="mt-6">
+                <h3 class="text-xl font-semibold mb-3" data-translate-key="about.terms.title"></h3>
+                <p data-translate-key="about.terms.p1"></p>
+                <ul class="list-disc pl-5">
+                    <li><span data-translate-key="about.terms.item1.title"></span> <span data-translate-key="about.terms.item1.text"></span></li>
+                    <li><span data-translate-key="about.terms.item2.title"></span> <span data-translate-key="about.terms.item2.text"></span></li>
+                    <li><span data-translate-key="about.terms.item3.title"></span> <span data-translate-key="about.terms.item3.text"></span></li>
+                    <li><span data-translate-key="about.terms.item4.title"></span> <span data-translate-key="about.terms.item4.text"></span></li>
+                    <li><span data-translate-key="about.terms.item5.title"></span> <span data-translate-key="about.terms.item5.text"></span></li>
+                </ul>
+            </div>
+            <div id="privacy" class="mt-6">
+                <h3 class="text-xl font-semibold mb-3" data-translate-key="about.privacy.title"></h3>
+                <p data-translate-key="about.privacy.p1"></p>
+                <ul class="list-disc pl-5">
+                    <li><span data-translate-key="about.privacy.item1.title"></span> <span data-translate-key="about.privacy.item1.text"></span></li>
+                    <li>
+                        <strong data-translate-key="about.privacy.item2.title"></strong>
+                        <ul class="list-disc pl-5 mt-2">
+                            <li><strong data-translate-key="about.privacy.item2.subitem1.title"></strong> <span data-translate-key="about.privacy.item2.subitem1.text"></span></li>
+                            <li><strong data-translate-key="about.privacy.item2.subitem2.title"></strong> <span data-translate-key="about.privacy.item2.subitem2.text"></span></li>
+                        </ul>
+                    </li>
+                    <li class="mt-2">
+                        <strong data-translate-key="about.privacy.item3.title"></strong> <span data-translate-key="about.privacy.item3.text"></span>
+                        <ul class="list-disc pl-5 mt-2">
+                            <li data-translate-key="about.privacy.item3.subitem1"></li>
+                            <li data-translate-key="about.privacy.item3.subitem2"></li>
+                            <li data-translate-key="about.privacy.item3.subitem3"></li>
+                        </ul>
+                    </li>
+                    <li class="mt-2"><strong data-translate-key="about.privacy.item4.title"></strong> <span data-translate-key="about.privacy.item4.text"></span></li>
+                </ul>
+            </div>
         </div>
-        <div id="privacy" class="mt-6">
-          <h3 class="text-xl font-semibold mb-3">Política de Privacidad</h3>
-          <p>Tu privacidad es el pilar fundamental de LIBRE. Esta política explica qué información se recopila y cómo se utiliza para mantener el anonimato.</p>
-          <ul class="list-disc pl-5">
-              <li><strong>Anonimato:</strong> El Servicio está diseñado para ser radicalmente anónimo. No se te solicita ni se almacena ninguna información de identificación personal (nombre, correo electrónico, etc.).</li>
-              <li><strong>Datos Recopilados:</strong>
-                  <ul>
-                      <li><strong>Identificador Anónimo:</strong> Al usar el servicio, se genera un identificador único y anónimo (ej: `anon-xxxxxx`) que se guarda en el almacenamiento local (`localStorage`) de tu navegador. Este ID te permite ver tu historial de mensajes, pero no está vinculado a tu identidad real. Si borras los datos de tu navegador, este ID se perderá a menos que lo hayas exportado.</li>
-                      <li><strong>País:</strong> Para fines estadísticos y para mostrar la procedencia de los mensajes en el mapa, detectamos tu país a través de tu dirección IP. La dirección IP en sí misma **no se almacena en ningún momento**. Solo se guarda el código del país (ej: "ES" para España) junto con el mensaje.</li>
-                  </ul>
-              </li>
-              <li><strong>Uso de Almacenamiento Local (`localStorage`):</strong> Utilizamos el almacenamiento local de tu navegador para:
-                  <ul>
-                      <li>Guardar tu identificador anónimo.</li>
-                      <li>Recordar si has aceptado el aviso de edad y visto la bienvenida.</li>
-                      <li>Registrar los últimos mensajes respondidos para el sistema de notificaciones.</li>
-                  </ul>
-              </li>
-              <li><strong>No Compartimos Datos:</strong> Dado que no recopilamos datos personales, no hay nada que compartir o vender a terceros.</li>
-          </ul>
-        </div>
-      </div>
     </section>
   </main>
 
