@@ -51,15 +51,19 @@ function applyTranslations() {
         }
     });
     document.documentElement.lang = currentLang;
-    document.getElementById('lang-es').classList.toggle('active', currentLang === 'es');
-    document.getElementById('lang-en').classList.toggle('active', currentLang === 'en');
+    const langEs = document.getElementById('lang-es');
+    const langEn = document.getElementById('lang-en');
+    if(langEs) langEs.classList.toggle('active', currentLang === 'es');
+    if(langEn) langEn.classList.toggle('active', currentLang === 'en');
 }
 
 function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('libre_lang', lang);
     applyTranslations();
-    refreshAllData();
+    if(localStorage.getItem('libre_welcome_seen') === 'true') {
+      refreshAllData();
+    }
 }
 
 // ---- LÓGICA DE LA PANTALLA DE BIENVENIDA ----
@@ -67,10 +71,14 @@ function setupWelcomeScreen() {
     const overlay = document.getElementById('welcome-overlay');
     if (!overlay) return;
 
-    if (localStorage.getItem('libre_welcome_seen') === 'true') {
+    // Determinar idioma inicial
+    const savedLang = localStorage.getItem('libre_lang');
+    const browserLang = navigator.language.slice(0, 2);
+    currentLang = savedLang || (browserLang === 'en' ? 'en' : 'es');
+    applyTranslations();
+
+    if (localStorage.getItem('libre_welcome_seen') === 'true' && localStorage.getItem('libre_age_gate_accepted') === 'true') {
         overlay.remove();
-        currentLang = localStorage.getItem('libre_lang') || 'es';
-        applyTranslations();
         return;
     }
     
@@ -95,19 +103,25 @@ function setupWelcomeScreen() {
     langButtons.forEach(btn => {
         btn.onclick = () => {
             currentLang = btn.dataset.lang;
-            localStorage.setItem('libre_lang', currentLang);
             applyTranslations();
 
             langButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
             ageGateButton.disabled = false;
-            ageGateButton.textContent = currentLang === 'es' ? 'Confirmo que tengo +16 años' : 'I confirm I am 16+';
+            ageGateButton.setAttribute('data-translate-key', 'welcome.slide1.age_gate_button');
+            ageGateButton.textContent = translations[currentLang]['welcome.slide1.age_gate_button'];
         };
     });
+    
+    // Pre-seleccionar idioma
+    const activeLangBtn = document.querySelector(`#welcome-lang-selector button[data-lang="${currentLang}"]`);
+    if(activeLangBtn) activeLangBtn.click();
+
 
     ageGateButton.onclick = () => {
         localStorage.setItem('libre_age_gate_accepted', 'true');
+        localStorage.setItem('libre_lang', currentLang);
         showNextSlide();
     };
 
@@ -116,31 +130,36 @@ function setupWelcomeScreen() {
     slides.forEach((_, i) => {
         const dot = document.createElement('div');
         dot.className = 'welcome-dot';
-        dot.setAttribute('tabindex', '0');
+        if (i > 0) dot.style.display = 'none'; // Ocultar puntos al inicio
         dot.setAttribute('role', 'button');
         dot.setAttribute('aria-label', `Ir a la diapositiva ${i + 1}`);
-        if (i === 0) dot.classList.add('active');
         dot.onclick = () => goToSlide(i);
-        dot.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') goToSlide(i); };
         dotsContainer.appendChild(dot);
     });
-    dots = document.querySelectorAll('.welcome-dot');
+    dots = Array.from(dotsContainer.children);
 
     function updateUI() {
         slides.forEach((slide, i) => slide.classList.toggle('active', i === currentSlide));
-        dots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlide));
+        
+        const ageGatePassed = localStorage.getItem('libre_age_gate_accepted') === 'true';
+        if (ageGatePassed) {
+            dots.forEach((dot, i) => {
+                dot.style.display = 'block';
+                dot.classList.toggle('active', i === currentSlide);
+            });
+        }
 
         const isFirstSlide = currentSlide === 0;
         const isLastSlide = currentSlide === slides.length - 1;
 
         prevArrow.style.display = isFirstSlide ? 'none' : 'flex';
         nextArrow.style.display = isLastSlide ? 'none' : 'flex';
-        dotsContainer.style.display = isLastSlide ? 'none' : 'flex';
+        dotsContainer.style.display = isLastSlide || isFirstSlide ? 'none' : 'flex';
         startBtn.classList.toggle('hidden', !isLastSlide);
     }
 
     function goToSlide(idx) {
-        if (idx < 0 || idx >= slides.length || (idx > 0 && !localStorage.getItem('libre_age_gate_accepted'))) return;
+        if (idx < 0 || idx >= slides.length || (idx > 0 && localStorage.getItem('libre_age_gate_accepted') !== 'true')) return;
         currentSlide = idx;
         updateUI();
         resetInterval();
@@ -172,6 +191,10 @@ function setupWelcomeScreen() {
         overlay.classList.add('hidden');
         overlay.addEventListener('transitionend', () => overlay.remove());
         clearInterval(welcomeInterval);
+        
+        // INICIALIZAR LA APP AHORA QUE LA BIENVENIDA TERMINÓ
+        detectCountry();
+        initializeApp();
     };
 
     updateUI(); // Inicializa el estado visual
@@ -226,6 +249,9 @@ function initializeApp() {
         }, 2000);
         setTimeout(() => { imgLogo.classList.add('visible'); }, 3500);
     }
+    
+    // Refrescar traducciones por si acaso
+    applyTranslations();
     
     setupTextareaFeatures(document.getElementById('textarea'), document.getElementById('charCounterMain'), 'libre_draft_main');
     setupTextareaFeatures(document.getElementById('revelacionTextarea'), document.getElementById('charCounterRevelation'), 'libre_draft_revelation');
@@ -813,6 +839,8 @@ function showTab(tabId) {
 }
 
 function showLegalSection(sectionId) {
+    // Si la bienvenida está activa, no hacemos nada para evitar conflictos.
+    if(document.body.classList.contains('welcome-active')) return;
     showTab('about');
     setTimeout(() => {
         const element = document.getElementById(sectionId);
@@ -881,7 +909,12 @@ function createRevelationSkeleton(count = 1) {
 
 // ---- INICIO DE LA APLICACIÓN ----
 document.addEventListener('DOMContentLoaded', () => {
+    // La inicialización de la app se mueve al final de la bienvenida
+    // o se ejecuta aquí si la bienvenida ya fue completada.
     setupWelcomeScreen();
-    detectCountry();
-    initializeApp();
+
+    if (localStorage.getItem('libre_welcome_seen') === 'true') {
+        detectCountry();
+        initializeApp();
+    }
 });
