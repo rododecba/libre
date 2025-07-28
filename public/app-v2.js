@@ -92,7 +92,7 @@ function showNotification(messageKey, type = 'info', duration = 3000, context = 
 // ---- FUNCIONALIDAD DE TEXTAREAS (BORRADOR AUTOMÁTICO Y CONTADOR) ----
 function setupTextareaFeatures(textarea, counterElement, storageKey) {
     if (!textarea || !counterElement) return;
-    const maxLength = textarea.getAttribute('maxlength');
+    const maxLength = parseInt(textarea.getAttribute('maxlength'), 10);
 
     // 1. Cargar borrador desde localStorage
     const savedDraft = localStorage.getItem(storageKey);
@@ -103,7 +103,16 @@ function setupTextareaFeatures(textarea, counterElement, storageKey) {
     // 2. Función para actualizar el contador
     function updateCounter() {
         const currentLength = textarea.value.length;
-        counterElement.textContent = `${currentLength} / ${maxLength}`;
+        const remaining = maxLength - currentLength;
+        
+        counterElement.textContent = remaining;
+        
+        counterElement.classList.remove('warn', 'danger');
+        if (remaining <= 0) {
+            counterElement.classList.add('danger');
+        } else if (remaining <= 20) {
+            counterElement.classList.add('warn');
+        }
     }
 
     // 3. Event listener para guardar borrador y actualizar contador
@@ -187,7 +196,7 @@ function getQuestionForDate(date) {
 }
 function startCountdown() { if (revelationCountdownInterval) clearInterval(revelationCountdownInterval); const countdownEl = document.getElementById('revelacionCountdown'); if (!countdownEl) return; revelationCountdownInterval = setInterval(() => { const now = new Date(); const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)); const diff = tomorrow - now; if (diff <= 0) { countdownEl.textContent = "¡Revelado!"; clearInterval(revelationCountdownInterval); setTimeout(() => location.reload(), 1000); return; } const hours = Math.floor((diff / (1000 * 60 * 60)) % 24); const minutes = Math.floor((diff / 1000 / 60) % 60); const seconds = Math.floor((diff / 1000) % 60); countdownEl.textContent = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0'); }, 1000); }
 async function loadRevelacionDiaria() { const todayStr = getTodaysDateStr(); const question = getQuestionForDate(new Date()); document.getElementById('revelacionQuestion').textContent = question; const hasAnsweredToday = localStorage.getItem('libre_revelacion_answered') === todayStr; if (hasAnsweredToday) { document.getElementById('revelacionInputArea').classList.add('hidden'); document.getElementById('revelacionThanks').classList.remove('hidden'); startCountdown(); } else { document.getElementById('revelacionInputArea').classList.remove('hidden'); document.getElementById('revelacionThanks').classList.add('hidden'); if (revelationCountdownInterval) clearInterval(revelationCountdownInterval); } }
-document.getElementById('revelacionSendBtn').onclick = async function() { const textarea = document.getElementById('revelacionTextarea'); const text = textarea.value.trim(); if (!text) return; if (window.contienePalabraOfensiva(text)) return; if (!countryReady) { showNotification("js.notification.country_wait", "info"); return; } this.disabled = true; const todayStr = getTodaysDateStr(); try { await db.collection('revelations').doc(todayStr).collection('responses').add({ text: text, ts: Date.now(), country: userCountry, user: getAnonUserId() }); localStorage.setItem('libre_revelacion_answered', todayStr); textarea.value = ''; localStorage.removeItem('libre_draft_revelation'); document.getElementById('charCounterRevelation').textContent = `0 / 500`; loadRevelacionDiaria(); } catch (e) { console.error("Error saving revelation answer:", e); showNotification("revelation.send_error", "error"); } finally { this.disabled = false; } };
+document.getElementById('revelacionSendBtn').onclick = async function() { const textarea = document.getElementById('revelacionTextarea'); const text = textarea.value.trim(); if (!text) return; if (window.contienePalabraOfensiva(text)) return; if (!countryReady) { showNotification("js.notification.country_wait", "info"); return; } this.disabled = true; const todayStr = getTodaysDateStr(); try { await db.collection('revelations').doc(todayStr).collection('responses').add({ text: text, ts: Date.now(), country: userCountry, user: getAnonUserId() }); localStorage.setItem('libre_revelacion_answered', todayStr); textarea.value = ''; localStorage.removeItem('libre_draft_revelation'); const counter = document.getElementById('charCounterRevelation'); counter.textContent = textarea.getAttribute('maxlength'); counter.classList.remove('warn', 'danger'); loadRevelacionDiaria(); } catch (e) { console.error("Error saving revelation answer:", e); showNotification("revelation.send_error", "error"); } finally { this.disabled = false; } };
 async function showYesterdaysRevelation() {
   const container = document.getElementById('revelacionAyerContainer');
   const questionEl = document.getElementById('revelacionAyerQuestion');
@@ -276,7 +285,9 @@ document.getElementById('sendBtn').onclick = async function() {
     await db.collection("thoughts").add({ text: txt, ts: Date.now(), country: userCountry, user: getAnonUserId() });
     textarea.value = '';
     localStorage.removeItem('libre_draft_main');
-    document.getElementById('charCounterMain').textContent = `0 / 500`;
+    const counter = document.getElementById('charCounterMain');
+    counter.textContent = textarea.getAttribute('maxlength');
+    counter.classList.remove('warn', 'danger');
     mostrarFraseInspiradoraEnTextarea();
     showNotification("js.notification.thought_sent", "success");
     refreshAllData();
@@ -498,7 +509,10 @@ window.mostrarCajaRespuesta = function(thoughtId, btn) {
     const placeholder = translations[currentLang]['feed.reply_placeholder'];
     const buttonText = translations[currentLang]['feed.send_reply_button'];
     
-    // Crear elementos
+    // Crear elementos con la nueva estructura
+    const container = document.createElement('div');
+    container.className = 'textarea-container';
+
     const textarea = document.createElement('textarea');
     textarea.className = 'w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm';
     textarea.rows = 2;
@@ -511,9 +525,10 @@ window.mostrarCajaRespuesta = function(thoughtId, btn) {
     const enviarBtn = document.createElement('button');
     enviarBtn.className = 'mt-2 px-4 py-1 rounded-lg bg-blue-500 text-white text-sm font-medium shadow hover:bg-blue-600 transition enviarRespuestaBtn';
     enviarBtn.textContent = buttonText;
-
+    
     // Añadir al DOM
-    caja.append(textarea, charCounter, enviarBtn);
+    container.append(textarea, charCounter);
+    caja.append(container, enviarBtn);
 
     // Configurar funcionalidades
     const storageKey = `libre_draft_reply_${thoughtId}`;
@@ -728,9 +743,12 @@ document.getElementById('capsuleBtn').onclick = async function() {
         this.disabled = true;
         await db.collection("capsules").add({ text: msg, openAt, ts: Date.now(), country: userCountry, user: getAnonUserId() });
         showNotification('js.notification.capsule_scheduled', 'success', 3000, ` ${date} @ ${time}`);
-        document.getElementById('capsuleMessage').value = '';
+        const textarea = document.getElementById('capsuleMessage');
+        textarea.value = '';
         localStorage.removeItem('libre_draft_capsule');
-        document.getElementById('charCounterCapsule').textContent = `0 / 500`;
+        const counter = document.getElementById('charCounterCapsule');
+        counter.textContent = textarea.getAttribute('maxlength');
+        counter.classList.remove('warn', 'danger');
         document.getElementById('capsuleDate').value = '';
         document.getElementById('capsuleTime').value = '';
         loadMyCapsules();
