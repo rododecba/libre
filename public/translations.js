@@ -1,7 +1,7 @@
 const translations = {
   es: {
     // Welcome Screen
-    'welcome.slide1.title': '¡Bienvenido a LIBRE!',
+    'welcome.slide1.title': '¡Bienvenido!',
     'welcome.slide1.text': 'Primero, elige tu idioma y confirma que tienes la edad para unirte a nuestra comunidad.',
     'welcome.slide1.age_gate_button_disabled': 'Elige un idioma primero',
     'welcome.slide1.age_gate_button': 'Confirmo que tengo +16 años',
@@ -169,7 +169,7 @@ const translations = {
   },
   en: {
     // Welcome Screen
-    'welcome.slide1.title': 'Welcome to LIBRE!',
+    'welcome.slide1.title': 'Welcome!',
     'welcome.slide1.text': 'First, choose your language and confirm you are old enough to join our community.',
     'welcome.slide1.age_gate_button_disabled': 'Choose a language first',
     'welcome.slide1.age_gate_button': 'I confirm I am 16+',
