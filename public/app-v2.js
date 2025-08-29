@@ -48,20 +48,8 @@ function validateUserInput(text, maxLength = 500) {
   // Verificar si tiene contenido real y no solo espacios
   if (text.trim().length === 0) return false;
   
-  // Verificar patrones sospechosos
-  const suspiciousPatterns = [
-    /<script/i,
-    /javascript:/i,
-    /<iframe/i,
-    /<img[^>]+onerror/i,
-    /document\.cookie/i,
-    /\beval\s*\(/i,
-    /new\s+Function/i
-  ];
-  
-  for (const pattern of suspiciousPatterns) {
-    if (pattern.test(text)) return false;
-  }
+  // MODIFICADO: La validación de patrones sospechosos ahora se centraliza en badwords.js
+  // La función window.contienePalabraOfensiva se encarga de esto.
   
   return true;
 }
@@ -559,9 +547,9 @@ document.getElementById('sendBtn').onclick = async function() {
     return;
   }
   
-  // Verificar palabras ofensivas
-  if (window.contienePalabraOfensiva(txt)) {
-    showNotification("security.inappropriate_content", "error");
+  // MODIFICADO: Centralización de la validación de contenido en badwords.js
+  if (window.contieneContenidoInapropiado(txt)) {
+    // La notificación se muestra dentro de la función de validación
     return;
   }
   
@@ -792,9 +780,8 @@ async function sendReply(thoughtId, replyContainer) {
     return;
   }
   
-  // Verificar palabras ofensivas
-  if (window.contienePalabraOfensiva(replyText)) {
-    showNotification("security.inappropriate_content", "error");
+  // MODIFICADO: Centralización de la validación de contenido en badwords.js
+  if (window.contieneContenidoInapropiado(replyText)) {
     return;
   }
   
@@ -879,6 +866,19 @@ function setupReportButtons() {
         
         try {
           showNotification("js.notification.reporting", "info");
+
+          // MODIFICADO: Verificar si el usuario ya ha reportado este pensamiento
+          const existingReportSnapshot = await db.collection('reports')
+            .where('user', '==', user.uid)
+            .where('thoughtId', '==', thoughtId)
+            .limit(1)
+            .get();
+
+          if (!existingReportSnapshot.empty) {
+            showNotification("js.notification.report_already_reported", "info");
+            this.setAttribute('data-reported', 'true'); // Marcar como reportado en UI
+            return;
+          }
           
           // Verificar límite de reportes (máximo 5 por día)
           const today = new Date();
@@ -1170,9 +1170,8 @@ document.getElementById('revelacionSendBtn').onclick = async function() {
     return;
   }
   
-  // Verificar palabras ofensivas
-  if (window.contienePalabraOfensiva(revelacionText)) {
-    showNotification("security.inappropriate_content", "error");
+  // MODIFICADO: Centralización de la validación de contenido en badwords.js
+  if (window.contieneContenidoInapropiado(revelacionText)) {
     return;
   }
   
@@ -1334,9 +1333,8 @@ document.getElementById('capsuleBtn').onclick = async function() {
     return;
   }
   
-  // Verificar palabras ofensivas
-  if (window.contienePalabraOfensiva(message)) {
-    showNotification("security.inappropriate_content", "error");
+  // MODIFICADO: Centralización de la validación de contenido en badwords.js
+  if (window.contieneContenidoInapropiado(message)) {
     return;
   }
   
@@ -1479,13 +1477,15 @@ async function loadMyCapsules() {
       if (isOpen) {
         timeDisplay = `
           <div class="text-sm text-purple-600 mb-2">
-            <span class="material-icons" style="font-size: 1rem; vertical-align: text-bottom;">schedule</span>
+            // MODIFICADO: Se reemplaza el estilo en línea por clases de Tailwind
+            <span class="material-icons align-text-bottom text-base">schedule</span>
             <span>${translations[currentLang]?.['capsule.opened_label'] || 'Abierta:'} ${formattedDate}</span>
           </div>`;
       } else {
         timeDisplay = `
           <div class="text-sm text-purple-800 mb-2">
-            <span class="material-icons" style="font-size: 1rem; vertical-align: text-bottom;">hourglass_empty</span>
+            // MODIFICADO: Se reemplaza el estilo en línea por clases de Tailwind
+            <span class="material-icons align-text-bottom text-base">hourglass_empty</span>
             <span>${translations[currentLang]?.['capsule.countdown_label'] || 'Se abre en:'}</span>
             <span class="capsule-countdown" data-open-at="${openAt.getTime()}"></span>
           </div>`;
@@ -1880,6 +1880,12 @@ async function loadGlobalStats() {
         </div>
       </div>
     `;
+
+    // MODIFICADO: Actualizar el contador total de pensamientos
+    const countDoc = await db.collection('stats').doc('thoughts_count').get();
+    if (countDoc.exists) {
+        document.getElementById('globalCountNum').textContent = countDoc.data().count || 0;
+    }
     
   } catch (error) {
     console.error("Error loading global stats:", error);

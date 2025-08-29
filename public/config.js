@@ -1,13 +1,31 @@
-// Firebase config - Seguro incluir en cliente ya que se protege con reglas de Firestore
+// --- IMPORTANTE ---
+// La configuración de Firebase se ha movido para mejorar la seguridad.
+// NO DEBES almacenar tus claves de API directamente en el código del lado del cliente.
+// En su lugar, utiliza variables de entorno o un servicio de configuración remota
+// proporcionado por tu plataforma de hosting (ej. Netlify, Vercel, Firebase Hosting).
+
+// Ejemplo de cómo podrías obtener las variables de entorno (esto es conceptual):
+// const firebaseConfig = {
+//   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+//   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+//   projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+//   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+//   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+//   appId: process.env.REACT_APP_FIREBASE_APP_ID,
+//   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
+// };
+
+// Por ahora, el objeto está vacío. Debes llenarlo desde una fuente segura.
 const firebaseConfig = {
-  apiKey: "AIzaSyD3fKmS0g3JRfiIp8i9dqsdSA9w_C0ctxY",
-  authDomain: "libreantisocial.firebaseapp.com",
-  projectId: "libreantisocial",
-  storageBucket: "libreantisocial.firebasestorage.app",
-  messagingSenderId: "842162863212",
-  appId: "1:842162863212:web:5dde2e830ba261fd35ec49",
-  measurementId: "G-ZCYR53CGX7"
+  apiKey: "TU_API_KEY_AQUI",
+  authDomain: "TU_AUTH_DOMAIN_AQUI",
+  projectId: "TU_PROJECT_ID_AQUI",
+  storageBucket: "TU_STORAGE_BUCKET_AQUI",
+  messagingSenderId: "TU_MESSAGING_SENDER_ID_AQUI",
+  appId: "TU_APP_ID_AQUI",
+  measurementId: "TU_MEASUREMENT_ID_AQUI"
 };
+
 
 // No incluir tokens de API en el código cliente
 // Se reemplaza la función por una versión que use un servicio sin tokens

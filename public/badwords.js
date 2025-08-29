@@ -69,12 +69,15 @@ function detectarPatronesAtaque(texto) {
   const patronesMaliciosos = [
     // Scripts y alertas
     /<\s*script/i,
+    /javascript:/i,
     /alert\s*\(/i,
     /document\.cookie/i,
     /document\.location/i,
     /window\.location/i,
     /localStorage/i,
     /sessionStorage/i,
+    /\beval\s*\(/i,
+    /new\s+Function/i,
     
     // Iframes
     /<\s*iframe/i,
@@ -182,24 +185,24 @@ function palabrasOfensivasEncontradas(texto) {
   return encontradas;
 }
 
-// Función principal para detectar contenido prohibido
-window.contienePalabraOfensiva = function(texto) {
-  // Verificar contenido malicioso de ataque primero
+// MODIFICADO: La función principal ahora se llama `contieneContenidoInapropiado` y centraliza todas las validaciones.
+window.contieneContenidoInapropiado = function(texto) {
+  // 1. Verificar contenido malicioso de ataque primero
   if (detectarPatronesAtaque(texto)) {
-    showNotification("Se ha detectado contenido potencialmente peligroso", "error");
+    showNotification("security.dangerous_content", "error");
     return true;
   }
   
-  // Verificar si contiene palabras ofensivas
+  // 2. Verificar si contiene palabras ofensivas
   const palabras = palabrasOfensivasEncontradas(texto);
   if (palabras.length > 0) {
-    showNotification(`Tu mensaje contiene contenido inapropiado`, "error");
+    showNotification("security.inappropriate_content", "error");
     return true;
   }
   
-  // Verificar si parece spam
+  // 3. Verificar si parece spam
   if (detectarPatronesSpam(texto)) {
-    showNotification("Tu mensaje ha sido detectado como posible spam", "error");
+    showNotification("security.spam_detected", "error");
     return true;
   }
   
