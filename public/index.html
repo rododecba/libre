@@ -1,433 +1,298 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LIBRE</title>
-  
-  <link rel="icon" type="image/png" href="logolibre-favicon.png?v=1">
-  <link rel="apple-touch-icon" href="logolibre-favicon.png?v=1">
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    /* ---- RESET Y ESTILOS GLOBALES ---- */
-    html, body {
-        margin: 0; padding: 0; border: none;
-        width: 100%; height: 100%; box-sizing: border-box;
-        scroll-behavior: smooth; transition: background-color 0.3s, color 0.3s;
-    }
-    body.welcome-active, body.modal-active {
-        overflow: hidden;
-    }
-
-    /* ---- ESTILOS GENERALES DE LA APP (Tus estilos originales) ---- */
-    .logo-hidden { opacity: 0; transition: opacity 1.5s; }
-    .logo-shown { opacity: 1; transition: opacity 1.5s; }
-    #logolibre { opacity: 0; transition: opacity 1.5s; }
-    #logolibre.visible { opacity: 1; transition: opacity 1.5s; }
-    #map { width: 100%; height: 250px; border-radius: 1rem; margin-bottom: 1rem; }
-    .pagination { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
-    .pagination button { background: #e5e7eb; border-radius: 6px; padding: 4px 10px; font-size: 0.9rem; }
-    .pagination button[disabled] { opacity: 0.5; cursor: not-allowed; }
-    .reply-box { background: #fafafa; border-radius: 1rem; padding: 0.75rem; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
-    .action-btn { font-size: 0.8rem; color: #6d28d9; background: none; border: none; cursor: pointer; transition: color 0.2s; }
-    .action-btn:hover { color: #4b2995; text-decoration: underline; }
-    .action-btn:disabled { color: #9ca3af; cursor: not-allowed; text-decoration: none; }
-    .report-btn { font-size: 0.8rem; color: #ef4444; }
-    .report-btn:hover { color: #b91c1c; text-decoration: underline; }
-    .frase-inspiradora { color: #6D28D9; font-weight: 500; font-style: italic; margin-bottom: 0.5rem; display: block; transition: color 0.3s; min-height: 1.5rem;}
-    .stats-box { margin-top: 1rem; background: #F0FFF4; border-radius: 0.75rem; padding: 1rem; border: 1px solid #C6F6D5; }
-    .stats-box .titulo { font-weight: 600; color: #2F855A; margin-bottom: 0.2rem; }
-    .stats-box .dato { font-size: 1.07rem; font-weight: 500; color: #2D3748; margin-bottom: 0.1rem; }
-    .stats-box .dato strong { color: #2F855A; }
-    .estadisticas-anonimas { margin-top: 1.5rem; background: #F3F0FF; border-radius: 0.75rem; padding: 1rem; }
-    .estadisticas-anonimas .titulo { font-weight: 600; color: #6D28D9; margin-bottom: 0.2rem; }
-    .estadisticas-anonimas .dato { font-size: 1.07rem; font-weight: 500; color: #2D3748; margin-bottom: 0.1rem; }
-    .estadisticas-anonimas .dato strong { color: #6D28D9; }
-    .badge-notif { display: inline-block; min-width: 16px; background: #ef4444; color: #fff; border-radius: 9999px; font-size: 0.8rem; padding: 2px 8px; position: absolute; top: -6px; right: -10px; z-index: 10; box-shadow: 0 0 4px #ef4444aa; }
-    .revelation-answer { border-left: 3px solid #a78bfa; padding-left: 1rem; margin-top: 1rem; }
-    @keyframes pulse-and-rotate { 0% { transform: scale(1) rotate(0deg); } 5% { transform: scale(1.2) rotate(-15deg); } 10% { transform: scale(1) rotate(0deg); } 100% { transform: scale(1) rotate(0deg); } }
-    #randomThoughtGlobe { cursor: pointer; display: inline-block; animation: pulse-and-rotate 5s infinite; transition: transform 0.3s ease-in-out; }
-    #randomThoughtGlobe:hover { animation-play-state: paused; transform: scale(1.2) rotate(-15deg); }
-    #notification-area { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
-    .notification { padding: 1rem; border-radius: 0.5rem; color: white; font-weight: 500; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.5s ease; opacity: 0; transform: translateX(100%); }
-    .notification.show { opacity: 1; transform: translateX(0); }
-    .notification.success { background-color: #28a745; }
-    .notification.error { background-color: #dc3545; }
-    .notification.info { background-color: #17a2b8; }
-    .legal-section h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
-    .legal-section p, .legal-section ul { margin-bottom: 1rem; text-align: justify; }
-    .legal-section li { margin-bottom: 0.5rem; }
-    .empty-state { text-align: center; padding: 2rem 1rem; font-size: 0.9rem; color: #718096; }
-    .textarea-container { position: relative; }
-    .char-counter { position: absolute; bottom: 8px; right: 10px; font-size: 0.8rem; font-weight: 500; color: #9ca3af; background-color: rgba(255, 255, 255, 0.7); padding: 1px 6px; border-radius: 4px; transition: color 0.3s; }
-    .char-counter.warn { color: #f59e0b; }
-    .char-counter.danger { color: #ef4444; }
-    .lang-selector a { margin: 0 0.5rem; text-decoration: none; color: #6b7280; font-weight: normal; transition: color 0.2s; }
-    .lang-selector a:hover { color: #111827; text-decoration: underline; }
-    .lang-selector a.active { color: #4f46e5; font-weight: bold; cursor: default; }
-    .lang-selector a.active:hover { text-decoration: none; }
-    @media (max-width: 640px) { .estadisticas-anonimas, .stats-box { font-size: 0.97rem; } }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIBRE</title>
+    <!-- Encabezado de Seguridad CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://www.gstatic.com https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://ip-api.com; img-src 'self' data: https://unpkg.com; frame-src 'none';">
+    <!-- Fin del Encabezado de Seguridad -->
     
-    /* ---- ESTILOS PANTALLA DE BIENVENIDA ---- */
-    #welcome-overlay {
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(243, 244, 246, 0.98); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-        z-index: 9999; display: flex; align-items: center; justify-content: center;
-        opacity: 1; transition: opacity 0.5s ease-out;
-    }
-    #welcome-overlay.hidden { opacity: 0; pointer-events: none; }
-    #welcome-container { text-align: center; max-width: 400px; padding: 2rem; position: relative; }
-    .welcome-slide { display: none; animation: fadeIn 0.8s ease-in-out; }
-    .welcome-slide.active { display: block; }
-    .welcome-icon { font-size: 4rem; line-height: 1; margin-bottom: 1rem; animation: icon-pop 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28) 0.2s; }
-    .welcome-title { font-size: 1.5rem; font-weight: 600; color: #1f2937; margin-bottom: 0.75rem; }
-    .welcome-text { font-size: 1rem; color: #4b5563; line-height: 1.6; }
-    #welcome-start-btn {
-        margin-top: 2rem; padding: 0.75rem 1.5rem; background-color: #4f46e5; color: white;
-        font-weight: 500; border-radius: 9999px; border: none; cursor: pointer;
-        transition: background-color 0.2s, transform 0.2s; animation: fadeIn 1s 0.5s both;
-    }
-    #welcome-start-btn:hover { background-color: #4338ca; transform: scale(1.05); }
-    #welcome-start-btn.hidden { display: none; }
-    #welcome-dots { position: absolute; bottom: -2rem; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
-    .welcome-dot {
-        width: 12px; height: 12px; background-color: #d1d5db; border-radius: 50%;
-        transition: background-color 0.3s, box-shadow 0.3s; opacity: 0.7; box-shadow: 0 0 0 0 #4f46e5;
-    }
-    .welcome-dot.active {
-        background-color: #4f46e5; opacity: 1; animation: dotPulse 0.9s; box-shadow: 0 0 0 4px #c7d2fe55;
-    }
-    .welcome-arrow {
-        position: absolute; top: 50%; transform: translateY(-50%); background: rgba(79, 70, 229, 0.18);
-        border: none; border-radius: 9999px; width: 44px; height: 44px; display: flex;
-        align-items: center; justify-content: center; cursor: pointer;
-        transition: background 0.2s, box-shadow 0.2s, opacity 0.2s; opacity: 0.65; z-index: 2;
-    }
-    .welcome-arrow:hover, .welcome-arrow:focus { background: rgba(79, 70, 229, 0.37); opacity: 1; box-shadow: 0 0 0 3px #a5b4fc44; outline: none; }
-    .welcome-arrow:disabled { opacity: 0.2; cursor: not-allowed; }
-    .welcome-arrow svg { width: 28px; height: 28px; fill: #4f46e5; opacity: 0.8; }
-    #welcome-arrow-prev { left: -54px; }
-    #welcome-arrow-next { right: -54px; }
-    #welcome-lang-selector button {
-        padding: 0.5rem 1rem; border: 2px solid #d1d5db; border-radius: 9999px;
-        font-weight: 500; transition: all 0.2s;
-    }
-    #welcome-lang-selector button.active { border-color: #4f46e5; background-color: #e0e7ff; color: #4f46e5; }
-    #welcome-age-gate button {
-        width: 100%; padding: 0.75rem; background-color: #16a34a; color: white;
-        border: none; border-radius: 0.75rem; font-size: 1rem; font-weight: 600;
-        cursor: pointer; transition: background-color 0.2s;
-    }
-    #welcome-age-gate button:hover { background-color: #15803d; }
-    #welcome-age-gate button:disabled { background-color: #9ca3af; cursor: not-allowed; }
-    @media (max-width: 500px) {
-        #welcome-arrow-prev { left: 0; }
-        #welcome-arrow-next { right: 0; }
-        #welcome-container { padding: 0.7rem; }
-    }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes icon-pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    @keyframes dotPulse { 0% { box-shadow: 0 0 0 0 #a5b4fc55; } 60% { box-shadow: 0 0 0 8px #a5b4fc11; } 100% { box-shadow: 0 0 0 0 #a5b4fc00; } }
+    <!-- Estilos -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     
-    /* ---- ESTILOS VENTANA MODAL LEGAL ---- */
-    #legal-modal-overlay {
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 10000; display: flex; align-items: center; justify-content: center;
-        opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-    }
-    #legal-modal-overlay.visible { opacity: 1; pointer-events: auto; }
-    #legal-modal-content {
-        background: white; color: #1f2937; border-radius: 1rem; padding: 1.5rem 2rem;
-        max-width: 90vw; max-height: 85vh; width: 600px;
-        display: flex; flex-direction: column;
-        transform: scale(0.95); transition: transform 0.3s ease;
-    }
-    #legal-modal-overlay.visible #legal-modal-content { transform: scale(1); }
-    #legal-modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.75rem; margin-bottom: 1rem; }
-    #legal-modal-title { font-size: 1.25rem; font-weight: 600; }
-    #legal-modal-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #9ca3af; }
-    #legal-modal-body { overflow-y: auto; text-align: left; }
-    #legal-modal-body p, #legal-modal-body ul { text-align: left; }
-    #legal-modal-body li { margin-bottom: 0.75rem; }
-  </style>
+    <!-- Favicon -->
+    <link rel="icon" href="img/favicon.png" type="image/png">
+    
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Scripts de Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <!-- Configuración -->
+    <script src="js/config.js"></script>
+    <script src="js/countries.js"></script>
+    <script src="js/translations.js"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col items-center p-4">
-
-<div id="welcome-overlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
-    <div id="welcome-container">
-        <button id="welcome-arrow-prev" class="welcome-arrow" aria-label="Anterior" tabindex="0" style="display:none;">
-            <svg viewBox="0 0 24 24"><polygon points="16,4 8,12 16,20"></polygon></svg>
-        </button>
-        <button id="welcome-arrow-next" class="welcome-arrow" aria-label="Siguiente" tabindex="0" style="display:none;">
-            <svg viewBox="0 0 24 24"><polygon points="8,4 16,12 8,20"></polygon></svg>
-        </button>
-
-        <div class="welcome-slide active">
-            <div class="welcome-icon font-semibold text-gray-800">LIBRE</div>
-            <h2 class="welcome-title" data-translate-key="welcome.slide1.title"></h2>
-            <p class="welcome-text" data-translate-key="welcome.slide1.text" style="margin-bottom: 1.5rem;"></p>
-            <div id="welcome-lang-selector" class="flex justify-center space-x-4 mb-6">
-                <button data-lang="es">Español</button>
-                <button data-lang="en">English</button>
-            </div>
-            <div id="welcome-age-gate">
-                <button disabled data-translate-key="welcome.slide1.age_gate_button_disabled"></button>
-            </div>
-            <p class="text-xs text-gray-500 mt-3">
-                <span data-translate-key="welcome.slide1.terms_notice_pt1"></span>
-                <button onclick="showLegalModal('terms')" class="underline" data-translate-key="welcome.slide1.terms_link"></button>
-                <span data-translate-key="welcome.slide1.terms_notice_pt2"></span>
-                <button onclick="showLegalModal('privacy')" class="underline" data-translate-key="welcome.slide1.privacy_link"></button>.
-            </p>
-        </div>
-        <div class="welcome-slide">
-            <div class="welcome-icon">🌍</div>
-            <h2 class="welcome-title" data-translate-key="welcome.slide2.title"></h2>
-            <p class="welcome-text" data-translate-key="welcome.slide2.text"></p>
-        </div>
-        <div class="welcome-slide">
-            <div class="welcome-icon">🌌</div>
-            <h2 class="welcome-title" data-translate-key="welcome.slide3.title"></h2>
-            <p class="welcome-text" data-translate-key="welcome.slide3.text"></p>
-        </div>
-        <div class="welcome-slide">
-            <div class="welcome-icon">📜</div>
-            <h2 class="welcome-title" data-translate-key="welcome.slide4.title"></h2>
-            <p class="welcome-text" data-translate-key="welcome.slide4.text"></p>
-        </div>
-        <div class="welcome-slide">
-            <div class="welcome-icon">🚀</div>
-            <h2 class="welcome-title" data-translate-key="welcome.slide5.title"></h2>
-            <p class="welcome-text" data-translate-key="welcome.slide5.text"></p>
-        </div>
-        <div class="welcome-slide">
-            <div class="welcome-icon">❤️</div>
-            <h2 class="welcome-title" data-translate-key="welcome.slide6.title"></h2>
-            <p class="welcome-text" data-translate-key="welcome.slide6.text"></p>
-        </div>
-
-        <button id="welcome-start-btn" class="hidden" data-translate-key="welcome.start_button">Comenzar a ser LIBRE</button>
-        <div id="welcome-dots"></div>
+<body class="bg-gray-100">
+    <!-- Logo Animado -->
+    <div id="logoAnimation" class="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50 pointer-events-none">
+        <div id="textLogo" class="text-blue-800 font-bold text-5xl logo-hidden">LIBRE</div>
     </div>
-</div>
-
-<div id="notification-area"></div>
-
-  <header class="mb-6 text-center w-full max-w-xl">
-    <div id="logoContainer" class="relative h-16 mt-6 text-3xl font-semibold flex items-center justify-center">
-      <h1 id="textLogo" class="absolute logo-shown">LIBRE</h1>
-      <img id="logolibre" src="logolibre.png" alt="LIBRE logo" class="absolute w-8 h-8" />
-    </div>
-    <p class="mt-1 text-[0.77rem] font-medium whitespace-normal" data-translate-key="header.subtitle"></p>
-    <div class="mt-4 text-lg font-medium">
-      <span id="globalCount">🌐 <span id="globalCountNum">0</span> <span data-translate-key="header.global_count"></span></span>
-    </div>
-  </header>
-
-  <nav class="w-full max-w-xl flex justify-around mb-6 text-sm relative">
-    <button onclick="showTab('feed')" class="hover:underline" data-translate-key="nav.global_thoughts"></button>
-    <button onclick="showTab('revelacion')" class="hover:underline" data-translate-key="nav.daily_revelation"></button>
-    <button onclick="showTab('mine')" class="hover:underline relative">
-      <span data-translate-key="nav.my_thoughts"></span>
-      <span id="mineTabNotification" class="badge-notif hidden" data-translate-key="nav.new_badge"></span>
-    </button>
-    <button onclick="showTab('capsule')" class="hover:underline" data-translate-key="nav.time_capsule"></button>
-  </nav>
-
-  <main class="w-full">
-    <section id="feed" class="w-full max-w-xl mx-auto mb-8">
-      <div class="rounded-2xl bg-blue-100 border border-blue-300 p-6 shadow-md relative">
-        <div class="flex items-center mb-4">
-          <h2 class="text-2xl font-semibold text-blue-800 flex items-center">
-              <span id="randomThoughtGlobe" title="Ver un pensamiento aleatorio del mundo" class="text-3xl mr-2" data-translate-key-title="feed.title_tooltip">🌍</span>
-              <span data-translate-key="feed.title"></span>
-          </h2>
-        </div>
-        <details class="mb-6">
-          <summary class="font-medium cursor-pointer text-blue-800" data-translate-key="feed.details_summary"></summary>
-          <div class="mt-2">
-            <div id="map"></div>
-            <div id="countryRanking" class="mb-4"></div>
-            <div id="estadisticasAnonimas" class="estadisticas-anonimas" style="display: none;"></div>
-          </div>
-        </details>
-        <div id="write" class="w-full mb-6">
-          <div class="textarea-container">
-            <textarea id="textarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" rows="4" maxlength="500" data-translate-key-placeholder="feed.textarea_placeholder"></textarea>
-            <div id="charCounterMain" class="char-counter"></div>
-          </div>
-          <button id="sendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-xl transition" data-translate-key="feed.send_button"></button>
-        </div>
-        <div id="randomThought" class="p-4 bg-white rounded-lg shadow-sm mb-4 hidden"></div>
-        <div id="globalThoughts" class="space-y-4"></div>
-        <div id="globalPagination" class="pagination"></div>
-      </div>
-    </section>
-
-    <section id="revelacion" class="w-full max-w-xl mx-auto mb-8 hidden">
-      <div class="rounded-2xl bg-purple-100 border border-purple-300 p-6 shadow-md relative">
-          <div class="flex items-center mb-4">
-              <span class="text-3xl mr-2">🌌</span>
-              <h2 class="text-2xl font-semibold text-purple-800" data-translate-key="revelation.title"></h2>
-          </div>
-          <p class="text-sm text-purple-900 mb-4" data-translate-key="revelation.subtitle"></p>
-          <div id="revelacionHoy">
-              <h3 class="font-semibold text-lg text-purple-800 mb-2" data-translate-key="revelation.todays_question"></h3>
-              <p id="revelacionQuestion" class="font-medium text-lg mb-4 p-4 bg-purple-50 rounded-lg"></p>
-              <div id="revelacionInputArea">
-                  <div class="textarea-container">
-                    <textarea id="revelacionTextarea" class="w-full p-4 rounded-xl shadow-inner bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400" rows="4" maxlength="500" data-translate-key-placeholder="revelation.textarea_placeholder"></textarea>
-                    <div id="charCounterRevelation" class="char-counter"></div>
-                  </div>
-                  <button id="revelacionSendBtn" class="mt-2 w-full text-center py-3 rounded-xl font-medium bg-purple-500 text-white hover:bg-purple-600 shadow-md transition" data-translate-key="revelation.send_button"></button>
-              </div>
-              <div id="revelacionThanks" class="hidden p-4 bg-purple-200 rounded-lg text-center font-medium text-purple-900">
-                  <p data-translate-key="revelation.thanks_message"></p>
-                  <p class="text-sm mt-2" data-translate-key="revelation.next_revelation_in"></p>
-                  <p id="revelacionCountdown" class="text-2xl font-bold mt-1">--:--:--</p>
-              </div>
-          </div>
-          <div class="mt-8">
-              <button onclick="showYesterdaysRevelation()" class="text-purple-600 font-semibold hover:underline" data-translate-key="revelation.view_yesterday"></button>
-              <div id="revelacionAyerContainer" class="mt-4 hidden">
-                  <h3 id="revelacionAyerQuestion" class="font-semibold text-lg text-purple-800 mb-2"></h3>
-                  <div id="revelacionAyerRespuestas" class="space-y-4"></div>
-              </div>
-          </div>
-      </div>
-    </section>
-
-    <section id="mine" class="w-full max-w-xl mx-auto mb-8 hidden">
-      <div class="rounded-2xl bg-green-100 border border-green-300 p-6 shadow-md relative">
-        <div class="flex items-center mb-4">
-          <span class="text-3xl mr-2">📜</span>
-          <h2 class="text-2xl font-semibold text-green-800" data-translate-key="mine.title"></h2>
-        </div>
-        <div id="personalStats" class="stats-box mb-6"></div>
-        <div class="flex mb-3">
-          <button onclick="exportAnonId()" class="px-3 py-1 rounded bg-gray-300 mr-2 text-sm" data-translate-key="mine.export_id_button"></button>
-          <button onclick="importAnonId()" class="px-3 py-1 rounded bg-gray-300 text-sm" data-translate-key="mine.import_id_button"></button>
-        </div>
-        <div class="mb-4 text-xs text-green-900 opacity-60" data-translate-key="mine.id_info"></div>
-        <h3 class="text-lg font-semibold text-green-800 mb-3" data-translate-key="mine.history_title"></h3>
-        <div id="myThoughts" class="space-y-4"></div>
-        <div id="myPagination" class="pagination"></div>
-      </div>
-    </section>
-
-    <section id="capsule" class="w-full max-w-xl mx-auto mb-8 hidden">
-      <div class="rounded-2xl bg-blue-100 border border-blue-300 p-6 shadow-md relative">
-        <div class="flex items-center mb-4">
-          <span class="text-3xl mr-2">🚀</span>
-          <h2 class="text-2xl font-semibold text-blue-800" data-translate-key="capsule.title"></h2>
-        </div>
-        <p class="mt-1 text-sm font-medium text-blue-900 mb-4" data-translate-key="capsule.subtitle"></p>
-        <div class="textarea-container">
-          <textarea id="capsuleMessage" class="w-full mt-2 p-4 rounded-xl shadow-inner bg-white border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300" rows="4" maxlength="500" data-translate-key-placeholder="capsule.textarea_placeholder"></textarea>
-          <div id="charCounterCapsule" class="char-counter"></div>
-        </div>
-        <div class="flex space-x-2 mt-3">
-          <input type="date" id="capsuleDate" class="p-2 rounded-lg bg-white border border-blue-300 focus:outline-none">
-          <input type="time" id="capsuleTime" class="p-2 rounded-lg bg-white border border-blue-300 focus:outline-none">
-          <button id="capsuleBtn" class="px-4 py-2 rounded-lg bg-blue-500 text-white shadow-md hover:bg-blue-600 transition" data-translate-key="capsule.schedule_button"></button>
-        </div>
-        <div id="capsulesList" class="mt-6 space-y-4"></div>
-      </div>
-    </section>
-
-    <section id="about" class="w-full max-w-2xl mx-auto mb-8 hidden legal-section">
-        <div class="rounded-2xl bg-yellow-50 border border-yellow-200 p-6 sm:p-8 shadow-md relative">
-            <h2 class="text-2xl font-semibold text-black mb-6 text-center" data-translate-key="about.title"></h2>
-            <details open>
-                <summary class="text-lg font-semibold cursor-pointer mb-2" data-translate-key="about.why_libre.title"></summary>
-                <ul class="list-disc pl-5 text-sm sm:text-base">
-                    <li data-translate-key="about.why_libre.item1"></li>
-                    <li data-translate-key="about.why_libre.item2"></li>
-                    <li data-translate-key="about.why_libre.item3"></li>
-                    <li data-translate-key="about.why_libre.item4"></li>
-                    <li data-translate-key="about.why_libre.item5"></li>
-                    <li data-translate-key="about.why_libre.item6"></li>
-                </ul>
-            </details>
-            <div id="terms" class="mt-6">
-                <h3 class="text-xl font-semibold mb-3" data-translate-key="about.terms.title"></h3>
-                <p data-translate-key="about.terms.p1"></p>
-                <ul class="list-disc pl-5">
-                    <li data-translate-key="about.terms.item1"></li>
-                    <li data-translate-key="about.terms.item2"></li>
-                    <li data-translate-key="about.terms.item3"></li>
-                    <li data-translate-key="about.terms.item4"></li>
-                    <li data-translate-key="about.terms.item5"></li>
-                </ul>
+    
+    <!-- Pantalla de Bienvenida/Onboarding -->
+    <div id="welcome-overlay" class="fixed inset-0 bg-white z-40 flex flex-col justify-center items-center hidden">
+        <div class="relative w-full max-w-md">
+            <!-- Slides de Bienvenida -->
+            <div class="welcome-slides">
+                <!-- Slide 1: Selección de Idioma y Verificación de Edad -->
+                <div class="welcome-slide active">
+                    <h2 class="welcome-title" data-translate-key="welcome.slide1.title">Bienvenido a LIBRE</h2>
+                    <p data-translate-key="welcome.slide1.subtitle">Selecciona tu idioma</p>
+                    <div id="welcome-lang-selector" class="mt-6 flex justify-center space-x-4">
+                        <button data-lang="es" class="active">Español</button>
+                        <button data-lang="en">English</button>
+                    </div>
+                    
+                    <div class="mt-10 text-center">
+                        <p class="mb-6 font-medium" data-translate-key="welcome.slide1.age_gate">¿Tienes más de 14 años?</p>
+                        <div id="welcome-age-gate">
+                            <button disabled data-translate-key="welcome.slide1.age_gate_button">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Slide 2: Política de Privacidad -->
+                <div class="welcome-slide">
+                    <h2 class="welcome-title" data-translate-key="welcome.slide2.title">Privacidad ante todo</h2>
+                    <p data-translate-key="welcome.slide2.p1">En LIBRE no recopilamos datos personales.</p>
+                    <ul class="welcome-list">
+                        <li data-translate-key="welcome.slide2.li1">No hay registro de usuarios</li>
+                        <li data-translate-key="welcome.slide2.li2">No guardamos tu dirección IP</li>
+                        <li data-translate-key="welcome.slide2.li3">No usamos cookies de rastreo</li>
+                        <li data-translate-key="welcome.slide2.li4">Solo detectamos tu país (sin guardar datos)</li>
+                    </ul>
+                </div>
+                
+                <!-- Slide 3: Reglas de la Comunidad -->
+                <div class="welcome-slide">
+                    <h2 class="welcome-title" data-translate-key="welcome.slide3.title">Reglas de la comunidad</h2>
+                    <p data-translate-key="welcome.slide3.p1">Para mantener un espacio seguro:</p>
+                    <ul class="welcome-list">
+                        <li data-translate-key="welcome.slide3.li1">No compartas información personal</li>
+                        <li data-translate-key="welcome.slide3.li2">Trata a otros con respeto</li>
+                        <li data-translate-key="welcome.slide3.li3">No publiques contenido ofensivo</li>
+                        <li data-translate-key="welcome.slide3.li4">Reporta cualquier contenido inapropiado</li>
+                    </ul>
+                </div>
+                
+                <!-- Slide 4: Cómo usar la app -->
+                <div class="welcome-slide">
+                    <h2 class="welcome-title" data-translate-key="welcome.slide4.title">Cómo usar LIBRE</h2>
+                    <p data-translate-key="welcome.slide4.p1">Explora las diferentes secciones:</p>
+                    <ul class="welcome-list">
+                        <li data-translate-key="welcome.slide4.li1"><b>Pensamientos:</b> Comparte lo que piensas</li>
+                        <li data-translate-key="welcome.slide4.li2"><b>Revelación:</b> Responde la pregunta del día</li>
+                        <li data-translate-key="welcome.slide4.li3"><b>Cápsulas:</b> Envía mensajes al futuro</li>
+                        <li data-translate-key="welcome.slide4.li4"><b>Lo Mío:</b> Ve tus publicaciones y respuestas</li>
+                    </ul>
+                </div>
+                
+                <!-- Slide 5: Final y Comenzar -->
+                <div class="welcome-slide">
+                    <h2 class="welcome-title" data-translate-key="welcome.slide5.title">¡Listo para empezar!</h2>
+                    <p data-translate-key="welcome.slide5.p1">LIBRE es un espacio donde puedes expresarte de forma anónima y sin juicios.</p>
+                    <p class="mt-4" data-translate-key="welcome.slide5.p2">Libera tus pensamientos.</p>
+                    <button id="welcome-start-btn" class="mt-6 welcome-start-btn hidden" data-translate-key="welcome.slide5.start_button">Comenzar a ser LIBRE</button>
+                </div>
             </div>
-            <div id="privacy" class="mt-6">
-                <h3 class="text-xl font-semibold mb-3" data-translate-key="about.privacy.title"></h3>
-                <p data-translate-key="about.privacy.p1"></p>
-                <ul class="list-disc pl-5">
-                    <li data-translate-key="about.privacy.item1"></li>
-                    <li>
-                        <strong data-translate-key="about.privacy.item2.title"></strong>
-                        <ul class="list-disc pl-5 mt-2">
-                            <li data-translate-key="about.privacy.item2.subitem1"></li>
-                            <li data-translate-key="about.privacy.item2.subitem2"></li>
-                        </ul>
-                    </li>
-                    <li class="mt-2">
-                        <strong data-translate-key="about.privacy.item3.title"></strong>
-                        <span data-translate-key="about.privacy.item3.text"></span>
-                        <ul class="list-disc pl-5 mt-2">
-                            <li data-translate-key="about.privacy.item3.subitem1"></li>
-                            <li data-translate-key="about.privacy.item3.subitem2"></li>
-                            <li data-translate-key="about.privacy.item3.subitem3"></li>
-                        </ul>
-                    </li>
-                    <li class="mt-2" data-translate-key="about.privacy.item4"></li>
-                </ul>
+            
+            <!-- Navegación -->
+            <div id="welcome-dots" class="welcome-dots"></div>
+            <button id="welcome-arrow-prev" class="welcome-arrow welcome-arrow-prev hidden">&#10094;</button>
+            <button id="welcome-arrow-next" class="welcome-arrow welcome-arrow-next">&#10095;</button>
+        </div>
+    </div>
+    
+    <!-- Contenedor principal -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Cabecera -->
+        <header class="flex justify-between items-center mb-6">
+            <div class="logo-container relative">
+                <img id="logolibre" src="img/logo.svg" alt="LIBRE" class="h-8 visible">
+            </div>
+            <div class="flex space-x-2">
+                <button id="lang-es" class="lang-btn active">ES</button>
+                <button id="lang-en" class="lang-btn">EN</button>
+            </div>
+        </header>
+        
+        <!-- Navegación principal -->
+        <nav class="tabs mb-6">
+            <button class="tab-btn active" onclick="showTab('feed')" data-translate-key="nav.feed">PENSAMIENTOS</button>
+            <button class="tab-btn" onclick="showTab('revelacion')" data-translate-key="nav.revelacion">REVELACIÓN</button>
+            <button class="tab-btn" onclick="showTab('capsule')" data-translate-key="nav.capsule">CÁPSULAS</button>
+            <button class="tab-btn" onclick="showTab('mine')">
+                <span data-translate-key="nav.mine">LO MÍO</span>
+                <span id="mineTabNotification" class="notification-dot hidden"></span>
+            </button>
+        </nav>
+        
+        <!-- Tab: Pensamientos (Feed) -->
+        <div id="feedTab" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Columna izquierda: Escribir pensamiento -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <div class="textarea-container">
+                            <textarea id="textarea" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200" rows="4" maxlength="500" data-translate-key-placeholder="feed.textarea_placeholder" placeholder="Escribe lo que piensas..."></textarea>
+                            <div id="charCounterMain" class="char-counter">500</div>
+                        </div>
+                        <div class="mt-2 flex justify-end">
+                            <button id="sendBtn" class="px-4 py-1.5 rounded-lg bg-blue-500 text-white font-medium shadow hover:bg-blue-600 transition" data-translate-key="feed.send_button">Enviar</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de pensamientos globales -->
+                    <h2 class="text-lg font-bold mt-6 mb-3 text-blue-800" data-translate-key="feed.title">Pensamientos del mundo</h2>
+                    <div id="globalThoughts" class="space-y-4">
+                        <div class="p-4 bg-white rounded-lg shadow-sm skeleton-loader"></div>
+                        <div class="p-4 bg-white rounded-lg shadow-sm skeleton-loader"></div>
+                        <div class="p-4 bg-white rounded-lg shadow-sm skeleton-loader"></div>
+                    </div>
+                    <div id="globalPagination" class="pagination-controls mt-4"></div>
+                </div>
+                
+                <!-- Columna derecha: Estadísticas -->
+                <div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
+                        <div class="flex items-center mb-4">
+                            <span class="material-icons text-blue-500 mr-2">public</span>
+                            <h3 class="font-semibold" data-translate-key="feed.global_counter">Pensamientos compartidos</h3>
+                        </div>
+                        <div class="text-3xl font-bold text-blue-600" id="globalCountNum">-</div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow-sm mb-4" id="countryRanking"></div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow-sm mb-4" id="estadisticasAnonimas"></div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <h3 class="font-semibold mb-2" data-translate-key="feed.map_title">Mapa de pensamientos</h3>
+                        <div id="map" class="h-48 rounded-lg"></div>
+                    </div>
+                    
+                    <div class="mt-4 text-xs text-center text-gray-500">
+                        <p class="mb-1">© 2024 LIBRE</p>
+                        <button onclick="showLegalModal('privacy')" class="text-blue-500 underline" data-translate-key="about.privacy.link">Privacidad</button> | 
+                        <button onclick="showLegalModal('terms')" class="text-blue-500 underline" data-translate-key="about.terms.link">Términos</button> | 
+                        <button onclick="showLegalModal('about')" class="text-blue-500 underline" data-translate-key="about.about.link">Acerca de</button>
+                    </div>
+                </div>
             </div>
         </div>
-    </section>
-  </main>
-
-  <footer class="w-full max-w-xl mx-auto text-center py-6">
-    <p class="mb-4 text-sm font-medium" data-translate-key="footer.support_text"></p>
-    <a href="https://ko-fi.com/libreantisocial" target="_blank" class="inline-block px-6 py-2 bg-yellow-400 rounded-full font-medium shadow hover:shadow-lg transition" data-translate-key="footer.support_button"></a>
-    <div class="mt-6 text-sm text-gray-600">
-      <div class="flex justify-center items-center space-x-4">
-          <button onclick="showLegalSection('terms')" class="hover:underline" data-translate-key="footer.terms"></button>
-          <span>•</span>
-          <button onclick="showLegalSection('privacy')" class="hover:underline" data-translate-key="footer.privacy"></button>
-      </div>
-      <div class="mt-4 lang-selector">
-        <a href="#" onclick="setLanguage('es')" id="lang-es">Español</a>
-        <a href="#" onclick="setLanguage('en')" id="lang-en">English</a>
-      </div>
-      <p class="mt-3"><span data-translate-key="footer.contact"></span> <a href="mailto:libreantisocial@gmail.com" class="text-blue-600 hover:underline">libreantisocial@gmail.com</a></p>
-      <p class="mt-3 opacity-80">© 2025 Libre</p>
-    </div>
-  </footer>
-
-  <div id="legal-modal-overlay">
-    <div id="legal-modal-content">
-        <div id="legal-modal-header">
-            <h3 id="legal-modal-title"></h3>
-            <button id="legal-modal-close-btn" aria-label="Cerrar">&times;</button>
+        
+        <!-- Tab: Revelación diaria -->
+        <div id="revelacionTab" class="tab-content hidden">
+            <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
+                <h2 class="text-lg font-bold mb-3 text-green-800" data-translate-key="revelation.title">Revelación del día</h2>
+                <p class="font-medium text-lg mb-4" id="revelacionQuestion"></p>
+                
+                <div id="revelacionInputArea">
+                    <div class="textarea-container">
+                        <textarea id="revelacionTextarea" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-200" rows="4" maxlength="500" data-translate-key-placeholder="revelation.textarea_placeholder" placeholder="Comparte tu respuesta..."></textarea>
+                        <div id="charCounterRevelation" class="char-counter">500</div>
+                    </div>
+                    <div class="mt-2 flex justify-end">
+                        <button id="revelacionSendBtn" class="px-4 py-1.5 rounded-lg bg-green-500 text-white font-medium shadow hover:bg-green-600 transition" data-translate-key="revelation.send_button">Enviar</button>
+                    </div>
+                </div>
+                
+                <div id="revelacionThanks" class="hidden">
+                    <p class="text-green-700 font-medium mb-4" data-translate-key="revelation.thanks">¡Gracias por tu respuesta!</p>
+                    <p class="mb-2" data-translate-key="revelation.next_revelation">Próxima revelación en:</p>
+                    <div id="revelacionCountdown" class="text-2xl font-bold">24:00:00</div>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <button class="text-green-700 font-medium flex items-center" onclick="showYesterdaysRevelation()">
+                    <span class="material-icons mr-1">history</span>
+                    <span data-translate-key="revelation.show_yesterday">Ver revelación de ayer</span>
+                </button>
+                
+                <div id="revelacionAyerContainer" class="hidden mt-4">
+                    <h3 class="text-md font-bold mb-3 text-green-800" id="revelacionAyerQuestion"></h3>
+                    <div id="revelacionAyerRespuestas" class="space-y-3"></div>
+                </div>
+            </div>
         </div>
-        <div id="legal-modal-body">
-            <!-- El contenido se inyectará aquí -->
+        
+        <!-- Tab: Cápsulas del tiempo -->
+        <div id="capsuleTab" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <h2 class="text-lg font-bold mb-3 text-purple-800" data-translate-key="capsule.title">Nueva cápsula del tiempo</h2>
+                        <p class="mb-4" data-translate-key="capsule.description">Envía un mensaje a tu futuro yo o al mundo.</p>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-1" data-translate-key="capsule.date_label">Fecha de apertura</label>
+                            <input type="date" id="capsuleDate" class="w-full p-2 border rounded-lg">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-1" data-translate-key="capsule.time_label">Hora</label>
+                            <input type="time" id="capsuleTime" class="w-full p-2 border rounded-lg">
+                        </div>
+                        
+                        <div class="textarea-container">
+                            <textarea id="capsuleMessage" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-200" rows="4" maxlength="500" data-translate-key-placeholder="capsule.textarea_placeholder" placeholder="Escribe tu mensaje..."></textarea>
+                            <div id="charCounterCapsule" class="char-counter">500</div>
+                        </div>
+                        
+                        <div class="mt-2 flex justify-end">
+                            <button id="capsuleBtn" class="px-4 py-1.5 rounded-lg bg-purple-500 text-white font-medium shadow hover:bg-purple-600 transition" data-translate-key="capsule.send_button">Programar</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="text-lg font-bold mb-3 text-purple-800" data-translate-key="capsule.my_capsules">Mis cápsulas</h2>
+                    <div id="capsulesList" class="space-y-3">
+                        <p class="empty-state" data-translate-key="empty.my_capsules">No tienes cápsulas programadas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Lo mío -->
+        <div id="mineTab" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2">
+                    <h2 class="text-lg font-bold mb-3 text-blue-800" data-translate-key="mine.title">Mis pensamientos</h2>
+                    <div id="myThoughts" class="space-y-4"></div>
+                    <div id="myPagination" class="pagination-controls mt-4"></div>
+                </div>
+                
+                <div>
+                    <div id="personalStats" class="bg-white p-4 rounded-lg shadow-sm mb-4"></div>
+                </div>
+            </div>
         </div>
     </div>
-  </div>
-
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="badwords.js"></script>
-  <script src="translations.js"></script>
-  <script src="countries.js"></script>
-  <script src="app-v2.js"></script>
+    
+    <!-- Modal legal -->
+    <div id="legal-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="legal-modal-title" class="modal-title">Términos y Condiciones</h2>
+            <div id="legal-modal-body" class="modal-body"></div>
+            <button id="legal-modal-close-btn" class="modal-close-btn" data-translate-key="modal.close_button">Cerrar</button>
+        </div>
+    </div>
+    
+    <!-- Área de notificaciones -->
+    <div id="notification-area" class="notification-area"></div>
+    
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/badwords.js"></script>
+    <script src="js/app-v2.js"></script>
 </body>
 </html>
